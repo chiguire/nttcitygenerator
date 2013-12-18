@@ -70,7 +70,8 @@ namespace octet {
       get_viewport_size(vx, vy);
 
       cameraToWorld.loadIdentity();
-      cameraToWorld.translate(0.0f, 0.5f, 5.0f);
+      cameraToWorld.rotate(45, -1.0f, 0.0f, 0.0f);
+      cameraToWorld.translate(0.0f, 2.0f, 6.0f);
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
 
