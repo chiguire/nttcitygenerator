@@ -54,19 +54,19 @@ namespace octet {
 
     }
 
-    void debugRender(color_shader &s, mat4t &cameraToWorld, float aspectRatio, unsigned int depth) {
+    void debugRender(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth) {
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth, &root);
     }
 
     private:
 
-    void debugRenderRect_(color_shader &s, mat4t &cameraToWorld, float aspectRatio, unsigned int depth, BSPNode *node) {
+    void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, BSPNode *node) {
       if (depth == 0) return;
       if (!node) return;
 
-      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
+      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, *cameraToWorld);
 
-      s.render(modelToProjection, vec4(1.0f, 0.0f, 0.0f));
+      s->render(modelToProjection, vec4(1.0f, 0.0f, 0.0f));
 
       float vertices[] = {
         node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  

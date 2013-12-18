@@ -49,6 +49,7 @@ namespace octet {
       srand(NULL);
 
       city = City::createFromRectangle(5.0f, 5.0f);
+      city->stepPartition(3);
 
       picker.init(this);
     }
@@ -69,11 +70,11 @@ namespace octet {
       get_viewport_size(vx, vy);
 
       cameraToWorld.loadIdentity();
-      cameraToWorld.translate(0.0f, 0.5f, 1.0f);
-      ball.update(cameraToWorld);
+      cameraToWorld.translate(0.0f, 0.5f, 5.0f);
+      //ball.update(cameraToWorld);
       //picker.update(app_scene);
 
-      city->debugRender(cshader, cameraToWorld, float(vx)/float(vy), 1);
+      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), 3);
     }
   };
 }

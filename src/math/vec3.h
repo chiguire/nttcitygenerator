@@ -50,7 +50,7 @@ namespace octet {
         //__m64 lo = _mm_cvtt_ps2pi(
         v[0] = (float)x; v[1] = (float)y; v[2] = v[3] = (float)z;
       #else
-        v[0] = x; v[1] = y; v[2] = z;
+        v[0] = (float)x; v[1] = (float)y; v[2] = (float)z;
       #endif
     };
 

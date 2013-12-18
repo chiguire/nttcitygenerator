@@ -25,7 +25,7 @@
 #ifndef OCTET_OPENCL
   #define OCTET_OPENCL 0
 #endif
-#define OCTET_SSE 1
+//#define OCTET_SSE 1
 
 // use <> to include from standard directories
 // use "" to include from our own project

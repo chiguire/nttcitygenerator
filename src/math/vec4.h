@@ -250,7 +250,7 @@ namespace octet {
         //u.v[0] = u.v[1] = u.v[2] = u.v[3] = 0x7fffffff;
         return vec4(_mm_and_ps(m, u.m));
       #else
-        return vec4(abs(v[0]), abs(v[1]), abs(v[2]), abs(v[3]));
+        return vec4(fabsf(v[0]), fabsf(v[1]), fabsf(v[2]), fabsf(v[3]));
       #endif
     }
 
