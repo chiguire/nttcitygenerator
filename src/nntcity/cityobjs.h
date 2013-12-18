@@ -55,18 +55,22 @@ namespace octet {
     }
 
     void debugRender(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth) {
-      debugRenderRect_(s, cameraToWorld, aspectRatio, depth, &root);
+      vec4 colors[] = { vec4(1.0f, 0.0f, 0.0f, 1.0f),
+        vec4(0.0f, 1.0f, 0.0f, 1.0f),
+        vec4(0.0f, 0.0f, 1.0f, 1.0f),
+        vec4(1.0f, 0.0f, 1.0f, 1.0f) }; 
+      debugRenderRect_(s, cameraToWorld, aspectRatio, depth, colors, &root);
     }
 
     private:
 
-    void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, BSPNode *node) {
+    void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, vec4 *colors, BSPNode *node) {
       if (depth == 0) return;
       if (!node) return;
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, *cameraToWorld);
 
-      s->render(modelToProjection, vec4(1.0f, 0.0f, 0.0f));
+      s->render(modelToProjection, *(colors+depth));
 
       float vertices[] = {
         node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  
@@ -80,8 +84,8 @@ namespace octet {
 
       glDrawArrays(GL_LINE_LOOP, 0, 4);
 
-      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->left);
-      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->right);
+      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, colors, node->left);
+      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, colors, node->right);
     }
 
     void stepPartition_(unsigned int depth, BSPNode *b) {
