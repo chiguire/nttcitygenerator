@@ -1,0 +1,25 @@
+# Compiled source #
+###################
+*.dll
+*.exe
+*.o
+*.so
+*.self
+*.sdf
+*.suo
+*.oct
+*.user
+*.opensdf
+*.obj
+log.txt
+batch/
+external/
+install/
+maple/
+vc2010/layer1/Debug
+vc2010/layer1/Release
+vc2010/layer1/ipch
+vc2010/layer2/Debug
+vc2010/layer2/Release
+vc2010/layer2/ipch
+
