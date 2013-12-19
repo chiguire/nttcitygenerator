@@ -59,7 +59,9 @@ namespace octet {
         vec4(0.0f, 1.0f, 0.0f, 1.0f),
         vec4(0.0f, 0.0f, 1.0f, 1.0f),
         vec4(1.0f, 0.0f, 1.0f, 1.0f) }; 
+      //printf("Start\n");
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth, colors, &root);
+      //printf("End\n");
     }
 
     private:
@@ -78,6 +80,12 @@ namespace octet {
         node->vertices[2].x(), node->vertices[2].y(), node->vertices[2].z(),  
         node->vertices[3].x(), node->vertices[3].y(), node->vertices[3].z()
       };
+
+      /*printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
+        node->vertices[0].x(), node->vertices[0].z(),  
+        node->vertices[1].x(), node->vertices[1].z(),  
+        node->vertices[2].x(), node->vertices[2].z(),  
+        node->vertices[3].x(), node->vertices[3].z());*/
 
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void *)vertices);
       glEnableVertexAttribArray(attribute_pos);
@@ -119,9 +127,9 @@ namespace octet {
                       side_vertex_a.z() + (side_vertex_b.z() - side_vertex_a.z())*0.5f,
                       1.0f);
 
-        vec4 midpoint_opposite(side_vertex_a.x() + (side_vertex_b.x() - side_vertex_a.x())*0.5f,
-                      side_vertex_a.y() + (side_vertex_b.y() - side_vertex_a.y())*0.5f,
-                      side_vertex_a.z() + (side_vertex_b.z() - side_vertex_a.z())*0.5f,
+        vec4 midpoint_opposite(opposite_side_vertex_a.x() + (opposite_side_vertex_b.x() - opposite_side_vertex_a.x())*0.5f,
+                      opposite_side_vertex_a.y() + (opposite_side_vertex_b.y() - opposite_side_vertex_a.y())*0.5f,
+                      opposite_side_vertex_a.z() + (opposite_side_vertex_b.z() - opposite_side_vertex_a.z())*0.5f,
                       1.0f);
 
         b->left = new BSPNode();
