@@ -53,6 +53,8 @@ namespace octet {
       city = City::createFromRectangle(7.0f, 5.0f);
       city->stepPartition(depth);
 
+      city->printStreets();
+
       picker.init(this);
     }
 

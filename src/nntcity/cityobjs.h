@@ -1,4 +1,17 @@
+#include <vector>
+
 namespace octet {
+
+  class StreetSides{
+    public:
+    vec4 points[2];
+
+    StreetSides(vec4 p1, vec4 p2){
+      this->points[0] = p1;
+      this->points[1] = p2;
+    }
+  };
+
 
   class BSPNode {
   public:
@@ -20,9 +33,12 @@ namespace octet {
 
     mat4t modelToWorld;
 
+    std::vector<StreetSides> streetsList;
+
     class random randomizer;
 
     vec4 * debugColors;
+
 
     City () {}
 
@@ -48,6 +64,16 @@ namespace octet {
       root.left = NULL;
       root.right = NULL;
       modelToWorld.loadIdentity();
+      
+      for(int i=0; i!=4; ++i){
+        if(i !=3){
+          StreetSides s1(root.vertices[i],root.vertices[i+1]);
+          streetsList.push_back(s1);
+        }else{
+          StreetSides s1(root.vertices[i],root.vertices[0]);
+          streetsList.push_back(s1);
+        }
+      }
 
       srand (time(NULL));
     }
@@ -63,9 +89,9 @@ namespace octet {
 
     void setDebugColors(unsigned int depth) {
 	    
-      debugColors = new vec4[depth];
+      debugColors = new vec4[depth+1];
       
-      for(int i=0; i!= depth; ++i){
+      for(int i=0; i!= depth+1; ++i){
         vec4 color((float)(rand() % 2),(float)(rand() % 2),(float)(rand() % 2),1.0f);
         debugColors[i] = color;
       }
@@ -79,15 +105,26 @@ namespace octet {
       //printf("End\n");
     }
 
+    void printStreets(){
+      
+      printf("%d Streets:\n\n",streetsList.size());
+
+      for(int i=0; i!= streetsList.size(); ++i){
+        printf("%d. (%.2f, %.2f), (%.2f, %.2f).\n",i+1,
+        streetsList[i].points[0].x(), streetsList[i].points[0].z(),  
+        streetsList[i].points[1].x(), streetsList[i].points[1].z());
+      }
+    }
+
     private:
 
     void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, BSPNode *node) {
-      if (depth == 0) return;
+      if (depth == -1) return;
       if (!node) return;
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, *cameraToWorld);
 
-      s->render(modelToProjection, debugColors[depth-1]);
+      s->render(modelToProjection, debugColors[depth]);
 
       float vertices[] = {
         node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  
@@ -123,6 +160,7 @@ namespace octet {
       return (sideLengthSum1 > sideLengthSum2)? 0: 1;
 
     }
+
 
     void stepPartition_(unsigned int depth, BSPNode *b) {
       if (depth == 0) return;
@@ -165,6 +203,9 @@ namespace octet {
         b->right->vertices[1] = midpoint_opposite;
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
+
+        StreetSides s1(midpoint,midpoint_opposite);
+        streetsList.push_back(s1);
 
       }
 
