@@ -30,6 +30,8 @@ namespace octet {
 
     City *city;
 
+    int depth;
+
   public:
     // this is called when we construct the class
     engine(int argc, char **argv) 
@@ -46,8 +48,10 @@ namespace octet {
       skin_shader.init(true);
       cshader.init();
 
-      city = City::createFromRectangle(5.0f, 7.0f);
-      city->stepPartition(3);
+      depth = 5;
+
+      city = City::createFromRectangle(7.0f, 5.0f);
+      city->stepPartition(depth);
 
       picker.init(this);
     }
@@ -73,7 +77,7 @@ namespace octet {
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
 
-      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), 3);
+      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
     }
   };
 }

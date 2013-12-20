@@ -22,6 +22,8 @@ namespace octet {
 
     class random randomizer;
 
+    vec4 * debugColors;
+
     City () {}
 
     static City *createFromRectangle(float width, float height) {
@@ -46,9 +48,12 @@ namespace octet {
       root.left = NULL;
       root.right = NULL;
       modelToWorld.loadIdentity();
+
+      srand (time(NULL));
     }
 
     void stepPartition(unsigned int depth/* camera frustrum */) {
+      setDebugColors(depth);
       stepPartition_(depth, &root);
     }
 
@@ -56,25 +61,33 @@ namespace octet {
 
     }
 
+    void setDebugColors(unsigned int depth) {
+	    
+      debugColors = new vec4[depth];
+      
+      for(int i=0; i!= depth; ++i){
+        vec4 color((float)(rand() % 2),(float)(rand() % 2),(float)(rand() % 2),1.0f);
+        debugColors[i] = color;
+      }
+    }
+
+
     void debugRender(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth) {
-      vec4 colors[] = { vec4(1.0f, 0.0f, 0.0f, 1.0f),
-        vec4(0.0f, 1.0f, 0.0f, 1.0f),
-        vec4(0.0f, 0.0f, 1.0f, 1.0f),
-        vec4(1.0f, 0.0f, 1.0f, 1.0f) }; 
+
       //printf("Start\n");
-      debugRenderRect_(s, cameraToWorld, aspectRatio, depth, colors, &root);
+      debugRenderRect_(s, cameraToWorld, aspectRatio, depth, &root);
       //printf("End\n");
     }
 
     private:
 
-    void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, vec4 *colors, BSPNode *node) {
+    void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, BSPNode *node) {
       if (depth == 0) return;
       if (!node) return;
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, *cameraToWorld);
 
-      s->render(modelToProjection, *(colors+depth));
+      s->render(modelToProjection, debugColors[depth-1]);
 
       float vertices[] = {
         node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  
@@ -83,26 +96,25 @@ namespace octet {
         node->vertices[3].x(), node->vertices[3].y(), node->vertices[3].z()
       };
 
-      printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
+   /*   printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
         node->vertices[0].x(), node->vertices[0].z(),  
         node->vertices[1].x(), node->vertices[1].z(),  
         node->vertices[2].x(), node->vertices[2].z(),  
-        node->vertices[3].x(), node->vertices[3].z());
+        node->vertices[3].x(), node->vertices[3].z()); */
 
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void *)vertices);
       glEnableVertexAttribArray(attribute_pos);
 
       glDrawArrays(GL_LINE_LOOP, 0, 4);
 
-      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, colors, node->left);
-      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, colors, node->right);
+      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->left);
+      debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->right);
     }
 
    
     //We apply the heuristic: maximum value of the sum of the opposite sides, and then we yield one of those sides
     
-    int getSideToMakePartition( BSPNode * b ) 
-    {
+    int getSideToMakePartition( BSPNode * b ) {
 
       float sideLengthSum1 = abs(b->vertices[0] - b->vertices[1]).length() + abs(b->vertices[3] - b->vertices[2]).length();
 
@@ -118,7 +130,7 @@ namespace octet {
       if (!b->right || !b->left) { // It was a leaf node, expand it
 
 
-         int side_index = getSideToMakePartition(b);
+        int side_index = getSideToMakePartition(b);
 
 
         //Opposite side
@@ -158,10 +170,10 @@ namespace octet {
 
       // Heuristic to choose side: random by now
       // TODO Heuristic: choose sides intersected by frustrum
-      int r = randomizer.get(0, 10);
-      BSPNode *child = (r % 2 ==0)? b->left: b->right;
+    //  int r = randomizer.get(0, 10);
+    //  BSPNode *child = (r % 2 ==0)? b->left: b->right;
 
-      stepPartition_(depth - 1, child);
+      stepPartition_(depth - 1, b->right);
     }
 
   }; 
