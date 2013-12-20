@@ -20,6 +20,8 @@ namespace octet {
 
     mat4t modelToWorld;
 
+    class random randomizer;
+
     City () {}
 
     static City *createFromRectangle(float width, float height) {
@@ -81,11 +83,11 @@ namespace octet {
         node->vertices[3].x(), node->vertices[3].y(), node->vertices[3].z()
       };
 
-      /*printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
+      printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
         node->vertices[0].x(), node->vertices[0].z(),  
         node->vertices[1].x(), node->vertices[1].z(),  
         node->vertices[2].x(), node->vertices[2].z(),  
-        node->vertices[3].x(), node->vertices[3].z());*/
+        node->vertices[3].x(), node->vertices[3].z());
 
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void *)vertices);
       glEnableVertexAttribArray(attribute_pos);
@@ -96,22 +98,28 @@ namespace octet {
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, colors, node->right);
     }
 
+   
+    //We apply the heuristic: maximum value of the sum of the opposite sides, and then we yield one of those sides
+    
+    int getSideToMakePartition( BSPNode * b ) 
+    {
+
+      float sideLengthSum1 = abs(b->vertices[0] - b->vertices[1]).length() + abs(b->vertices[3] - b->vertices[2]).length();
+
+      float sideLengthSum2 = abs(b->vertices[0] - b->vertices[3]).length() + abs(b->vertices[1] - b->vertices[2]).length();
+
+      return (sideLengthSum1 > sideLengthSum2)? 0: 1;
+
+    }
+
     void stepPartition_(unsigned int depth, BSPNode *b) {
       if (depth == 0) return;
 
       if (!b->right || !b->left) { // It was a leaf node, expand it
-        //Take longest side, and connect it to opposite side
-        float side_length = (b->vertices[1] - b->vertices[0]).length();
-        int side_index = 0;
 
-        for (int i = 1; i < 3; i++) {
-          float side_length_2 = (b->vertices[i+1] - b->vertices[i]).length();
-          
-          if (side_length_2 > side_length) {
-            side_length = side_length_2;
-            side_index = i;
-          }
-        }
+
+         int side_index = getSideToMakePartition(b);
+
 
         //Opposite side
         int opposite_side_index = (side_index+2)%4;
@@ -150,10 +158,11 @@ namespace octet {
 
       // Heuristic to choose side: random by now
       // TODO Heuristic: choose sides intersected by frustrum
-      float r = float(rand())/RAND_MAX;
-      BSPNode *child = (r < 0.5f)? b->left: b->right;
+      int r = randomizer.get(0, 10);
+      BSPNode *child = (r % 2 ==0)? b->left: b->right;
 
       stepPartition_(depth - 1, child);
     }
+
   }; 
 }

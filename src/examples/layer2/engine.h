@@ -46,9 +46,7 @@ namespace octet {
       skin_shader.init(true);
       cshader.init();
 
-      srand(NULL);
-
-      city = City::createFromRectangle(5.0f, 5.0f);
+      city = City::createFromRectangle(5.0f, 7.0f);
       city->stepPartition(3);
 
       picker.init(this);
@@ -71,7 +69,7 @@ namespace octet {
 
       cameraToWorld.loadIdentity();
       cameraToWorld.rotate(45, -1.0f, 0.0f, 0.0f);
-      cameraToWorld.translate(0.0f, 2.0f, 6.0f);
+      cameraToWorld.translate(0.0f, 2.0f, 8.0f);
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
 
