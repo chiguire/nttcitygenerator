@@ -197,6 +197,10 @@ static char *get_sprintf_buffer() {
 #include "../resources/resources.inl"
 #include "../resources/mesh_builder.inl"
 
+// city headers
+#include "../../nntcity/cityobjs.h"
+#include "../../nntcity/citymesh.h"
+
 namespace octet {
   inline resource *resource::new_type(atom_t type) {
     switch ((int)type) {

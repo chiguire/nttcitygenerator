@@ -9,7 +9,6 @@
 // Demonstrates a basic scene graph with import from Collada.
 //
 #include "../../platform/platform.h"
-#include "../../nntcity/cityobjs.h"
 #include "engine.h"
 
 //

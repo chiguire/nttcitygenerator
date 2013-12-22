@@ -72,6 +72,7 @@
     <ClInclude Include="..\..\src\math\vec2.h" />
     <ClInclude Include="..\..\src\math\vec3.h" />
     <ClInclude Include="..\..\src\math\vec4.h" />
+    <ClInclude Include="..\..\src\nntcity\citymesh.h" />
     <ClInclude Include="..\..\src\nntcity\cityobjs.h" />
     <ClInclude Include="..\..\src\physics\physics.h" />
     <ClInclude Include="..\..\src\physics\physics_world.h" />

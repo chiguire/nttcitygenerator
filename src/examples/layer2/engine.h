@@ -29,6 +29,7 @@ namespace octet {
     mat4t cameraToWorld;
 
     City *city;
+	CityMesh *city_mesh;
 
     int depth;
 
@@ -55,6 +56,10 @@ namespace octet {
 
       city->printStreets();
 
+	  city_mesh = new CityMesh();
+	  std::vector<StreetSides> *streetList = &city->streetsList;
+	  city_mesh->init(streetList);
+
       picker.init(this);
     }
 
@@ -80,6 +85,7 @@ namespace octet {
       //picker.update(app_scene);
 
       city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+	  city_mesh->debugRender();
     }
   };
 }

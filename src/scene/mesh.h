@@ -6,6 +6,7 @@
 //
 // raw 3D mesh container
 //
+#include <vector>
 
 namespace octet {
   class mesh : public resource {
@@ -383,15 +384,19 @@ namespace octet {
       disable_attributes();
     }
 
+	
+
     void make_cube(float size = 1.0f) {
       init();
       mesh_builder b;
-    
+
       b.init(6*4, 6*6);
 
       b.add_cube(size);
       b.get_mesh(*this);
     }
+
+	
 
     void make_aa_box(float x, float y, float z) {
       init();

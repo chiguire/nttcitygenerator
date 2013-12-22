@@ -10,6 +10,7 @@ namespace octet {
       this->points[0] = p1;
       this->points[1] = p2;
     }
+	
   };
 
 
@@ -209,6 +210,8 @@ namespace octet {
 
       }
 
+
+
       // Heuristic to choose side: random by now
       // TODO Heuristic: choose sides intersected by frustrum
     //  int r = randomizer.get(0, 10);
@@ -216,6 +219,8 @@ namespace octet {
 
       stepPartition_(depth - 1, b->right);
     }
+
+
 
   }; 
 }
