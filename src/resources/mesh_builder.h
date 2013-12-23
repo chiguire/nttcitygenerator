@@ -201,6 +201,11 @@ namespace octet {
     void translate(float x, float y, float z) {
       matrix.translate(x, y, z);
     }
+
+	void rotate(float angle, float x, float y, float z) {
+		matrix.rotate(angle, x, y, z);
+	}
+
   };
 }
 
