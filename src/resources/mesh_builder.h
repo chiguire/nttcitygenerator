@@ -12,9 +12,8 @@
 namespace octet {
   class mesh_builder {
     struct vertex { float pos[3]; float normal[3]; float uv[2]; };
-    dynarray<vertex, allocator> vertices;
-    dynarray<unsigned short, allocator> indices;
-
+    
+    
     struct sphere {
       vec4 center;
       union {
@@ -43,6 +42,14 @@ namespace octet {
       indices.push_back(cur_vertex+2);
       indices.push_back(cur_vertex+3);
     }
+
+	void add_road(vec4 point1, vec4 point2) {
+		vec4 points[8];
+
+		points[0] = point1;
+	}
+
+	
 
     // add a ring in the x-y plane. Return index of first index
     unsigned add_ring(float radius, const vec4 &normal, unsigned num_vertices, float v, float uvscale) {
@@ -110,6 +117,10 @@ namespace octet {
     }
 
   public:
+	  dynarray<vertex, allocator> vertices;
+	  dynarray<unsigned short, allocator> indices;
+
+
     mesh_builder() {
       init();
     }
@@ -155,6 +166,8 @@ namespace octet {
       add_front_face(size);
       matrix.rotateX90();
     }
+
+	
 
     // add a subdivided size*size plane with nx*ny squares
     void add_plane(float size, unsigned nx, unsigned ny) {
