@@ -143,7 +143,7 @@ namespace octet {
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void *)vertices);
       glEnableVertexAttribArray(attribute_pos);
 
-      glDrawArrays(GL_LINE_STRIP, 0, 4);
+      glDrawArrays(GL_LINE_LOOP, 0, 4);
 
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->left);
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->right);
