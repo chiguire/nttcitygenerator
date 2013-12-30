@@ -81,7 +81,7 @@ namespace octet {
       // city_mesh initialization
       //
       city_mesh = new CityMesh();
-      std::vector<StreetSides> *streetList = &city->streetsList;
+      dynarray<StreetSides> *streetList = &city->streetsList;
       //city_mesh->init(streetList);
       city_mesh->debug_createSimpleMesh();
 

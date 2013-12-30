@@ -1,10 +1,12 @@
-#include <vector>
-
 namespace octet {
 
   class StreetSides{
     public:
     vec4 points[2];
+
+    StreetSides() {
+      memset(points, 0, sizeof(vec4)*2);
+    }
 
     StreetSides(vec4 p1, vec4 p2){
       this->points[0] = p1;
@@ -34,7 +36,7 @@ namespace octet {
 
     mat4t modelToWorld;
 
-    std::vector<StreetSides> streetsList;
+    dynarray<StreetSides> streetsList;
 
     class random randomizer;
 

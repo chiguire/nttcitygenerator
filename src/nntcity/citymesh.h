@@ -1,11 +1,29 @@
-
-#include <vector>
-
 namespace octet {
 
 	class CityMesh {
 		mesh c_mesh;
-		material mat;
+		material *mat;
+
+    static dynarray<image *> *imageArray_;
+
+    static dynarray<image *> *getImageArray() {
+      if (!imageArray_) {
+        imageArray_ = new dynarray<image *>();
+        char *files[] = {
+          "assets/citytex/pavement.gif",
+          "assets/citytex/road.gif",
+          0
+        };
+
+        for (int i = 0; files[i]; i++) { 
+          image *img = new image(files[i]);
+          img->load();
+          imageArray_->push_back(img);
+        }
+      }
+
+      return imageArray_;
+    }
 
 	public:
 		CityMesh() {}
@@ -18,7 +36,7 @@ namespace octet {
 		// still have to work on the rendering part 
 		// and on the material rendering
 		//
-		void init(std::vector<StreetSides> *streetsList) {
+		void init(dynarray<StreetSides> *streetsList) {
 			int num_vertices = streetsList->size()*2;
 
 			mesh_builder b;
@@ -26,8 +44,8 @@ namespace octet {
 			b.init(num_vertices*4, num_vertices*6);
 			
 			for (int i=0; i<streetsList->size(); i++) {
-				vec4 v1 = streetsList->at(i).points[0];
-				vec4 v2 = streetsList->at(i).points[1];
+				vec4 v1 = (*streetsList)[i].points[0];
+				vec4 v2 = (*streetsList)[i].points[1];
 
 				float points_distance = v1.z() - v2.z();
 				b.scale( 1.0f, 1.0f, points_distance);
@@ -51,15 +69,19 @@ namespace octet {
 			b.add_cube(1.0f);
 			b.get_mesh(c_mesh);
 
-      mat.make_color(vec4(1, 0, 0, 1), false, false);
+      //mat.make_color(vec4(1, 0, 0, 1), false, false);
+      dynarray <image *> *imgarr = getImageArray();
+      image *img = (*imgarr)[0];
+      mat = new material(img);
 		}
 
 		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      mat.render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      mat->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
 			c_mesh.render();
 		}
-
 	};
+
+  dynarray <image *> *CityMesh::imageArray_;
 
   class CompassCard {
     color_shader *cshader;
