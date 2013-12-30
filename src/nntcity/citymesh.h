@@ -5,7 +5,7 @@ namespace octet {
 
 	class CityMesh {
 		mesh c_mesh;
-		material *mat;
+		material mat;
 
 	public:
 		CityMesh() {}
@@ -50,9 +50,12 @@ namespace octet {
 			b.translate(5.0f, 0.0f, 0.0f);
 			b.add_cube(1.0f);
 			b.get_mesh(c_mesh);
+
+      mat.make_color(vec4(1, 0, 0, 1), false, false);
 		}
 
-		void debugRender() {
+		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+      mat.render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
 			c_mesh.render();
 		}
 

@@ -20,7 +20,6 @@ namespace octet {
 
     // shaders to draw triangles
     bump_shader object_shader;
-    bump_shader skin_shader;
     color_shader cshader;
 
     vec4 light_uniforms_array[5];
@@ -59,16 +58,15 @@ namespace octet {
     void app_init() {
       // Shader Set Up
       object_shader.init(false);
-      skin_shader.init(true);
       cshader.init();
       compassCard.init(&cshader);
 
       // Light Set Up
-      light_uniforms_array[0] = vec4(0.3f, 0.3f, 0.3f, 1.0f);
-      light_uniforms_array[1] = vec4();
-      light_uniforms_array[2] = vec4();
-      light_uniforms_array[3] = vec4(0.0f, -1.0f, 0.2f, 1.0f);
-      light_uniforms_array[4] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+      memset(light_uniforms_array, 0, sizeof(light_uniforms_array));
+      light_uniforms_array[0] = vec4(0.3f, 0.3f, 0.3f, 50.0f);
+      light_uniforms_array[2] = vec4(0.707f, 0.0f, 0.707f, 0.0f);
+      light_uniforms_array[3] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+      light_uniforms_array[4] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
       num_light_uniforms = 5;
       num_lights = 1;
 
@@ -123,7 +121,8 @@ namespace octet {
       mat4t modelToCamera = modelToWorld * worldToCamera;
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
-      object_shader.render(modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+
+      light_uniforms_array[2] = vec4(0.707f, 0.0f, 0.707f, 0.0f) * worldToCamera;
 
 
       //ball.update(cameraToWorld);
@@ -133,7 +132,7 @@ namespace octet {
       //
       // city_mesh render - not working for now
       //
-      city_mesh->debugRender();
+      city_mesh->debugRender(object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);
