@@ -12,6 +12,9 @@ namespace octet {
     typedef animation animation;
     typedef scene_node scene_node;
 
+    vec3 camera_position;
+    vec3 camera_rotation;
+
     // named resources loaded from collada file
     resources dict;
 
@@ -20,18 +23,24 @@ namespace octet {
     bump_shader skin_shader;
     color_shader cshader;
 
+    vec4 light_uniforms_array[5];
+    int num_light_uniforms;
+    int num_lights;
+
     // helper to rotate camera about scene
-    mouse_ball ball;
+    //mouse_ball ball;
 
     // helper for picking objects on the screen
-    object_picker picker;
+    //object_picker picker;
 
     mat4t cameraToWorld;
 
     City *city;
 
-	// city mesh obj. working on
-	CityMesh *city_mesh;
+    // city mesh obj. working on
+    CityMesh *city_mesh;
+
+    CompassCard compassCard;
 
     int depth;
 
@@ -39,35 +48,49 @@ namespace octet {
     // this is called when we construct the class
     engine(int argc, char **argv) 
     : app(argc, argv)
-    , ball()
+    //, ball()
+    , camera_position(0.0f, 0.0f, 10.0f)
+    , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
     {
     }
 
     // this is called once OpenGL is initialized
     void app_init() {
-      // set up the shaders
+      // Shader Set Up
       object_shader.init(false);
       skin_shader.init(true);
       cshader.init();
+      compassCard.init(&cshader);
 
+      // Light Set Up
+      light_uniforms_array[0] = vec4(0.3f, 0.3f, 0.3f, 1.0f);
+      light_uniforms_array[1] = vec4();
+      light_uniforms_array[2] = vec4();
+      light_uniforms_array[3] = vec4(0.0f, -1.0f, 0.2f, 1.0f);
+      light_uniforms_array[4] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+      num_light_uniforms = 5;
+      num_lights = 1;
+
+      // Binary Space Partition
       depth = 5;
-
       city = City::createFromRectangle(7.0f, 5.0f);
       city->stepPartition(depth);
-
       city->printStreets();
 
-	  //
-	  // city_mesh declaration
-	  // city_mesh initialization
-	  //
-	  city_mesh = new CityMesh();
-	  std::vector<StreetSides> *streetList = &city->streetsList;
-	  //city_mesh->init(streetList);
-	  city_mesh->debug_createSimpleMesh();
+      //
+      // city_mesh declaration
+      // city_mesh initialization
+      //
+      city_mesh = new CityMesh();
+      std::vector<StreetSides> *streetList = &city->streetsList;
+      //city_mesh->init(streetList);
+      city_mesh->debug_createSimpleMesh();
 
-      picker.init(this);
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+      //picker.init(this);
     }
 
     // this is called to draw the world
@@ -79,24 +102,81 @@ namespace octet {
       glClearColor(0.5f, 0.5f, 0.5f, 1);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // allow Z buffer depth testing (closer objects are always drawn in front of far ones)
+      /* Set and prepare the shader */
       glEnable(GL_DEPTH_TEST);
 
       int vx = 0, vy = 0;
       get_viewport_size(vx, vy);
 
+      mat4t modelToWorld;
+      modelToWorld.loadIdentity();
+
       cameraToWorld.loadIdentity();
-      cameraToWorld.rotate(45, -1.0f, 0.0f, 0.0f);
-      cameraToWorld.translate(0.0f, 2.0f, 8.0f);
+      cameraToWorld.translate(camera_position.x(), 0.0f, camera_position.y());
+      cameraToWorld.rotate(camera_rotation[1], 0.0f, 1.0f, 0.0f);
+      cameraToWorld.rotate(-camera_rotation[0], 1.0f, 0.0f, 0.0f);
+      cameraToWorld.translate(0.0f, 0.0f, camera_position.z());
+
+      mat4t worldToCamera;
+      cameraToWorld.invertQuick(worldToCamera);
+      
+      mat4t modelToCamera = modelToWorld * worldToCamera;
+
+      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
+      object_shader.render(modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+
+
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
 
-      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
-	  
-	  //
-	  // city_mesh render - not working for now
-	  //
-	   city_mesh->debugRender();
+    
+      //
+      // city_mesh render - not working for now
+      //
+      city_mesh->debugRender();
+
+      //Unbind vertex buffers so normal vertex arrays can work
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+
+      compassCard.render(&camera_position, &camera_rotation);
+
+      if (is_key_down('W')) {
+        camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
+      } else if (is_key_down('S')) {
+        camera_position[1] += 0.25f * (camera_position[2]/5.0f);
+      }
+
+      if (is_key_down('A')) {
+        camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
+      } else if (is_key_down('D')) {
+        camera_position[0] += 0.25f * (camera_position[2]/5.0f);
+      }
+
+      if (is_key_down('Q')) {
+        camera_position[2] -= 0.25f;
+        if (camera_position[2] < 2.0f) camera_position[2] = 2.0f;
+      } else if (is_key_down('E')) {
+        camera_position[2] += 0.25f;
+      }
+
+       if (is_key_down('F')) {
+        camera_rotation[1] += 5.0f;
+        if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
+      } else if (is_key_down('H')) {
+        camera_rotation[1] -= 5.0f;
+        if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
+      }
+
+      if (is_key_down('G')) {
+        camera_rotation[0] -= 5.0f;
+        if (camera_rotation[0] < -60.0f) camera_rotation[0] = -60.0f;
+      } else if (is_key_down('T')) {
+        camera_rotation[0] += 5.0f;
+        if (camera_rotation[0] > 60.0f) camera_rotation[0] = 60.0f;
+      }
     }
   };
 }
