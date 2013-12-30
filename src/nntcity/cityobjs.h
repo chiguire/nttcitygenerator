@@ -104,7 +104,9 @@ namespace octet {
     void debugRender(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth) {
 
       //printf("Start\n");
+      glDisable(GL_DEPTH_TEST);
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth, &root);
+      glEnable(GL_DEPTH_TEST);
       //printf("End\n");
     }
 

@@ -1,8 +1,11 @@
 namespace octet {
 
 	class CityMesh {
-		mesh c_mesh;
-		material *mat;
+    dynarray <mesh *> roadMeshes;
+    dynarray <mesh *> pavementMeshes;
+
+		material *roadMaterial;
+    material *pavementMaterial;
 
     static dynarray<image *> *imageArray_;
 
@@ -26,58 +29,74 @@ namespace octet {
     }
 
 	public:
-		CityMesh() {}
+		CityMesh() {
+      roadMeshes.reset();
+      pavementMeshes.reset();
+    }
 
-		//
-		// LORENZO:
-		// takes the streetsList and createse a unique mesh
-		// as a collection of parallelepipeds
-		//
-		// still have to work on the rendering part 
-		// and on the material rendering
-		//
 		void init(dynarray<StreetSides> *streetsList) {
-			int num_vertices = streetsList->size()*2;
+			for (int i = 0; i < streetsList->size(); i++) {
+    		mesh_builder roadMeshBuilder;
+        mesh_builder pavementMeshBuilder;
 
-			mesh_builder b;
-
-			b.init(num_vertices*4, num_vertices*6);
-			
-			for (int i=0; i<streetsList->size(); i++) {
+        // Creating road
+		  	roadMeshBuilder.init(0, 0);
 				vec4 v1 = (*streetsList)[i].points[0];
 				vec4 v2 = (*streetsList)[i].points[1];
 
-				float points_distance = v1.z() - v2.z();
-				b.scale( 1.0f, 1.0f, points_distance);
-				
-				b.translate( 0.0f, 0.0f, points_distance);
-				b.add_cube(1.0f);
+        //printf("Adding street %d, from (%.2f, %.2f) to (%.2f, %.2f)\n", (i+1), v1.x(), v1.z(), v2.x(), v2.z());
+
+        float angleY = atan2f(v2.x() - v1.x(), v2.z() - v1.z())*180.0f/3.14159265359f;
+        vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
+
+				float points_distance = (v2 - v1).length();
+				roadMeshBuilder.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        roadMeshBuilder.rotate(angleY, 0.0f, 1.0f, 0.0f);
+        roadMeshBuilder.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
+
+        mesh *m = new mesh();
+        roadMeshBuilder.get_mesh(*m);
+
+        roadMeshes.push_back(m);
+
+        //Creating pavements
+        //left
+        pavementMeshBuilder.init(0, 0);
+        pavementMeshBuilder.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        pavementMeshBuilder.rotate(angleY, 0.0f, 1.0f, 0.0f);
+        pavementMeshBuilder.translate(-0.1f-0.01f, 0.0f, 0.0f);
+        pavementMeshBuilder.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+
+        m = new mesh();
+        pavementMeshBuilder.get_mesh(*m);
+        pavementMeshes.push_back(m);
+
+        //right
+        pavementMeshBuilder.init(0, 0);
+        pavementMeshBuilder.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        pavementMeshBuilder.rotate(angleY, 0.0f, 1.0f, 0.0f);
+        pavementMeshBuilder.translate(0.1f+0.01f, 0.0f, 0.0f);
+        pavementMeshBuilder.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+
+        m = new mesh();
+        pavementMeshBuilder.get_mesh(*m);
+        pavementMeshes.push_back(m);
 			}
 
-			b.get_mesh(c_mesh);
 
-		//	mat->make_color(vec4( 1.0f, 0.0f, 0.0f, 1.0f), false, false);
-		}
-
-		// just a try on how to draw to boxes as the same mesh
-		void debug_createSimpleMesh() {
-			mesh_builder b;
-			b.init(6*4, 4*6);
-			b.scale(1.0f, 1.0f, 5.0f);
-			b.add_cube(1.0f);
-			b.translate(5.0f, 0.0f, 0.0f);
-			b.add_cube(1.0f);
-			b.get_mesh(c_mesh);
-
-      //mat.make_color(vec4(1, 0, 0, 1), false, false);
-      dynarray <image *> *imgarr = getImageArray();
-      image *img = (*imgarr)[0];
-      mat = new material(img);
+      pavementMaterial = new material((*getImageArray())[0]);
+      roadMaterial = new material((*getImageArray())[1]);
 		}
 
 		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      mat->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-			c_mesh.render();
+      roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      for (auto m = roadMeshes.begin(); m != roadMeshes.end(); m++) {
+        (*m)->render();
+      }
+      pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      for (auto m = pavementMeshes.begin(); m != pavementMeshes.end(); m++) {
+        (*m)->render();
+      }
 		}
 	};
 

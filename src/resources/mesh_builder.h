@@ -12,7 +12,8 @@
 namespace octet {
   class mesh_builder {
     struct vertex { float pos[3]; float normal[3]; float uv[2]; };
-    
+    dynarray<vertex, allocator> vertices;
+    dynarray<unsigned short, allocator> indices;
     
     struct sphere {
       vec4 center;
@@ -43,13 +44,20 @@ namespace octet {
       indices.push_back(cur_vertex+3);
     }
 
-	void add_road(vec4 point1, vec4 point2) {
-		vec4 points[8];
-
-		points[0] = point1;
-	}
-
-	
+    // Add a front face aligned to plane XY, with distance z from origin
+    void add_front_face(float x, float y, float z) {
+      unsigned short cur_vertex = (unsigned short)vertices.size();
+      add_vertex(vec4(-x, -y, z, 1), vec4(0, 0, 1, 0), 0, 0);
+      add_vertex(vec4(-x,  y, z, 1), vec4(0, 0, 1, 0), 0, 1);
+      add_vertex(vec4( x,  y, z, 1), vec4(0, 0, 1, 0), 1, 1);
+      add_vertex(vec4( x, -y, z, 1), vec4(0, 0, 1, 0), 1, 0);
+      indices.push_back(cur_vertex+0);
+      indices.push_back(cur_vertex+1);
+      indices.push_back(cur_vertex+2);
+      indices.push_back(cur_vertex+0);
+      indices.push_back(cur_vertex+2);
+      indices.push_back(cur_vertex+3);
+    }
 
     // add a ring in the x-y plane. Return index of first index
     unsigned add_ring(float radius, const vec4 &normal, unsigned num_vertices, float v, float uvscale) {
@@ -117,10 +125,6 @@ namespace octet {
     }
 
   public:
-	  dynarray<vertex, allocator> vertices;
-	  dynarray<unsigned short, allocator> indices;
-
-
     mesh_builder() {
       init();
     }
@@ -167,7 +171,22 @@ namespace octet {
       matrix.rotateX90();
     }
 
-	
+    void add_cuboid(float x, float y, float z) {
+      add_front_face(x, y, z);
+      matrix.rotateY90();
+      add_front_face(z, y, x);
+      matrix.rotateY90();
+      add_front_face(x, y, z);
+      matrix.rotateY90();
+      add_front_face(z, y, x);
+      matrix.rotateY90();
+
+      matrix.rotateX90();
+      add_front_face(x, z, y);
+      matrix.rotateX180();
+      add_front_face(x, z, y);
+      matrix.rotateX90();
+    }
 
     // add a subdivided size*size plane with nx*ny squares
     void add_plane(float size, unsigned nx, unsigned ny) {
@@ -215,9 +234,9 @@ namespace octet {
       matrix.translate(x, y, z);
     }
 
-	void rotate(float angle, float x, float y, float z) {
-		matrix.rotate(angle, x, y, z);
-	}
+    void rotate(float angle, float x, float y, float z) {
+      matrix.rotate(angle, x, y, z);
+    }
 
   };
 }

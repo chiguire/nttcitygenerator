@@ -82,8 +82,7 @@ namespace octet {
       //
       city_mesh = new CityMesh();
       dynarray<StreetSides> *streetList = &city->streetsList;
-      //city_mesh->init(streetList);
-      city_mesh->debug_createSimpleMesh();
+      city_mesh->init(streetList);
 
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -122,12 +121,10 @@ namespace octet {
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
 
-      light_uniforms_array[2] = vec4(0.707f, 0.0f, 0.707f, 0.0f) * worldToCamera;
-
+      light_uniforms_array[2] = vec4(0.707f, 0.707f, 0.707f, 0.0f) * worldToCamera;
 
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
-
     
       //
       // city_mesh render - not working for now
@@ -138,7 +135,7 @@ namespace octet {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       compassCard.render(&camera_position, &camera_rotation);
 
@@ -156,7 +153,7 @@ namespace octet {
 
       if (is_key_down('Q')) {
         camera_position[2] -= 0.25f;
-        if (camera_position[2] < 2.0f) camera_position[2] = 2.0f;
+        if (camera_position[2] < 0.5f) camera_position[2] = 0.5f;
       } else if (is_key_down('E')) {
         camera_position[2] += 0.25f;
       }
