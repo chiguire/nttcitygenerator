@@ -71,8 +71,16 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 5;
-      city = City::createFromRectangle(7.0f, 5.0f);
+      depth = 8;
+      //city = City::createFromRectangle(7.0f, 5.0f);
+      city = new City();
+      vec4 vertices[] = {
+        vec4(-5.0f, 0.0f, -8.0f, 1.0f),
+        vec4(-6.5f, 0.0f, 9.0f, 1.0f),
+        vec4(4.5f, 0.0f, 8.0f, 1.0f),
+        vec4(4.0f, 0.0f, -5.0f, 1.0f)
+      };
+      city->init(vertices);
       city->stepPartition(depth);
       city->printStreets();
 
