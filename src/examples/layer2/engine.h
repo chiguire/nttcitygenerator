@@ -98,8 +98,51 @@ namespace octet {
       //picker.init(this);
     }
 
+
+    void keyboardInput() 
+    {
+      if (is_key_down('W')) {
+        camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
+      } else if (is_key_down('S')) {
+        camera_position[1] += 0.25f * (camera_position[2]/5.0f);
+      }
+
+      if (is_key_down('A')) {
+        camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
+      } else if (is_key_down('D')) {
+        camera_position[0] += 0.25f * (camera_position[2]/5.0f);
+      }
+
+      if (is_key_down('Q')) {
+        camera_position[2] -= 0.25f;
+        if (camera_position[2] < 0.5f) camera_position[2] = 0.5f;
+      } else if (is_key_down('E')) {
+        camera_position[2] += 0.25f;
+      }
+
+      if (is_key_down('F')) {
+        camera_rotation[1] += 5.0f;
+        if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
+      } else if (is_key_down('H')) {
+        camera_rotation[1] -= 5.0f;
+        if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
+      }
+
+      if (is_key_down('G')) {
+        camera_rotation[0] -= 5.0f;
+        if (camera_rotation[0] < -60.0f) camera_rotation[0] = -60.0f;
+      } else if (is_key_down('T')) {
+        camera_rotation[0] += 5.0f;
+        if (camera_rotation[0] > 60.0f) camera_rotation[0] = 60.0f;
+      }
+    }
+
+
     // this is called to draw the world
     void draw_world(int x, int y, int w, int h) {
+
+      keyboardInput();
+
       // set a viewport - includes whole window area
       glViewport(x, y, w, h);
 
@@ -147,40 +190,7 @@ namespace octet {
 
       compassCard.render(&camera_position, &camera_rotation);
 
-      if (is_key_down('W')) {
-        camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
-      } else if (is_key_down('S')) {
-        camera_position[1] += 0.25f * (camera_position[2]/5.0f);
-      }
-
-      if (is_key_down('A')) {
-        camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
-      } else if (is_key_down('D')) {
-        camera_position[0] += 0.25f * (camera_position[2]/5.0f);
-      }
-
-      if (is_key_down('Q')) {
-        camera_position[2] -= 0.25f;
-        if (camera_position[2] < 0.5f) camera_position[2] = 0.5f;
-      } else if (is_key_down('E')) {
-        camera_position[2] += 0.25f;
-      }
-
-       if (is_key_down('F')) {
-        camera_rotation[1] += 5.0f;
-        if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
-      } else if (is_key_down('H')) {
-        camera_rotation[1] -= 5.0f;
-        if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
-      }
-
-      if (is_key_down('G')) {
-        camera_rotation[0] -= 5.0f;
-        if (camera_rotation[0] < -60.0f) camera_rotation[0] = -60.0f;
-      } else if (is_key_down('T')) {
-        camera_rotation[0] += 5.0f;
-        if (camera_rotation[0] > 60.0f) camera_rotation[0] = 60.0f;
-      }
     }
+
   };
 }

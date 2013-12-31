@@ -78,12 +78,14 @@ namespace octet {
         }
       }
 
-      srand (time(NULL));
+      srand (static_cast <unsigned> (time(0)));
     }
 
     void stepPartition(unsigned int depth/* camera frustrum */) {
+
       setDebugColors(depth);
       stepPartition_(depth, &root);
+
     }
 
     void iterator() {
@@ -209,8 +211,8 @@ namespace octet {
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
 
-        StreetSides s1(midpoint,midpoint_opposite);
-        streetsList.push_back(s1);
+        generateStreets(b->left);
+        generateStreets(b->right);
 
       }
 
@@ -224,7 +226,83 @@ namespace octet {
       stepPartition_(depth - 1, b->right);
     }
 
+    void generateStreets( BSPNode * node) {
+      
+      dynarray<StreetSides> localList;
 
+      for(int i=0; i!=4; ++i){
+ 
+        if(!streetAlreadyExists(node->vertices[i],node->vertices[(i==3) ? 0 : i+1])){
+          
+          solveConflictbetweenStreets(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
+
+          StreetSides s1(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
+          localList.push_back(s1);
+
+        }
+ 
+      }
+
+      for(int m=0; m!=localList.size(); m++){
+        streetsList.push_back(localList[m]);
+      }
+    }
+
+    bool streetAlreadyExists(vec4 sp1Son, vec4 sp2Son){
+      
+      vec4 streenSonPoints[2];
+      streenSonPoints[0] = sp1Son;
+      streenSonPoints[1] = sp2Son;
+
+      for(int i=0; i!=streetsList.size(); ++i){
+        for(int j=0; j!=2; ++j){
+          for(int k=0; k!=2; ++k){
+
+            if(all(streetsList[i].points[j] == streenSonPoints[k]) && 
+                all(streetsList[i].points[(j==1) ? 0 : j+1] == streenSonPoints[(k==1) ? 0 : k+1])){
+              return true;
+            }
+
+          }
+        } 
+      }
+
+      return false;
+      
+    }
+
+    void solveConflictbetweenStreets(vec4 sp1Son, vec4 sp2Son) {
+      
+      vec4 streenSonPoints[2];
+      streenSonPoints[0] = sp1Son;
+      streenSonPoints[1] = sp2Son;
+
+      int indexToDelete=-1;
+
+	    for(int i=0; i!=streetsList.size(); ++i){
+        for(int j=0; j!=2; ++j){
+          for(int k=0; k!=2; ++k){
+
+            if(all(streetsList[i].points[j] == streenSonPoints[k])){
+
+              vec4 midpoint(streetsList[i].points[j].x() + (streetsList[i].points[(j==1) ? 0 : j+1].x() - streetsList[i].points[j].x())*0.5f,
+                       streetsList[i].points[j].y() + (streetsList[i].points[(j==1) ? 0 : j+1].y() - streetsList[i].points[j].y())*0.5f,
+                        streetsList[i].points[j].z() + (streetsList[i].points[(j==1) ? 0 : j+1].z() - streetsList[i].points[j].z())*0.5f,
+                        1.0f); 
+              
+              if(all(midpoint == streenSonPoints[(k==1) ? 0 : k+1])){
+                indexToDelete = i;
+              }
+            }
+           }
+          }
+        } 
+ 
+        if(indexToDelete!=-1){
+          streetsList.erase(indexToDelete);
+        }
+    }
+    
 
   }; 
 }
