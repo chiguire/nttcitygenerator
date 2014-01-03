@@ -12,7 +12,7 @@ namespace octet {
       this->points[0] = p1;
       this->points[1] = p2;
     }
-	
+  
   };
 
 
@@ -93,7 +93,7 @@ namespace octet {
     }
 
     void setDebugColors(unsigned int depth) {
-	    
+      
       debugColors = new vec4[depth+1];
       
       for(int i=0; i!= depth+1; ++i){
@@ -121,6 +121,58 @@ namespace octet {
         streetsList[i].points[0].x(), streetsList[i].points[0].z(),  
         streetsList[i].points[1].x(), streetsList[i].points[1].z());
       }
+    }
+
+    void getDimensions(vec4 &dimensions) {
+      vec4 minCoord;
+      vec4 maxCoord;
+
+      for (int i = 0; i != 4; i++) {
+        vec4 &p = root.vertices[i];
+
+        if (p.x() < minCoord.x()) {
+          minCoord[0] = p.x();
+        }
+
+        if (p.x() > maxCoord.x()) {
+          maxCoord[0] = p.x();
+        }
+
+        if (p.y() < minCoord.y()) {
+          minCoord[1] = p.y();
+        }
+
+        if (p.y() > maxCoord.y()) {
+          maxCoord[1] = p.y();
+        }
+
+        
+        if (p.z() < minCoord.z()) {
+          minCoord[2] = p.z();
+        }
+
+        if (p.z() > maxCoord.z()) {
+          maxCoord[2] = p.z();
+        }
+      }
+
+      float x = maxCoord[0] - minCoord[0];
+      float y = maxCoord[1] - minCoord[1];
+      float z = maxCoord[2] - minCoord[2];
+
+      dimensions[0] = x;
+      dimensions[1] = y;
+      dimensions[2] = z;
+      dimensions[3] = 1.0f;
+    }
+
+    void getCenter(vec4 &center) {
+      //average 4 root points
+
+      center[0] = (root.vertices[0].x() + root.vertices[1].x() + root.vertices[2].x() + root.vertices[3].x())/4.0f;
+      center[1] = (root.vertices[0].y() + root.vertices[1].y() + root.vertices[2].y() + root.vertices[3].y())/4.0f;
+      center[2] = (root.vertices[0].z() + root.vertices[1].z() + root.vertices[2].z() + root.vertices[3].z())/4.0f;
+      center[3] = (root.vertices[0].w() + root.vertices[1].w() + root.vertices[2].w() + root.vertices[3].w())/4.0f;
     }
 
     private:
@@ -279,7 +331,7 @@ namespace octet {
 
       int indexToDelete=-1;
 
-	    for(int i=0; i!=streetsList.size(); ++i){
+      for(int i=0; i!=streetsList.size(); ++i){
         for(int j=0; j!=2; ++j){
           for(int k=0; k!=2; ++k){
 
@@ -302,7 +354,5 @@ namespace octet {
           streetsList.erase(indexToDelete);
         }
     }
-    
-
   }; 
 }

@@ -3,9 +3,11 @@ namespace octet {
 	class CityMesh {
     dynarray <mesh *> roadMeshes;
     dynarray <mesh *> pavementMeshes;
+    mesh surfaceMesh;
 
 		material *roadMaterial;
     material *pavementMaterial;
+    material *grassMaterial;
 
     static dynarray<image *> *imageArray_;
 
@@ -15,6 +17,8 @@ namespace octet {
         char *files[] = {
           "assets/citytex/pavement.gif",
           "assets/citytex/road.gif",
+          "assets/citytex/grass.gif",
+          "assets/citytex/heightmap.gif",
           0
         };
 
@@ -34,13 +38,11 @@ namespace octet {
       pavementMeshes.reset();
     }
 
-		void init(dynarray<StreetSides> *streetsList) {
+		void init(dynarray<StreetSides> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
+      mesh_builder mb; 
 			for (int i = 0; i < streetsList->size(); i++) {
-    		mesh_builder roadMeshBuilder;
-        mesh_builder pavementMeshBuilder;
-
         // Creating road
-		  	roadMeshBuilder.init(0, 0);
+		  	mb.init(0, 0);
 				vec4 v1 = (*streetsList)[i].points[0];
 				vec4 v2 = (*streetsList)[i].points[1];
 
@@ -50,45 +52,74 @@ namespace octet {
         vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
 
 				float points_distance = (v2 - v1).length();
-				roadMeshBuilder.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        roadMeshBuilder.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        roadMeshBuilder.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
+				mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
+        mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
 
         mesh *m = new mesh();
-        roadMeshBuilder.get_mesh(*m);
+        mb.get_mesh(*m);
 
         roadMeshes.push_back(m);
 
         //Creating pavements
         //left
-        pavementMeshBuilder.init(0, 0);
-        pavementMeshBuilder.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        pavementMeshBuilder.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        pavementMeshBuilder.translate(-0.1f-0.01f, 0.0f, 0.0f);
-        pavementMeshBuilder.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        mb.init(0, 0);
+        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
+        mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
+        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
 
         m = new mesh();
-        pavementMeshBuilder.get_mesh(*m);
+        mb.get_mesh(*m);
         pavementMeshes.push_back(m);
 
         //right
-        pavementMeshBuilder.init(0, 0);
-        pavementMeshBuilder.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        pavementMeshBuilder.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        pavementMeshBuilder.translate(0.1f+0.01f, 0.0f, 0.0f);
-        pavementMeshBuilder.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        mb.init(0, 0);
+        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
+        mb.translate(0.1f+0.01f, 0.0f, 0.0f);
+        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
 
         m = new mesh();
-        pavementMeshBuilder.get_mesh(*m);
+        mb.get_mesh(*m);
         pavementMeshes.push_back(m);
 			}
 
-
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
+      grassMaterial = new material((*getImageArray())[2]);
+      //Create surface mesh
+
+      //Create heightmap
+      float citySize = cityDimensions.x() > cityDimensions.z()? cityDimensions.x() : cityDimensions.z();
+      dynarray<int> heightmap;
+      heightmap.reset();
+      int citySize_ = (int)citySize;
+      image *heightmapImage = ((*getImageArray())[3]);
+
+      for (int i = 0; i != citySize_; i++) {
+        float u_ = ((float)i) / citySize;
+        for (int j = 0; j != citySize_; j++) {
+          vec4 color;
+          
+          float v_ = ((float)j) / citySize;
+  
+          heightmapImage->sample2D(u_, v_, color);
+
+          heightmap.push_back((int)(color.x()/30.0f));
+        }
+      }
+
+      mb.init(0, 0);
+      mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
+      mb.rotate(90, 1, 0, 0);
+      mb.add_plane_heightmap(citySize, citySize_, citySize_, heightmap.data());
+      mb.get_mesh(surfaceMesh);
 		}
 
 		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      surfaceMesh.render();
       roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       for (auto m = roadMeshes.begin(); m != roadMeshes.end(); m++) {
         (*m)->render();

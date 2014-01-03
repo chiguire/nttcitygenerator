@@ -316,6 +316,25 @@ namespace octet {
       }
       return gl_texture;
     }
+
+    /* Sample a 2D image, using nearest neighbor */
+    void sample2D(float u_, float v_, vec4 &color) {
+      
+      if ((width == 0 && height == 0) || u_ < 0.0f || u_ > 1.0f || v_ < 0.0f || v_ > 1.0f) {
+        color[0] = 0;
+        color[1] = 0;
+        color[2] = 0;
+        color[3] = 0;
+      }
+
+      int u = (int)floorf(u_*width+0.5f);
+      int v = (int)floorf(v_*height+0.5f);
+
+      color[0] = bytes[v*width+u];
+      color[1] = bytes[v*width+u+1];
+      color[2] = bytes[v*width+u+2];
+      color[3] = bytes[v*width+u+3];
+    }
   };
 }
 

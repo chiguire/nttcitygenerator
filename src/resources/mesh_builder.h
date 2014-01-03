@@ -196,10 +196,35 @@ namespace octet {
       for (unsigned i = 0; i != nx; ++i) {
         for (unsigned j = 0; j != ny; ++j) {
           unsigned short cur_vertex = (unsigned short)vertices.size();
-          add_vertex(vec4( i*xsize+sizeBy2, j*ysize+sizeBy2, 0, 1), vec4(0, 0, 1, 0), 0, 0);
-          add_vertex(vec4( i*xsize+sizeBy2, (j+1)*ysize+sizeBy2, 0, 1), vec4(0, 0, 1, 0), 0, 1);
-          add_vertex(vec4( (i+1)*xsize+sizeBy2, (j+1)*ysize+sizeBy2, 0, 1), vec4(0, 0, 1, 0), 1, 1);
-          add_vertex(vec4( (i+1)*xsize+sizeBy2, j*ysize+sizeBy2, 0, 1), vec4(0, 0, 1, 0), 1, 0);
+          add_vertex(vec4( i*xsize-sizeBy2, j*ysize-sizeBy2, 0, 1), vec4(0, 0, 1, 0), 0, 0);
+          add_vertex(vec4( i*xsize-sizeBy2, (j+1)*ysize-sizeBy2, 0, 1), vec4(0, 0, 1, 0), 0, 1);
+          add_vertex(vec4( (i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, 0, 1), vec4(0, 0, 1, 0), 1, 1);
+          add_vertex(vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, 0, 1), vec4(0, 0, 1, 0), 1, 0);
+          indices.push_back(cur_vertex+0);
+          indices.push_back(cur_vertex+1);
+          indices.push_back(cur_vertex+2);
+          indices.push_back(cur_vertex+0);
+          indices.push_back(cur_vertex+2);
+          indices.push_back(cur_vertex+3);
+        }
+      }
+    }
+
+    // add a subdivided size*size plane with nx*ny squares, z value is
+    // given by an image
+    void add_plane_heightmap(float size, unsigned nx, unsigned ny, int *heightmap) {
+      float xsize = size / nx;
+      float ysize = size / ny;
+      float sizeBy2 = size * 0.5f;
+      for (unsigned i = 0; i != nx; ++i) {
+        for (unsigned j = 0; j != ny; ++j) {
+          int height = *(heightmap+nx*i+j);
+
+          unsigned short cur_vertex = (unsigned short)vertices.size();
+          add_vertex(vec4( i*xsize-sizeBy2, j*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 0, 0);
+          add_vertex(vec4( i*xsize-sizeBy2, (j+1)*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 0, 1);
+          add_vertex(vec4( (i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 1, 1);
+          add_vertex(vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 1, 0);
           indices.push_back(cur_vertex+0);
           indices.push_back(cur_vertex+1);
           indices.push_back(cur_vertex+2);

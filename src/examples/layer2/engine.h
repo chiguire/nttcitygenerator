@@ -90,7 +90,14 @@ namespace octet {
       //
       city_mesh = new CityMesh();
       dynarray<StreetSides> *streetList = &city->streetsList;
-      city_mesh->init(streetList);
+
+      vec4 dimensions;
+      vec4 center;
+
+      city->getDimensions(dimensions);
+      city->getCenter(center);
+
+      city_mesh->init(streetList, dimensions, center);
 
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -130,10 +137,10 @@ namespace octet {
 
       if (is_key_down('G')) {
         camera_rotation[0] -= 5.0f;
-        if (camera_rotation[0] < -60.0f) camera_rotation[0] = -60.0f;
+        if (camera_rotation[0] < -90.0f) camera_rotation[0] = -90.0f;
       } else if (is_key_down('T')) {
         camera_rotation[0] += 5.0f;
-        if (camera_rotation[0] > 60.0f) camera_rotation[0] = 60.0f;
+        if (camera_rotation[0] > 90.0f) camera_rotation[0] = 90.0f;
       }
     }
 
