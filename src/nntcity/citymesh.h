@@ -71,7 +71,7 @@ namespace octet {
         mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
-        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
 
         m = new mesh();
         mb.get_mesh(*m);
@@ -82,11 +82,11 @@ namespace octet {
         mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(0.1f+0.01f, 0.0f, 0.0f);
-        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
 
         m = new mesh();
         mb.get_mesh(*m);
-        pavementMeshes.push_back(m);
+        pavementMeshes.push_back(m); 
 			}
 
       pavementMaterial = new material((*getImageArray())[0]);
@@ -134,8 +134,8 @@ namespace octet {
 		}
 
 		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      surfaceMesh.render();
+     // grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+     // surfaceMesh.render();
       roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       for (auto m = roadMeshes.begin(); m != roadMeshes.end(); m++) {
         (*m)->render();

@@ -71,7 +71,7 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 8;
+      depth = 4;
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
       vec4 vertices[] = {
@@ -83,6 +83,9 @@ namespace octet {
       city->init(vertices);
       city->stepPartition(depth);
       city->printStreets();
+
+      city->calculateIntersections();
+      city->printIntersections();
 
       //
       // city_mesh declaration
@@ -110,15 +113,15 @@ namespace octet {
     void keyboardInput() 
     {
       if (is_key_down('W')) {
-        camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
+        camera_position[1] -= 0.5f * (camera_position[2]/5.0f);
       } else if (is_key_down('S')) {
-        camera_position[1] += 0.25f * (camera_position[2]/5.0f);
+        camera_position[1] += 0.5f * (camera_position[2]/5.0f);
       }
 
       if (is_key_down('A')) {
-        camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
+        camera_position[0] -= 0.5f * (camera_position[2]/5.0f);
       } else if (is_key_down('D')) {
-        camera_position[0] += 0.25f * (camera_position[2]/5.0f);
+        camera_position[0] += 0.5f * (camera_position[2]/5.0f);
       }
 
       if (is_key_down('Q')) {
@@ -197,7 +200,7 @@ namespace octet {
 
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
-      compassCard.render(&camera_position, &camera_rotation);
+      //compassCard.render(&camera_position, &camera_rotation);
 
     }
 

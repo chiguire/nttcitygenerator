@@ -15,6 +15,39 @@ namespace octet {
   
   };
 
+  class StreetIntersection{
+  public:
+    dynarray<StreetSides*> streets;
+    vec4 point;
+
+    StreetIntersection(){}
+
+    StreetIntersection(StreetSides* s1, StreetSides* s2, vec4 p){
+      this->streets.push_back(s1);
+      this->streets.push_back(s2);
+      this->point = p;
+    }
+
+    bool containsStreet(StreetSides* s1){
+
+      for(int i=0; i!=this->streets.size(); ++i){
+        for(int j=0; j!=2; ++j){
+          for(int k=0; k!=2; ++k){
+
+            if(all(streets[i]->points[j] == s1->points[k]) && 
+                all(streets[i]->points[(j==1) ? 0 : j+1] == s1->points[(k==1) ? 0 : k+1])){
+              return true;
+            }
+
+          }
+        } 
+      }
+
+      return false;
+      
+    }
+  };
+
 
   class BSPNode {
   public:
@@ -37,6 +70,8 @@ namespace octet {
     mat4t modelToWorld;
 
     dynarray<StreetSides> streetsList;
+
+    dynarray <StreetIntersection*> streetsIntersections;
 
     class random randomizer;
 
@@ -173,6 +208,39 @@ namespace octet {
       center[1] = (root.vertices[0].y() + root.vertices[1].y() + root.vertices[2].y() + root.vertices[3].y())/4.0f;
       center[2] = (root.vertices[0].z() + root.vertices[1].z() + root.vertices[2].z() + root.vertices[3].z())/4.0f;
       center[3] = (root.vertices[0].w() + root.vertices[1].w() + root.vertices[2].w() + root.vertices[3].w())/4.0f;
+    }
+
+    void calculateIntersections(){
+      for(int i=0; i!= streetsList.size(); ++i){
+        for(int j=0; j!=streetsList.size(); ++j){
+          for(int k=0; k!=2; ++k){
+            for(int l=0; l!=2; ++l){
+              //If has any point in common
+              if( all(streetsList[i].points[k] == streetsList[j].points[l]) ){
+                //If it is not the same street
+                if( !all(streetsList[i].points[(k==1) ? 0 : k+1] == streetsList[j].points[(l==1) ? 0 : l+1])){
+                  addIntersection(&streetsList[i],&streetsList[j],streetsList[i].points[k]);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    void printIntersections(){
+      
+      printf("\n\n%d Intersections:\n\n",streetsIntersections.size());
+
+      for(int i=0; i!= streetsIntersections.size(); ++i){
+       printf("Point (%.2f, %.2f): \n",streetsIntersections[i]->point.x(),streetsIntersections[i]->point.z());
+        for(int j=0; j!= streetsIntersections[i]->streets.size(); ++j){
+          printf("s%d. (%.2f, %.2f), (%.2f, %.2f).\n",j+1,
+          streetsIntersections[i]->streets[j]->points[0].x(), streetsIntersections[i]->streets[j]->points[0].z(),  
+          streetsIntersections[i]->streets[j]->points[1].x(), streetsIntersections[i]->streets[j]->points[1].z());
+        }
+      printf("\n");
+      }
     }
 
     private:
@@ -354,5 +422,38 @@ namespace octet {
           streetsList.erase(indexToDelete);
         }
     }
+
+     
+
+    void addIntersection(StreetSides *s1, StreetSides *s2, vec4 p ) 
+    {
+      
+      StreetIntersection* st = new StreetIntersection(s1,s2,p);
+      
+
+      for(int i=0; i!= streetsIntersections.size(); ++i){
+        //The intersection exists
+        if( all( streetsIntersections[i]->point == p ) ){
+          if(!streetsIntersections[i]->containsStreet(s2)) { 
+            streetsIntersections[i]->streets.push_back(s2);
+              /* printf("Add street :(%.2f, %.2f), (%.2f, %.2f) in (%.2f, %.2f).\n",
+              s2.points[0].x(), s2.points[0].z(), s2.points[1].x(), s2.points[1].z(),p.x(),p.z()); */
+               
+          }
+          goto outloop; 
+        }
+      }
+
+      //The intersection does not exist
+      
+      streetsIntersections.push_back(st);
+     /* printf("Add intersection :(%.2f, %.2f), (%.2f, %.2f) -- (%.2f, %.2f), (%.2f, %.2f) in (%.2f, %.2f).\n",
+        s1.points[0].x(), s1.points[0].z(), s1.points[1].x(), s1.points[1].z(), s2.points[0].x(), s2.points[0].z(), 
+        s2.points[1].x(), s2.points[1].z(),p.x(),p.z());      */
+
+      outloop:;
+    }
+
+  
   }; 
 }
