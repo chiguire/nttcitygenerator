@@ -59,6 +59,29 @@ namespace octet {
       indices.push_back(cur_vertex+3);
     }
 
+    // add a subdivided size*size plane with nx*ny squares
+    void add_plane_subdivided(float x, float y, float z, unsigned nx, unsigned ny) {
+      float xsize = x / nx;
+      float ysize = y / ny;
+      float xsizeBy2 = xsize * 0.5f;
+      float ysizeBy2 = ysize * 0.5f;
+      for (unsigned i = 0; i != nx; ++i) {
+        for (unsigned j = 0; j != ny; ++j) {
+          unsigned short cur_vertex = (unsigned short)vertices.size();
+          add_vertex(vec4( i*xsize-xsizeBy2, j*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 0, 0);
+          add_vertex(vec4( i*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 0, 1);
+          add_vertex(vec4( (i+1)*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 1, 1);
+          add_vertex(vec4( (i+1)*xsize-xsizeBy2, j*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 1, 0);
+          indices.push_back(cur_vertex+0);
+          indices.push_back(cur_vertex+1);
+          indices.push_back(cur_vertex+2);
+          indices.push_back(cur_vertex+0);
+          indices.push_back(cur_vertex+2);
+          indices.push_back(cur_vertex+3);
+        }
+      }
+    }
+
     // add a ring in the x-y plane. Return index of first index
     unsigned add_ring(float radius, const vec4 &normal, unsigned num_vertices, float v, float uvscale) {
       float rnv = 1.0f / num_vertices;
@@ -188,6 +211,23 @@ namespace octet {
       matrix.rotateX90();
     }
 
+    void add_cuboid_subdivided(float x, float y, float z, unsigned nx, unsigned ny, unsigned nz) {
+      add_plane_subdivided(x, y, z, nx, ny);
+      matrix.rotateY90();
+      add_plane_subdivided(z, y, x, nz, ny);
+      matrix.rotateY90();
+      add_plane_subdivided(x, y, z, nx, ny);
+      matrix.rotateY90();
+      add_plane_subdivided(z, y, x, nz, ny);
+      matrix.rotateY90();
+
+      matrix.rotateX90();
+      add_plane_subdivided(x, z, y, nx, nz);
+      matrix.rotateX180();
+      add_plane_subdivided(x, z, y, nx, nz);
+      matrix.rotateX90();
+    }
+
     // add a subdivided size*size plane with nx*ny squares
     void add_plane(float size, unsigned nx, unsigned ny) {
       float xsize = size / nx;
@@ -210,21 +250,36 @@ namespace octet {
       }
     }
 
+    
+
     // add a subdivided size*size plane with nx*ny squares, z value is
     // given by an image
-    void add_plane_heightmap(float size, unsigned nx, unsigned ny, int *heightmap) {
+    void add_plane_heightmap(float size, unsigned nx, unsigned ny, float *heightmap, unsigned hmx, unsigned hmy) {
       float xsize = size / nx;
       float ysize = size / ny;
       float sizeBy2 = size * 0.5f;
-      for (unsigned i = 0; i != nx; ++i) {
-        for (unsigned j = 0; j != ny; ++j) {
-          int height = *(heightmap+nx*i+j);
+      for (unsigned j = 0; j != ny; ++j) {
+        for (unsigned i = 0; i != nx; ++i) {
+          vec4 height(*(heightmap+hmx*j+i), *(heightmap+hmx*j+(i+1)), *(heightmap+hmx*(j+1)+(i+1)), *(heightmap+hmx*(j+1)+i));
+          vec4 a;
+          vec4 b;
+
+          a = vec4(i*xsize-sizeBy2, j*ysize-sizeBy2, height[0], 1) - vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, height[1], 1);
+          b = vec4(i*xsize-sizeBy2, j*ysize-sizeBy2, height[0], 1) - vec4( i*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[3], 1);
+          vec4 normal1 = a.cross(b).normalize();
+
+          a = vec4((i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[2], 1) - vec4( i*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[3], 1);
+          b = vec4((i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[2], 1) - vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, height[1], 1);
+          vec4 normal2 = a.cross(b).normalize();
+
+          vec4 normal3 = (normal1 + normal2) * 0.5f;
+          normal3 = normal3.normalize();
 
           unsigned short cur_vertex = (unsigned short)vertices.size();
-          add_vertex(vec4( i*xsize-sizeBy2, j*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 0, 0);
-          add_vertex(vec4( i*xsize-sizeBy2, (j+1)*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 0, 1);
-          add_vertex(vec4( (i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 1, 1);
-          add_vertex(vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, -height, 1), vec4(0, 0, 1, 0), 1, 0);
+          add_vertex(vec4( i*xsize-sizeBy2, j*ysize-sizeBy2, height[0], 1), normal1, 0, 0); //vec4(0, 0, 1, 0), 0, 0);
+          add_vertex(vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, height[1], 1), normal3, 0, 1); //vec4(0, 0, 1, 0), 0, 1);
+          add_vertex(vec4( (i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[2], 1), normal2, 1, 1); //vec4(0, 0, 1, 0), 1, 1);
+          add_vertex(vec4( i*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[3], 1), normal3, 1, 0); //vec4(0, 0, 1, 0), 1, 0);
           indices.push_back(cur_vertex+0);
           indices.push_back(cur_vertex+1);
           indices.push_back(cur_vertex+2);

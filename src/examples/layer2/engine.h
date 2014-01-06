@@ -64,7 +64,7 @@ namespace octet {
       // Light Set Up
       memset(light_uniforms_array, 0, sizeof(light_uniforms_array));
       light_uniforms_array[0] = vec4(0.3f, 0.3f, 0.3f, 50.0f);
-      light_uniforms_array[2] = vec4(0.707f, 0.0f, 0.707f, 0.0f);
+      light_uniforms_array[2] = vec4(0.707f, 0.707f, 0.707f, 0.0f);
       light_uniforms_array[3] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
       light_uniforms_array[4] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
       num_light_uniforms = 5;

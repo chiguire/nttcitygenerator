@@ -55,6 +55,7 @@ namespace octet {
 				mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
+        //mb.add_cuboid_subdivided(0.1f, 0.02f, points_distance/2.0f, 1, 1, ceilf(points_distance) );
 
         mesh *m = new mesh();
         mb.get_mesh(*m);
@@ -92,29 +93,30 @@ namespace octet {
 
       //Create heightmap
       float citySize = cityDimensions.x() > cityDimensions.z()? cityDimensions.x() : cityDimensions.z();
-      dynarray<int> heightmap;
+      citySize *= 2.0f; //city terrain border
+      dynarray<float> heightmap;
       heightmap.reset();
       int citySize_ = (int)citySize;
       image *heightmapImage = ((*getImageArray())[3]);
 
-      for (int i = 0; i != citySize_; i++) {
-        float u_ = ((float)i) / citySize;
-        for (int j = 0; j != citySize_; j++) {
+      for (int j = 0; j != citySize_+1; j++) {
+        float v_ = ((float)j-1) / (citySize_-2);
+        for (int i = 0; i != citySize_+1; i++) {
           vec4 color;
           
-          float v_ = ((float)j) / citySize;
+          float u_ = ((float)i-1) / (citySize_-2);
   
-          heightmapImage->sample2D(u_, v_, color);
+          heightmapImage->sample2Dbilinear(u_, v_, color);
 
-          heightmap.push_back((int)(color.x()/30.0f));
+          heightmap.push_back(color.x()/255.0f*2.0f);
         }
       }
-
       mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
-      mb.rotate(90, 1, 0, 0);
-      mb.add_plane_heightmap(citySize, citySize_, citySize_, heightmap.data());
+      mb.translate(cityCenter.x(), cityCenter.y()-1.0f, cityCenter.z());
+      mb.rotate(-90, 1, 0, 0);
+      mb.add_plane_heightmap(citySize, citySize_, citySize_, heightmap.data(), citySize+1, citySize_+1);
       mb.get_mesh(surfaceMesh);
+      //surfaceMesh.set_mode(GL_LINE_STRIP);
 		}
 
 		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {

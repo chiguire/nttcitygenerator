@@ -319,21 +319,54 @@ namespace octet {
 
     /* Sample a 2D image, using nearest neighbor */
     void sample2D(float u_, float v_, vec4 &color) {
+      int u = (int)floorf(u_*width+0.5f);
+      int v = (int)floorf(v_*height+0.5f);
       
-      if ((width == 0 && height == 0) || u_ < 0.0f || u_ > 1.0f || v_ < 0.0f || v_ > 1.0f) {
+      //printf("Coords (%.2f, %.2f), pixels (%d, %d), ", u_, v_, u, v);
+      
+      if ((width == 0 && height == 0) || u < 0 || u >= width || v < 0 || v >= height) {
         color[0] = 0;
         color[1] = 0;
         color[2] = 0;
         color[3] = 0;
+        return;
+      }
+      
+      color[0] = bytes[v*4*width+u*4];
+      color[1] = bytes[v*4*width+u*4+1];
+      color[2] = bytes[v*4*width+u*4+2];
+      color[3] = bytes[v*4*width+u*4+3];
+    }
+
+    /* Sample a 2D image, using nearest neighbor */
+    void sample2Dbilinear(float u_, float v_, vec4 &color) {
+      int u0 = (int)floorf(u_*width);
+      int v0 = (int)floorf(v_*height);
+      int u1 = (int)floorf(u_*width+0.5f);
+      int v1 = (int)floorf(v_*height+0.5f);
+      
+      float ut = u_ - floorf(u_);
+      float vt = v_ - floorf(v_);
+
+      if ((width == 0 && height == 0) ||
+        u0 < 0 || u1 >= width || v0 < 0 || v1 >= height) {
+        color[0] = 0;
+        color[1] = 0;
+        color[2] = 0;
+        color[3] = 0;
+        return;
       }
 
-      int u = (int)floorf(u_*width+0.5f);
-      int v = (int)floorf(v_*height+0.5f);
+      vec4 color00 = vec4(bytes[v0*4*width+u0*4],bytes[v0*4*width+u0*4+1], bytes[v0*4*width+u0*4+2], bytes[v0*4*width+u0*4+3]);
+      vec4 color01 = vec4(bytes[v0*4*width+u1*4],bytes[v0*4*width+u1*4+1], bytes[v0*4*width+u1*4+2], bytes[v0*4*width+u1*4+3]);
+      vec4 color11 = vec4(bytes[v1*4*width+u1*4],bytes[v1*4*width+u1*4+1], bytes[v1*4*width+u1*4+2], bytes[v1*4*width+u1*4+3]);
+      vec4 color10 = vec4(bytes[v1*4*width+u0*4],bytes[v1*4*width+u0*4+1], bytes[v1*4*width+u0*4+2], bytes[v1*4*width+u0*4+3]);
+      
+      vec4 interp0001 = color00*(1-ut) + color01*ut;
+      vec4 interp1110 = color11*(1-ut) + color10*ut;
+      vec4 interpv = interp0001*(1-vt) + interp1110*vt;
 
-      color[0] = bytes[v*width+u];
-      color[1] = bytes[v*width+u+1];
-      color[2] = bytes[v*width+u+2];
-      color[3] = bytes[v*width+u+3];
+      color = interpv;
     }
   };
 }
