@@ -62,8 +62,10 @@ namespace octet {
       init(new param(color));
     }
 
-    material(image *img) {
-      init(new param(img));
+    material(image *img, float shininess_=30.0f/255) {
+      //init(new param(img));
+      param *p = new param(img);
+      init(p, p, new param(vec4(0.0f)), p, new param(vec4(0.0f)), new param(vec4(shininess_, 0.0f, 0.0f, 0.0f)));
     }
 
     void visit(visitor &v) {

@@ -4,10 +4,12 @@ namespace octet {
     dynarray <mesh *> roadMeshes;
     dynarray <mesh *> pavementMeshes;
     mesh surfaceMesh;
+    mesh waterMesh;
 
 		material *roadMaterial;
     material *pavementMaterial;
     material *grassMaterial;
+    material *waterMaterial;
 
     static dynarray<image *> *imageArray_;
 
@@ -18,7 +20,8 @@ namespace octet {
           "assets/citytex/pavement.gif",
           "assets/citytex/road.gif",
           "assets/citytex/grass.gif",
-          "assets/citytex/heightmap.gif",
+          "assets/citytex/heightmap4.gif",
+          "assets/citytex/water.gif",
           0
         };
 
@@ -54,8 +57,8 @@ namespace octet {
 				float points_distance = (v2 - v1).length();
 				mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
-        //mb.add_cuboid_subdivided(0.1f, 0.02f, points_distance/2.0f, 1, 1, ceilf(points_distance) );
+        //mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
+        mb.add_cuboid_subdivided(0.1f, 0.02f, points_distance/2.0f, 1, 1, ceilf(points_distance) );
 
         mesh *m = new mesh();
         mb.get_mesh(*m);
@@ -88,7 +91,10 @@ namespace octet {
 
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
-      grassMaterial = new material((*getImageArray())[2]);
+      grassMaterial = new material((*getImageArray())[2], 1.0f);
+      //waterMaterial = new material((*getImageArray())[4]);
+      waterMaterial = new material();
+      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), false, false);
       //Create surface mesh
 
       //Create heightmap
@@ -96,17 +102,19 @@ namespace octet {
       citySize *= 2.0f; //city terrain border
       dynarray<float> heightmap;
       heightmap.reset();
-      int citySize_ = (int)citySize;
       image *heightmapImage = ((*getImageArray())[3]);
+      int hmw = heightmapImage->get_width();
+      int hmh = heightmapImage->get_height();
 
-      for (int j = 0; j != citySize_+1; j++) {
-        float v_ = ((float)j-1) / (citySize_-2);
-        for (int i = 0; i != citySize_+1; i++) {
+
+      for (int j = 0; j != hmh+1; j++) {
+        float v_ = ((float)j-1) / (hmh-2);
+        for (int i = 0; i != hmw+1; i++) {
           vec4 color;
           
-          float u_ = ((float)i-1) / (citySize_-2);
+          float u_ = ((float)i-1) / (hmw-2);
   
-          heightmapImage->sample2Dbilinear(u_, v_, color);
+          heightmapImage->sample2D(u_, v_, color);
 
           heightmap.push_back(color.x()/255.0f*2.0f);
         }
@@ -114,9 +122,15 @@ namespace octet {
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y()-1.0f, cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(citySize, citySize_, citySize_, heightmap.data(), citySize+1, citySize_+1);
+      mb.add_plane_heightmap(citySize, hmw, hmh, heightmap.data(), hmw+1, hmh+1);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
+
+      mb.init(0, 0);
+      mb.translate(cityCenter.x(), cityCenter.y()+0.5f-1.0f, cityCenter.z());
+      mb.rotate(-90, 1, 0, 0);
+      mb.add_plane(citySize, (int)citySize, (int)citySize);
+      mb.get_mesh(waterMesh);
 		}
 
 		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
@@ -130,6 +144,8 @@ namespace octet {
       for (auto m = pavementMeshes.begin(); m != pavementMeshes.end(); m++) {
         (*m)->render();
       }
+      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      waterMesh.render();
 		}
 	};
 
@@ -183,7 +199,6 @@ namespace octet {
       };
 
       glDisable(GL_DEPTH_TEST);
-      glEnableVertexAttribArray(attribute_pos);
 
       cshader->render(modelToProjection, vec4(0.0f, 0.0f, 1.0f, 1.0f));
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, x_arrow);

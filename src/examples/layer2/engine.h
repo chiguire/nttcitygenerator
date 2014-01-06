@@ -102,6 +102,7 @@ namespace octet {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       //picker.init(this);
     }
 
@@ -159,6 +160,7 @@ namespace octet {
 
       /* Set and prepare the shader */
       glEnable(GL_DEPTH_TEST);
+      glEnable(GL_BLEND);
 
       int vx = 0, vy = 0;
       get_viewport_size(vx, vy);
@@ -193,7 +195,7 @@ namespace octet {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       compassCard.render(&camera_position, &camera_rotation);
 

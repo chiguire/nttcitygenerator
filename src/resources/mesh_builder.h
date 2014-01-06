@@ -63,15 +63,15 @@ namespace octet {
     void add_plane_subdivided(float x, float y, float z, unsigned nx, unsigned ny) {
       float xsize = x / nx;
       float ysize = y / ny;
-      float xsizeBy2 = xsize * 0.5f;
-      float ysizeBy2 = ysize * 0.5f;
+      float xsizeBy2 = x * 0.5f;
+      float ysizeBy2 = y * 0.5f;
       for (unsigned i = 0; i != nx; ++i) {
         for (unsigned j = 0; j != ny; ++j) {
           unsigned short cur_vertex = (unsigned short)vertices.size();
-          add_vertex(vec4( i*xsize-xsizeBy2, j*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 0, 0);
-          add_vertex(vec4( i*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 0, 1);
-          add_vertex(vec4( (i+1)*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 1, 1);
-          add_vertex(vec4( (i+1)*xsize-xsizeBy2, j*ysize-ysizeBy2, z, 1), vec4(0, 0, 1, 0), 1, 0);
+          add_vertex(vec4( i*xsize-xsizeBy2, j*ysize-ysizeBy2, z*0.5f, 1), vec4(0, 0, 1, 0), 0, 0);
+          add_vertex(vec4( i*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z*0.5, 1), vec4(0, 0, 1, 0), 0, 1);
+          add_vertex(vec4( (i+1)*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z*0.5f, 1), vec4(0, 0, 1, 0), 1, 1);
+          add_vertex(vec4( (i+1)*xsize-xsizeBy2, j*ysize-ysizeBy2, z*0.5f, 1), vec4(0, 0, 1, 0), 1, 0);
           indices.push_back(cur_vertex+0);
           indices.push_back(cur_vertex+1);
           indices.push_back(cur_vertex+2);
@@ -212,6 +212,9 @@ namespace octet {
     }
 
     void add_cuboid_subdivided(float x, float y, float z, unsigned nx, unsigned ny, unsigned nz) {
+
+      x *= 2.0f; y *= 2.0f; z *= 2.0f;
+
       add_plane_subdivided(x, y, z, nx, ny);
       matrix.rotateY90();
       add_plane_subdivided(z, y, x, nz, ny);
@@ -272,7 +275,7 @@ namespace octet {
           b = vec4((i+1)*xsize-sizeBy2, (j+1)*ysize-sizeBy2, height[2], 1) - vec4( (i+1)*xsize-sizeBy2, j*ysize-sizeBy2, height[1], 1);
           vec4 normal2 = a.cross(b).normalize();
 
-          vec4 normal3 = (normal1 + normal2) * 0.5f;
+          vec4 normal3 = normal1 + normal2;
           normal3 = normal3.normalize();
 
           unsigned short cur_vertex = (unsigned short)vertices.size();
