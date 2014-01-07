@@ -72,7 +72,7 @@ namespace octet {
 
       // Binary Space Partition
       depth = 8;
-      //city = City::createFromRectangle(5.0f, 5.0f);
+      //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
       vec4 vertices[] = {
         vec4(-5.0f, 0.0f, -8.0f, 1.0f),
@@ -83,6 +83,9 @@ namespace octet {
       city->init(vertices);
       city->stepPartition(depth);
       city->printStreets();
+
+      city->calculateIntersections();
+      city->printIntersections();
 
       //
       // city_mesh declaration

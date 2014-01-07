@@ -145,22 +145,24 @@ namespace octet {
         mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
         //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
         mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
-
+        
         m = new mesh();
         mb.get_mesh(*m);
         pavementMeshes.push_back(m);
 
         //right
         mb.init(0, 0);
+
         mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(0.1f+0.01f, 0.0f, 0.0f);
-        //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+
+        //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
         mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
 
         m = new mesh();
         mb.get_mesh(*m);
-        pavementMeshes.push_back(m);
+        pavementMeshes.push_back(m); 
       }
 
       pavementMaterial = new material((*getImageArray())[0]);
