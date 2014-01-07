@@ -1,16 +1,22 @@
 namespace octet {
 
-	class CityMesh {
+  const float HEIGHT_FACTOR = 2.0f/255.0f;
+
+  class CityMesh {
     dynarray <mesh *> roadMeshes;
     dynarray <mesh *> pavementMeshes;
     mesh surfaceMesh;
     mesh waterMesh;
 
-		material *roadMaterial;
+    material *roadMaterial;
     material *pavementMaterial;
     material *grassMaterial;
     material *waterMaterial;
 
+    dynarray<float> heightmap;
+    int heightmap_width;
+    int heightmap_height;
+    
     static dynarray<image *> *imageArray_;
 
     static dynarray<image *> *getImageArray() {
@@ -35,43 +41,110 @@ namespace octet {
       return imageArray_;
     }
 
-	public:
-		CityMesh() {
+    void generateHeightmap() {
+      heightmap.reset();
+      image *heightmapImage = ((*getImageArray())[3]);
+      heightmap_width = heightmapImage->get_width()+1;
+      heightmap_height = heightmapImage->get_height()+1;
+
+      for (int j = 0; j != heightmap_height; j++) {
+        float v_ = ((float)j-1) / (heightmap_height-2);
+        for (int i = 0; i != heightmap_width; i++) {
+          vec4 color;
+          
+          float u_ = ((float)i-1) / (heightmap_width-2);
+  
+          heightmapImage->sample2Dbilinear(u_, v_, color);
+
+          heightmap.push_back(color.x()*HEIGHT_FACTOR);
+        }
+      }
+    }
+
+    // Samples the heights of the heightmap to create a projected road on the surface
+    // result - the array of float with the heights
+    // v1, v2 - start and end of the road
+    // points - number of points to sample. Function will sample points+1
+    // cityDimensions - the size of the city. Terrain will always be centered at the geometric center of the city
+    // cityCenter - the geometric center of the city
+    // multiplier - The terrain is grown a times the size of the city, this is the factor
+    // offsetX, offsetY - The city is centered in the terrain, this allows to center the height samples
+    void get_road_heights(dynarray<float> &result, vec4 &v1, vec4 &v2, int points, vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY) {
+      result.reset();
+
+      image *heightmapImage = ((*getImageArray())[3]);
+
+      vec4 vDiff = v2 - v1;
+
+      for (int i = 0; i != points+1; i++) {
+        float t = ((float)i)/((float)points);
+
+        vec4 vt = v1 + vDiff*t;
+        vec4 color;
+
+        float u_ = (vt.x()+cityCenter.x()+cityDimensions.x()*0.5f) / (cityDimensions.x());
+        float v_ = (vt.z()+cityCenter.z()+cityDimensions.z()*0.5f) / (cityDimensions.z());
+
+        u_ = ((1.0f-u_)*multiplier)+offsetX;
+        v_ = (v_*multiplier)+offsetY;
+        
+        heightmapImage->sample2Dbilinear(u_, v_, color);
+        //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
+
+        result.push_back(color.x()*HEIGHT_FACTOR);
+      }
+    }
+
+  public:
+    CityMesh() {
       roadMeshes.reset();
       pavementMeshes.reset();
     }
 
-		void init(dynarray<StreetSides> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
+    void init(dynarray<StreetSides> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
+
+      printf("Generating heightmap.\n");
+      generateHeightmap();
+
+      printf("Creating road meshes.\n");
+
       mesh_builder mb; 
-			for (int i = 0; i < streetsList->size(); i++) {
+      for (int i = 0; i < streetsList->size(); i++) {
+        dynarray<float> road_heights;
+
         // Creating road
-		  	mb.init(0, 0);
-				vec4 v1 = (*streetsList)[i].points[0];
-				vec4 v2 = (*streetsList)[i].points[1];
+        mb.init(0, 0);
+        vec4 v1 = (*streetsList)[i].points[0];
+        vec4 v2 = (*streetsList)[i].points[1];
 
         //printf("Adding street %d, from (%.2f, %.2f) to (%.2f, %.2f)\n", (i+1), v1.x(), v1.z(), v2.x(), v2.z());
 
         float angleY = atan2f(v2.x() - v1.x(), v2.z() - v1.z())*180.0f/3.14159265359f;
         vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
 
-				float points_distance = (v2 - v1).length();
-				mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        float points_distance = (v2 - v1).length();
+        unsigned int points = ceilf(points_distance)*2;
+        get_road_heights(road_heights, v1, v2, points, cityDimensions, cityCenter, 0.5f, 0.25f, 0.25f);
+
+
+        //bprintf("Midpoint (%.2f, %.2f, %.2f)\n", vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         //mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
-        mb.add_cuboid_subdivided(0.1f, 0.02f, points_distance/2.0f, 1, 1, ceilf(points_distance) );
+        mb.add_cuboid_heights(0.1f, 0.02f, points_distance/2.0f, points, road_heights.data());
 
         mesh *m = new mesh();
         mb.get_mesh(*m);
-
         roadMeshes.push_back(m);
 
         //Creating pavements
         //left
         mb.init(0, 0);
-        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
-        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
 
         m = new mesh();
         mb.get_mesh(*m);
@@ -79,15 +152,16 @@ namespace octet {
 
         //right
         mb.init(0, 0);
-        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(0.1f+0.01f, 0.0f, 0.0f);
-        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
+        mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
 
         m = new mesh();
         mb.get_mesh(*m);
         pavementMeshes.push_back(m);
-			}
+      }
 
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
@@ -100,40 +174,24 @@ namespace octet {
       //Create heightmap
       float citySize = cityDimensions.x() > cityDimensions.z()? cityDimensions.x() : cityDimensions.z();
       citySize *= 2.0f; //city terrain border
-      dynarray<float> heightmap;
-      heightmap.reset();
-      image *heightmapImage = ((*getImageArray())[3]);
-      int hmw = heightmapImage->get_width();
-      int hmh = heightmapImage->get_height();
-
-
-      for (int j = 0; j != hmh+1; j++) {
-        float v_ = ((float)j-1) / (hmh-2);
-        for (int i = 0; i != hmw+1; i++) {
-          vec4 color;
-          
-          float u_ = ((float)i-1) / (hmw-2);
-  
-          heightmapImage->sample2D(u_, v_, color);
-
-          heightmap.push_back(color.x()/255.0f*2.0f);
-        }
-      }
+      
+      printf("Creating surface from heightmap.\n");
       mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y()-1.0f, cityCenter.z());
+      mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(citySize, hmw, hmh, heightmap.data(), hmw+1, hmh+1);
+      mb.add_plane_heightmap(citySize, heightmap_width-1, heightmap_height-1, heightmap.data(), heightmap_width, heightmap_height);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
 
+      printf("Creating water plane.\n");
       mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y()+0.5f-1.0f, cityCenter.z());
+      mb.translate(cityCenter.x(), cityCenter.y()+0.5f, cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
       mb.add_plane(citySize, (int)citySize, (int)citySize);
       mb.get_mesh(waterMesh);
-		}
+    }
 
-		void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+    void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
       grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       surfaceMesh.render();
       roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -146,8 +204,8 @@ namespace octet {
       }
       waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       waterMesh.render();
-		}
-	};
+    }
+  };
 
   dynarray <image *> *CityMesh::imageArray_;
 

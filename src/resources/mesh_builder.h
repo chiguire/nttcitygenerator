@@ -45,41 +45,18 @@ namespace octet {
     }
 
     // Add a front face aligned to plane XY, with distance z from origin
-    void add_front_face(float x, float y, float z) {
+    void add_front_face(float x, float y, float z, float xOffset = 0.0f, float yOffset = 0.0f) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
-      add_vertex(vec4(-x, -y, z, 1), vec4(0, 0, 1, 0), 0, 0);
-      add_vertex(vec4(-x,  y, z, 1), vec4(0, 0, 1, 0), 0, 1);
-      add_vertex(vec4( x,  y, z, 1), vec4(0, 0, 1, 0), 1, 1);
-      add_vertex(vec4( x, -y, z, 1), vec4(0, 0, 1, 0), 1, 0);
+      add_vertex(vec4(-x + xOffset, -y + yOffset, z, 1), vec4(0, 0, 1, 0), 0, 0);
+      add_vertex(vec4(-x + xOffset,  y + yOffset, z, 1), vec4(0, 0, 1, 0), 0, 1);
+      add_vertex(vec4( x + xOffset,  y + yOffset, z, 1), vec4(0, 0, 1, 0), 1, 1);
+      add_vertex(vec4( x + xOffset, -y + yOffset, z, 1), vec4(0, 0, 1, 0), 1, 0);
       indices.push_back(cur_vertex+0);
       indices.push_back(cur_vertex+1);
       indices.push_back(cur_vertex+2);
       indices.push_back(cur_vertex+0);
       indices.push_back(cur_vertex+2);
       indices.push_back(cur_vertex+3);
-    }
-
-    // add a subdivided size*size plane with nx*ny squares
-    void add_plane_subdivided(float x, float y, float z, unsigned nx, unsigned ny) {
-      float xsize = x / nx;
-      float ysize = y / ny;
-      float xsizeBy2 = x * 0.5f;
-      float ysizeBy2 = y * 0.5f;
-      for (unsigned i = 0; i != nx; ++i) {
-        for (unsigned j = 0; j != ny; ++j) {
-          unsigned short cur_vertex = (unsigned short)vertices.size();
-          add_vertex(vec4( i*xsize-xsizeBy2, j*ysize-ysizeBy2, z*0.5f, 1), vec4(0, 0, 1, 0), 0, 0);
-          add_vertex(vec4( i*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z*0.5, 1), vec4(0, 0, 1, 0), 0, 1);
-          add_vertex(vec4( (i+1)*xsize-xsizeBy2, (j+1)*ysize-ysizeBy2, z*0.5f, 1), vec4(0, 0, 1, 0), 1, 1);
-          add_vertex(vec4( (i+1)*xsize-xsizeBy2, j*ysize-ysizeBy2, z*0.5f, 1), vec4(0, 0, 1, 0), 1, 0);
-          indices.push_back(cur_vertex+0);
-          indices.push_back(cur_vertex+1);
-          indices.push_back(cur_vertex+2);
-          indices.push_back(cur_vertex+0);
-          indices.push_back(cur_vertex+2);
-          indices.push_back(cur_vertex+3);
-        }
-      }
     }
 
     // add a ring in the x-y plane. Return index of first index
@@ -211,24 +188,67 @@ namespace octet {
       matrix.rotateX90();
     }
 
-    void add_cuboid_subdivided(float x, float y, float z, unsigned nx, unsigned ny, unsigned nz) {
+    void add_cuboid_heights(float x, float y, float z, unsigned nz, float *heights = NULL) {
+      add_front_face(x, y, z, 0.0f, heights[0]);
+      matrix.rotateY180();
+      add_front_face(x, y, z, 0.0f, heights[nz]);
+      matrix.rotateY180();
 
-      x *= 2.0f; y *= 2.0f; z *= 2.0f;
+      float zsize = (z*2.0f)/nz;
 
-      add_plane_subdivided(x, y, z, nx, ny);
-      matrix.rotateY90();
-      add_plane_subdivided(z, y, x, nz, ny);
-      matrix.rotateY90();
-      add_plane_subdivided(x, y, z, nx, ny);
-      matrix.rotateY90();
-      add_plane_subdivided(z, y, x, nz, ny);
-      matrix.rotateY90();
+      for (unsigned i = 0; i != nz; ++i) {
+        unsigned short cur_vertex = (unsigned short)vertices.size();
+        float yOffset0 = heights[i];
+        float yOffset1 = heights[i+1];
 
-      matrix.rotateX90();
-      add_plane_subdivided(x, z, y, nx, nz);
-      matrix.rotateX180();
-      add_plane_subdivided(x, z, y, nx, nz);
-      matrix.rotateX90();
+        add_vertex(vec4(-x, -y + yOffset0, z-(i+0)*zsize, 1), vec4(-1, 0, 0, 0), 0, 0);
+        add_vertex(vec4(-x,  y + yOffset0, z-(i+0)*zsize, 1), vec4(-1, 0, 0, 0), 0, 1);
+        add_vertex(vec4(-x,  y + yOffset1, z-(i+1)*zsize, 1), vec4(-1, 0, 0, 0), 1, 1);
+        add_vertex(vec4(-x, -y + yOffset1, z-(i+1)*zsize, 1), vec4(-1, 0, 0, 0), 1, 0);
+
+        add_vertex(vec4(x, -y + yOffset0, z-(i+0)*zsize, 1), vec4(1, 0, 0, 0), 0, 0);
+        add_vertex(vec4(x, -y + yOffset1, z-(i+1)*zsize, 1), vec4(1, 0, 0, 0), 1, 0);
+        add_vertex(vec4(x,  y + yOffset1, z-(i+1)*zsize, 1), vec4(1, 0, 0, 0), 1, 1);
+        add_vertex(vec4(x,  y + yOffset0, z-(i+0)*zsize, 1), vec4(1, 0, 0, 0), 0, 1);
+        
+        add_vertex(vec4(-x,  y + yOffset0, z-(i+0)*zsize, 1), vec4(0, 1, 0, 0), 0, 0);
+        add_vertex(vec4( x,  y + yOffset0, z-(i+0)*zsize, 1), vec4(0, 1, 0, 0), 0, 1);
+        add_vertex(vec4( x,  y + yOffset1, z-(i+1)*zsize, 1), vec4(0, 1, 0, 0), 1, 1);
+        add_vertex(vec4(-x,  y + yOffset1, z-(i+1)*zsize, 1), vec4(0, 1, 0, 0), 1, 0);
+        
+        add_vertex(vec4(-x,  -y + yOffset0, z-(i+0)*zsize, 1), vec4(0, -1, 0, 0), 0, 0);
+        add_vertex(vec4(-x,  -y + yOffset1, z-(i+1)*zsize, 1), vec4(0, -1, 0, 0), 1, 0);
+        add_vertex(vec4( x,  -y + yOffset1, z-(i+1)*zsize, 1), vec4(0, -1, 0, 0), 1, 1);
+        add_vertex(vec4( x,  -y + yOffset0, z-(i+0)*zsize, 1), vec4(0, -1, 0, 0), 0, 1);
+
+        indices.push_back(cur_vertex+0);
+        indices.push_back(cur_vertex+1);
+        indices.push_back(cur_vertex+2);
+        indices.push_back(cur_vertex+0);
+        indices.push_back(cur_vertex+2);
+        indices.push_back(cur_vertex+3);
+
+        indices.push_back(cur_vertex+4);
+        indices.push_back(cur_vertex+5);
+        indices.push_back(cur_vertex+6);
+        indices.push_back(cur_vertex+4);
+        indices.push_back(cur_vertex+6);
+        indices.push_back(cur_vertex+7);
+
+        indices.push_back(cur_vertex+8);
+        indices.push_back(cur_vertex+9);
+        indices.push_back(cur_vertex+10);
+        indices.push_back(cur_vertex+8);
+        indices.push_back(cur_vertex+10);
+        indices.push_back(cur_vertex+11);
+
+        indices.push_back(cur_vertex+12);
+        indices.push_back(cur_vertex+13);
+        indices.push_back(cur_vertex+14);
+        indices.push_back(cur_vertex+12);
+        indices.push_back(cur_vertex+14);
+        indices.push_back(cur_vertex+15);
+      }
     }
 
     // add a subdivided size*size plane with nx*ny squares
