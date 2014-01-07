@@ -39,6 +39,8 @@ namespace octet {
     // city mesh obj. working on
     CityMesh *city_mesh;
 
+    dynarray<Street> *streetList;
+
     CompassCard compassCard;
 
     int depth;
@@ -71,7 +73,7 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 4;
+      depth = 0;
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
       vec4 vertices[] = {
@@ -92,7 +94,7 @@ namespace octet {
       // city_mesh initialization
       //
       city_mesh = new CityMesh();
-      dynarray<StreetSides> *streetList = &city->streetsList;
+      streetList = &city->streetsList;
 
       vec4 dimensions;
       vec4 center;
@@ -192,13 +194,13 @@ namespace octet {
       //
       // city_mesh render - not working for now
       //
-      city_mesh->debugRender(object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       //compassCard.render(&camera_position, &camera_rotation);
 
