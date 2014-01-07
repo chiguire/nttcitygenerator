@@ -135,8 +135,8 @@ namespace octet {
 
         mesh *m = new mesh();
         mb.get_mesh(*m);
-
         (*streetsList)[i].roadMesh = (*m);
+
 
         //Creating pavements
         //left
@@ -164,7 +164,8 @@ namespace octet {
         m = new mesh();
         mb.get_mesh(*m);
         (*streetsList)[i].pavementMeshRight = (*m);
-			}
+      }
+
 
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
@@ -193,6 +194,7 @@ namespace octet {
       mb.add_plane(citySize, (int)citySize, (int)citySize);
       mb.get_mesh(waterMesh);
     }
+
 
 
 		void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {

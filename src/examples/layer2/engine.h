@@ -73,6 +73,7 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
+
       depth = 0;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
