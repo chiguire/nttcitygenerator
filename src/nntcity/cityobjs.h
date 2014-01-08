@@ -261,10 +261,10 @@ namespace octet {
       s->render(modelToProjection, debugColors[depth]);
 
       float vertices[] = {
-        node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  
-        node->vertices[1].x(), node->vertices[1].y(), node->vertices[1].z(),  
-        node->vertices[2].x(), node->vertices[2].y(), node->vertices[2].z(),  
-        node->vertices[3].x(), node->vertices[3].y(), node->vertices[3].z()
+        -node->vertices[0].x(), -node->vertices[0].y(), -node->vertices[0].z(),  
+        -node->vertices[1].x(), -node->vertices[1].y(), -node->vertices[1].z(),  
+        -node->vertices[2].x(), -node->vertices[2].y(), -node->vertices[2].z(),  
+        -node->vertices[3].x(), -node->vertices[3].y(), -node->vertices[3].z()
       };
 
    /*   printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
