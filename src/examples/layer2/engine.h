@@ -19,6 +19,7 @@ namespace octet {
     resources dict;
 
     // shaders to draw triangles
+	city_bump_shader city_bump_shader_;
     bump_shader object_shader;
     color_shader cshader;
 
@@ -39,6 +40,8 @@ namespace octet {
     // city mesh obj. working on
     CityMesh *city_mesh;
 
+    dynarray<Street> *streetList;
+
     CompassCard compassCard;
 
     int depth;
@@ -57,7 +60,9 @@ namespace octet {
     // this is called once OpenGL is initialized
     void app_init() {
       // Shader Set Up
+	  city_bump_shader_.init(); // false is default
       object_shader.init(false);
+	
       cshader.init();
       compassCard.init(&cshader);
 
@@ -71,7 +76,9 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 8;
+
+      depth = 0;
+
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
       vec4 vertices[] = {
@@ -92,7 +99,7 @@ namespace octet {
       // city_mesh initialization
       //
       city_mesh = new CityMesh();
-      dynarray<StreetSides> *streetList = &city->streetsList;
+      streetList = &city->streetsList;
 
       vec4 dimensions;
       vec4 center;
@@ -198,13 +205,14 @@ namespace octet {
       //
       // city_mesh render - not working for now
       //
-      city_mesh->debugRender(object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      // city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+	  city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       compassCard.render(&camera_position, &camera_rotation);
 

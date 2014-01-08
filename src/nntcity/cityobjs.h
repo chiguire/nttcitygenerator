@@ -1,34 +1,39 @@
 namespace octet {
 
-  class StreetSides{
+  class Street{
     public:
+
+    mesh roadMesh;
+    mesh pavementMeshLeft;
+    mesh pavementMeshRight;
     vec4 points[2];
 
-    StreetSides() {
+    Street() {
       memset(points, 0, sizeof(vec4)*2);
     }
 
-    StreetSides(vec4 p1, vec4 p2){
+    Street(vec4 p1, vec4 p2){
       this->points[0] = p1;
       this->points[1] = p2;
     }
   
   };
 
+
   class StreetIntersection{
   public:
-    dynarray<StreetSides*> streets;
+    dynarray<Street*> streets;
     vec4 point;
 
     StreetIntersection(){}
 
-    StreetIntersection(StreetSides* s1, StreetSides* s2, vec4 p){
+    StreetIntersection(Street* s1, Street* s2, vec4 p){
       this->streets.push_back(s1);
       this->streets.push_back(s2);
       this->point = p;
     }
 
-    bool containsStreet(StreetSides* s1){
+    bool containsStreet(Street* s1){
 
       for(int i=0; i!=this->streets.size(); ++i){
         for(int j=0; j!=2; ++j){
@@ -69,7 +74,7 @@ namespace octet {
 
     mat4t modelToWorld;
 
-    dynarray<StreetSides> streetsList;
+    dynarray<Street> streetsList;
 
     dynarray <StreetIntersection*> streetsIntersections;
 
@@ -107,10 +112,10 @@ namespace octet {
       
       for(int i=0; i!=4; ++i){
         if(i !=3){
-          StreetSides s1(root.vertices[i],root.vertices[i+1]);
+          Street s1(root.vertices[i],root.vertices[i+1]);
           streetsList.push_back(s1);
         }else{
-          StreetSides s1(root.vertices[i],root.vertices[0]);
+          Street s1(root.vertices[i],root.vertices[0]);
           streetsList.push_back(s1);
         }
       }
@@ -356,7 +361,7 @@ namespace octet {
 
     void generateStreets( BSPNode * node) {
       
-      dynarray<StreetSides> localList;
+      dynarray<Street> localList;
 
       for(int i=0; i!=4; ++i){
  
@@ -364,7 +369,7 @@ namespace octet {
           
           solveConflictbetweenStreets(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
 
-          StreetSides s1(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
+          Street s1(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
           localList.push_back(s1);
 
         }
@@ -433,7 +438,7 @@ namespace octet {
 
      
 
-    void addIntersection(StreetSides *s1, StreetSides *s2, vec4 p ) 
+    void addIntersection(Street *s1, Street *s2, vec4 p ) 
     {
       
       StreetIntersection* st = new StreetIntersection(s1,s2,p);
