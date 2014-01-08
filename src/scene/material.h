@@ -104,6 +104,13 @@ namespace octet {
       shader.render_skinned(cameraToProjection, modelToCamera, num_nodes, light_uniforms, num_light_uniforms, num_lights);
       bind_textures();
     }
+
+	///////////////////////////////////////////////////
+	void render_road(city_bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, int num_light_uniforms, int num_lights) const {
+      shader.render(modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      bind_textures();
+    }
+
   };
 }
 

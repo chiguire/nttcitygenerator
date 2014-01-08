@@ -19,6 +19,7 @@ namespace octet {
     resources dict;
 
     // shaders to draw triangles
+	city_bump_shader city_bump_shader_;
     bump_shader object_shader;
     color_shader cshader;
 
@@ -59,7 +60,9 @@ namespace octet {
     // this is called once OpenGL is initialized
     void app_init() {
       // Shader Set Up
+	  city_bump_shader_.init(); // false is default
       object_shader.init(false);
+	
       cshader.init();
       compassCard.init(&cshader);
 
@@ -196,7 +199,8 @@ namespace octet {
       //
       // city_mesh render - not working for now
       //
-      city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      // city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+	  city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);

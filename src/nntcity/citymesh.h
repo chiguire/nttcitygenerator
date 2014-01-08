@@ -197,7 +197,7 @@ namespace octet {
 
 
 
-		void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+	void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
       grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       surfaceMesh.render();
 
@@ -217,7 +217,32 @@ namespace octet {
       waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       waterMesh.render();
     }
+
+
+
+	 void debugRender_newShader(dynarray<Street> *streetsList, city_bump_shader &city_shader, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      surfaceMesh.render();
+
+      roadMaterial->render_road(city_shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+
+      for (int i = 0; i != streetsList->size(); ++i) {
+        (*streetsList)[i].roadMesh.render();
+      }
+
+      pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+
+      for (int i = 0; i != streetsList->size(); ++i) {
+        (*streetsList)[i].pavementMeshLeft.render();
+        (*streetsList)[i].pavementMeshRight.render();
+      }
+
+      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      waterMesh.render();
+    }
+
   };
+
 
 
   dynarray <image *> *CityMesh::imageArray_;
