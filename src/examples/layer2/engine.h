@@ -12,7 +12,7 @@ namespace octet {
     typedef animation animation;
     typedef scene_node scene_node;
 
-    vec3 camera_position;
+    vec4 camera_position;
     vec3 camera_rotation;
 
     // named resources loaded from collada file
@@ -48,7 +48,7 @@ namespace octet {
     engine(int argc, char **argv) 
     : app(argc, argv)
     //, ball()
-    , camera_position(0.0f, 0.0f, 10.0f)
+    , camera_position(0.0f, 0.0f, 10.0f, 0.0f)
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
     {
@@ -131,6 +131,12 @@ namespace octet {
         camera_position[2] += 0.25f;
       }
 
+      if (is_key_down('R')) {
+        camera_position[3] += 0.25f * (camera_position[2]/5.0f);
+      } else if (is_key_down('Y')) {
+        camera_position[3] -= 0.25f * (camera_position[2]/5.0f);
+      }
+
       if (is_key_down('F')) {
         camera_rotation[1] += 5.0f;
         if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
@@ -172,7 +178,7 @@ namespace octet {
       modelToWorld.loadIdentity();
 
       cameraToWorld.loadIdentity();
-      cameraToWorld.translate(camera_position.x(), 0.0f, camera_position.y());
+      cameraToWorld.translate(camera_position.x(), camera_position.w(), camera_position.y());
       cameraToWorld.rotate(camera_rotation[1], 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-camera_rotation[0], 1.0f, 0.0f, 0.0f);
       cameraToWorld.translate(0.0f, 0.0f, camera_position.z());

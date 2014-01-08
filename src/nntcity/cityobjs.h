@@ -78,7 +78,9 @@ namespace octet {
     vec4 * debugColors;
 
 
-    City () {}
+    City ()
+    :randomizer(time(NULL))
+    {}
 
     static City *createFromRectangle(float width, float height) {
       vec4 vert_[4];
@@ -342,8 +344,14 @@ namespace octet {
       // TODO Heuristic: choose sides intersected by frustrum
     //  int r = randomizer.get(0, 10);
     //  BSPNode *child = (r % 2 ==0)? b->left: b->right;
-
-      stepPartition_(depth - 1, b->right);
+      float r0 = randomizer.get(0.0f, 1.0f);
+      float r1 = randomizer.get(0.0f, 1.0f);
+      if (r0 > 0.5f) {
+        stepPartition_(depth - 1, b->left);
+      }
+      if (r1 > 0.5f) {
+        stepPartition_(depth - 1, b->right);
+      }
     }
 
     void generateStreets( BSPNode * node) {

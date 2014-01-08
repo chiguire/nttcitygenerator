@@ -13,6 +13,7 @@ namespace octet {
   public:
     random(unsigned new_seed = 0x9bac7615) : seed(new_seed) {
       seed = new_seed;
+      printf("Seed: %d.\n", seed);
     }
 
     // get a floating point value

@@ -1,6 +1,8 @@
 namespace octet {
 
   const float HEIGHT_FACTOR = 2.0f/255.0f;
+  const float WATER_LEVEL = 0.5f;
+  const float BRIDGE_LEVEL = 0.8f;
 
   class CityMesh {
     dynarray <mesh *> roadMeshes;
@@ -26,7 +28,7 @@ namespace octet {
           "assets/citytex/pavement.gif",
           "assets/citytex/road.gif",
           "assets/citytex/grass.gif",
-          "assets/citytex/heightmap4.gif",
+          "assets/citytex/heightmap5.gif",
           "assets/citytex/water.gif",
           0
         };
@@ -91,7 +93,11 @@ namespace octet {
         heightmapImage->sample2Dbilinear(u_, v_, color);
         //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
 
-        result.push_back(color.x()*HEIGHT_FACTOR);
+        float h = color.x() * HEIGHT_FACTOR;
+        if (h < BRIDGE_LEVEL) {
+          h = BRIDGE_LEVEL;
+        }
+        result.push_back(h);
       }
     }
 
@@ -123,7 +129,7 @@ namespace octet {
         vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
 
         float points_distance = (v2 - v1).length();
-        unsigned int points = ceilf(points_distance)*2;
+        unsigned int points = ceilf(points_distance*2);
         get_road_heights(road_heights, v1, v2, points, cityDimensions, cityCenter, 0.5f, 0.25f, 0.25f);
 
 
@@ -174,22 +180,21 @@ namespace octet {
       //Create surface mesh
 
       //Create heightmap
-      float citySize = cityDimensions.x() > cityDimensions.z()? cityDimensions.x() : cityDimensions.z();
-      citySize *= 2.0f; //city terrain border
-      
+      vec4 terrainDimensions = cityDimensions*2.0f;
+
       printf("Creating surface from heightmap.\n");
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(citySize, heightmap_width-1, heightmap_height-1, heightmap.data(), heightmap_width, heightmap_height);
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-1, heightmap_height-1, heightmap.data(), heightmap_width, heightmap_height);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
 
       printf("Creating water plane.\n");
       mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y()+0.5f, cityCenter.z());
+      mb.translate(cityCenter.x(), cityCenter.y()+WATER_LEVEL, cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane(citySize, (int)citySize, (int)citySize);
+      mb.add_plane(terrainDimensions.x(), terrainDimensions.z(), 10, 10);
       mb.get_mesh(waterMesh);
     }
 
@@ -219,7 +224,7 @@ namespace octet {
       cshader = cshader_;
     }
 
-    void render(vec3 *camera_position, vec3 *camera_rotation) {
+    void render(vec4 *camera_position, vec3 *camera_rotation) {
       mat4t modelToWorld;
       modelToWorld.loadIdentity();
 
@@ -227,7 +232,7 @@ namespace octet {
       cameraToWorld.loadIdentity();
       cameraToWorld.rotate((*camera_rotation)[1], 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-(*camera_rotation)[0], 1.0f, 0.0f, 0.0f);
-      cameraToWorld.translate(0.0f, 0.0f, camera_position->z());
+      cameraToWorld.translate(0.0f, 0.0f, 5.0f); //camera_position->z());
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld, 0.1f, 1000.0f, 0.08f, 0.08f);
 
@@ -259,6 +264,7 @@ namespace octet {
       };
 
       glDisable(GL_DEPTH_TEST);
+      glEnableVertexAttribArray(attribute_pos);
 
       cshader->render(modelToProjection, vec4(0.0f, 0.0f, 1.0f, 1.0f));
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, x_arrow);
