@@ -151,7 +151,7 @@ namespace octet {
 		  vec2 phase = fract(uv_ / tile_size);
 		  vec4 texture_tile = texture2D(samplers[1], phase);
 		  
-
+		  /*
           gl_FragColor.xyz = 
             ambient_light * ambient.xyz +
             diffuse_light * diffuse.xyz +
@@ -159,8 +159,11 @@ namespace octet {
             specular_light * specular.xyz
           ;
           gl_FragColor.w = diffuse.w;
+		  */
+		  
+		  gl_FragColor = ambient_light * texture_tile.xyz;
 
-/*
+		  /*
 		  gl_FragColor.xyz = 
 			ambient_light * texture_tile.xyz +
 			ambient_light * texture_tile.xyz +

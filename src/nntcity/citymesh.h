@@ -22,8 +22,8 @@ namespace octet {
       if (!imageArray_) {
         imageArray_ = new dynarray<image *>();
         char *files[] = {
-          "assets/citytex/pavement.gif",
-          "assets/citytex/road.gif",
+          "assets/citytex/pavement_2.gif",
+          "assets/citytex/road_2.gif",
           "assets/citytex/grass.gif",
           "assets/citytex/heightmap4.gif",
           "assets/citytex/water.gif",
@@ -230,7 +230,7 @@ namespace octet {
         (*streetsList)[i].roadMesh.render();
       }
 
-      pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      pavementMaterial->render_road(city_shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
 
       for (int i = 0; i != streetsList->size(); ++i) {
         (*streetsList)[i].pavementMeshLeft.render();
