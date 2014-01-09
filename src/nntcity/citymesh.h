@@ -27,7 +27,7 @@ namespace octet {
           "assets/citytex/pavement_2.gif",
           "assets/citytex/road_2.gif",
           "assets/citytex/grass.gif",
-          "assets/citytex/heightmap5.gif",
+          "assets/citytex/heightmap6.gif",
           "assets/citytex/water.gif",
           0
         };
@@ -51,8 +51,9 @@ namespace octet {
     void generateHeightmap() {
       heightmap.reset();
       image *heightmapImage = ((*getImageArray())[3]);
-      heightmap_width = heightmapImage->get_width()+1;
-      heightmap_height = heightmapImage->get_height()+1;
+      heightmap_width = heightmapImage->get_width()+2;
+      heightmap_height = heightmapImage->get_height()+2;
+      heightmap.resize(heightmap_width*heightmap_height);
 
       for (int j = 0; j != heightmap_height; j++) {
         float v_ = ((float)j-1) / (heightmap_height-2);
@@ -63,8 +64,11 @@ namespace octet {
   
           heightmapImage->sample2Dbilinear(u_, v_, color);
 
-          heightmap.push_back(color.x()*HEIGHT_FACTOR);
+          heightmap[j*heightmap_height+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
+
+          //printf("%.1f,", heightmap[j*heightmap_height+i]);
         }
+        //printf("\n");
       }
     }
 
@@ -175,10 +179,10 @@ namespace octet {
 
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
-      grassMaterial = new material((*getImageArray())[2], 1.0f);
+      grassMaterial = new material((*getImageArray())[2], false);
       //waterMaterial = new material((*getImageArray())[4]);
       waterMaterial = new material();
-      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), false, false);
+      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
       //Create surface mesh
 
       //Create heightmap
@@ -188,7 +192,7 @@ namespace octet {
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-1, heightmap_height-1, heightmap.data(), heightmap_width, heightmap_height);
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
 

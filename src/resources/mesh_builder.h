@@ -288,34 +288,51 @@ namespace octet {
       float xSizeBy2 = xSize * 0.5f;
       float ySizeBy2 = ySize * 0.5f;
 
+      dynarray<vec4> normalMap;
+      generateNormalMap(normalMap, nx, ny, heightmap, hmx, hmy);
+
+      unsigned short cur_vertex = (unsigned short)vertices.size();
+
       for (unsigned j = 0; j != ny; ++j) {
         for (unsigned i = 0; i != nx; ++i) {
-          vec4 height(*(heightmap+hmx*j+i), *(heightmap+hmx*j+(i+1)), *(heightmap+hmx*(j+1)+(i+1)), *(heightmap+hmx*(j+1)+i));
-          vec4 a;
-          vec4 b;
+          add_vertex(vec4( i*xsize-xSizeBy2, j*ysize-ySizeBy2, heightmap[hmy*(j+1)+(i+1)], 1), normalMap[ny*j+i], ((float)i)/nx, ((float)j)/ny);
+        }
+      }
 
-          a = vec4(i*xsize-xSizeBy2, j*ysize-ySizeBy2, height[0], 1) - vec4( (i+1)*xsize-xSizeBy2, j*ysize-ySizeBy2, height[1], 1);
-          b = vec4(i*xsize-xSizeBy2, j*ysize-ySizeBy2, height[0], 1) - vec4( i*xsize-xSizeBy2, (j+1)*ysize-ySizeBy2, height[3], 1);
-          vec4 normal1 = a.cross(b).normalize();
+      for (unsigned j = 0; j != ny-1; ++j) {
+        for (unsigned i = 0; i != nx-1; ++i) {
+          indices.push_back(cur_vertex+ny*(j+0)+(i+0));
+          indices.push_back(cur_vertex+ny*(j+0)+(i+1));
+          indices.push_back(cur_vertex+ny*(j+1)+(i+1));
+          indices.push_back(cur_vertex+ny*(j+0)+(i+0));
+          indices.push_back(cur_vertex+ny*(j+1)+(i+1));
+          indices.push_back(cur_vertex+ny*(j+1)+(i+0));
+        }
+      }
+    }
 
-          a = vec4((i+1)*xsize-xSizeBy2, (j+1)*ysize-ySizeBy2, height[2], 1) - vec4( i*xsize-xSizeBy2, (j+1)*ysize-ySizeBy2, height[3], 1);
-          b = vec4((i+1)*xsize-xSizeBy2, (j+1)*ysize-ySizeBy2, height[2], 1) - vec4( (i+1)*xsize-xSizeBy2, j*ysize-ySizeBy2, height[1], 1);
-          vec4 normal2 = a.cross(b).normalize();
+    void generateNormalMap(dynarray<vec4> &normalMap, unsigned nx, unsigned ny, float *heightmap, unsigned hmx, unsigned hmy) {
+      normalMap.reset();
+      normalMap.resize(nx*ny);      
 
-          vec4 normal3 = normal1 + normal2;
-          normal3 = normal3.normalize();
+      for (unsigned j = 0; j != ny; j++) {
+        for (unsigned i = 0; i != nx; i++) {
+          vec4 normal(0.0f, 0.0f, 0.0f, 1.0f);
 
-          unsigned short cur_vertex = (unsigned short)vertices.size();
-          add_vertex(vec4( i*xsize-xSizeBy2, j*ysize-ySizeBy2, height[0], 1), normal1, 0, 0); //vec4(0, 0, 1, 0), 0, 0);
-          add_vertex(vec4( (i+1)*xsize-xSizeBy2, j*ysize-ySizeBy2, height[1], 1), normal3, 0, 1); //vec4(0, 0, 1, 0), 0, 1);
-          add_vertex(vec4( (i+1)*xsize-xSizeBy2, (j+1)*ysize-ySizeBy2, height[2], 1), normal2, 1, 1); //vec4(0, 0, 1, 0), 1, 1);
-          add_vertex(vec4( i*xsize-xSizeBy2, (j+1)*ysize-ySizeBy2, height[3], 1), normal3, 1, 0); //vec4(0, 0, 1, 0), 1, 0);
-          indices.push_back(cur_vertex+0);
-          indices.push_back(cur_vertex+1);
-          indices.push_back(cur_vertex+2);
-          indices.push_back(cur_vertex+0);
-          indices.push_back(cur_vertex+2);
-          indices.push_back(cur_vertex+3);
+          float h11 = heightmap[hmy*(j+1)+(i+1)];
+          float h01 = heightmap[hmy*(j+1)+(i+1-1)];
+          float h21 = heightmap[hmy*(j+1)+(i+1+1)];
+          float h10 = heightmap[hmy*(j+1-1)+(i+1)];
+          float h12 = heightmap[hmy*(j+1+1)+(i+1)];
+          vec3 va(2.0f, 0.0f, h21 - h01);
+          vec3 vb(0.0f, 2.0f, h12 - h10);
+          va = va.normalize();
+          vb = vb.normalize();
+
+          vec3 c = va.cross(vb);
+          normal = vec4(c[0], c[1], c[2], 1.0f);
+          normal = normal.normalize();
+          normalMap[ny*j+i] = normal;
         }
       }
     }
