@@ -24,8 +24,8 @@ namespace octet {
       if (!imageArray_) {
         imageArray_ = new dynarray<image *>();
         char *files[] = {
-          "assets/citytex/pavement_2.gif",
-          "assets/citytex/road_2.gif",
+          "assets/citytex/pavement.gif",
+          "assets/citytex/road_4.gif",
           "assets/citytex/grass.gif",
           "assets/citytex/heightmap6.gif",
           "assets/citytex/water.gif",
