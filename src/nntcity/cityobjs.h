@@ -16,6 +16,10 @@ namespace octet {
       this->points[0] = p1;
       this->points[1] = p2;
     }
+
+    bool equalsTo(Street *s2){
+      return all(this->points[0] == s2->points[0]) && all(this->points[1] == s2->points[1]);
+    }
   
   };
 
@@ -230,6 +234,75 @@ namespace octet {
             }
           }
         }
+      }
+    }
+
+    void calculateStreetMeshesLength(){
+      for(int i=0; i!= streetsIntersections.size(); ++i){
+      //  for(int j=0; j!= streetsIntersections[i]->streets.size(); ++j){
+                
+                
+                 
+                //We calculate the distance to translate the intersection point of each pair of streets
+                Street *streetsToModify [2];
+                streetsToModify[0] = streetsIntersections[i]->streets[0];
+                streetsToModify[1] = streetsIntersections[i]->streets[1];
+
+                vec4 streetVectors [2];
+
+                for(int x=0; x!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++x){
+                  for(int y=0; y!=sizeof(streetsToModify[x]->points)/sizeof(streetsToModify[x]->points[0]);++y){
+                    if(all(streetsIntersections[i]->point == streetsToModify[x]->points[y])){
+                      streetVectors[x] = streetsToModify[x]->points[(y==1) ? 0 : y+1] - streetsIntersections[i]->point;
+                    }
+                  }
+                } 
+
+                float angleBetweenStreets = acos(dot(streetVectors[0],streetVectors[1]) / (streetVectors[0].length()*streetVectors[1].length()));
+
+                float streetWidth = 0.26f;
+
+                float distanceToTranslate = streetWidth / (2 * tanf(angleBetweenStreets/2));
+
+
+                //We calculate the coordinates of the translated point
+                float angleStreetsCS[2];  
+                
+                for(int p=0; p!=sizeof(streetVectors)/sizeof(streetVectors[0]);++p){
+                  if(streetVectors[p].x() != 0.0f){
+                    angleStreetsCS[p] = atan(streetVectors[p].z()/streetVectors[p].x());
+                  }else if(streetVectors[p].z() > 0.0f){
+                    angleStreetsCS[p] = 3.14159265359f / 2; // 90 º
+                  }else{
+                    angleStreetsCS[p] = 3*(3.14159265359f / 2); // 270 º
+                  }
+
+                }
+
+
+                for(int q=0; q!=sizeof(streetVectors)/sizeof(streetVectors[0]);++q){
+                  if(streetVectors[q].x() < 0.0f){
+                    angleStreetsCS[q] = 3.14159265359f + angleStreetsCS[q];
+                  }
+
+                  if(streetVectors[q].x() > 0.0f && streetVectors[q].z() < 0.0f ){
+                    angleStreetsCS[q] = 2 * (3.14159265359f) + angleStreetsCS[q];
+                  }
+                }
+
+
+
+
+                for(int l=0; l!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++l){
+                  for(int m=0; m!=sizeof(streetsToModify[l]->points)/sizeof(streetsToModify[l]->points[0]);++m){
+                    if(all(streetsIntersections[i]->point == streetsToModify[l]->points[m])){
+                      streetsToModify[l]->points[m][0] += distanceToTranslate * cos(angleStreetsCS[l]);
+                      streetsToModify[l]->points[m][2] += distanceToTranslate * sin(angleStreetsCS[l]);
+                    }
+                  }
+                }                 
+                
+       // }
       }
     }
 

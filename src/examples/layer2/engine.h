@@ -83,13 +83,17 @@ namespace octet {
         vec4(-6.5f, 0.0f, 9.0f, 1.0f),
         vec4(4.5f, 0.0f, 8.0f, 1.0f),
         vec4(4.0f, 0.0f, -5.0f, 1.0f)
-      };
+      }; 
+
       city->init(vertices);
       city->stepPartition(depth);
       city->printStreets();
 
       city->calculateIntersections();
       city->printIntersections();
+      city->calculateStreetMeshesLength();
+
+      city->printStreets();
 
       //
       // city_mesh declaration
