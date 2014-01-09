@@ -12,19 +12,22 @@ namespace octet {
     typedef animation animation;
     typedef scene_node scene_node;
 
-    vec3 camera_position;
+    vec4 camera_position;
     vec3 camera_rotation;
 
     // named resources loaded from collada file
     resources dict;
 
     // shaders to draw triangles
+	  city_bump_shader city_bump_shader_;
     bump_shader object_shader;
     color_shader cshader;
 
     vec4 light_uniforms_array[5];
     int num_light_uniforms;
     int num_lights;
+
+    vec3 light_rotation;
 
     // helper to rotate camera about scene
     //mouse_ball ball;
@@ -50,23 +53,26 @@ namespace octet {
     engine(int argc, char **argv) 
     : app(argc, argv)
     //, ball()
-    , camera_position(0.0f, 0.0f, 10.0f)
+    , camera_position(0.0f, 0.0f, 10.0f, 0.0f)
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
+    , light_rotation(45.0f, 30.0f, 0.0f)
     {
     }
 
     // this is called once OpenGL is initialized
     void app_init() {
       // Shader Set Up
+	  city_bump_shader_.init(); // false is default
       object_shader.init(false);
+	
       cshader.init();
       compassCard.init(&cshader);
 
       // Light Set Up
       memset(light_uniforms_array, 0, sizeof(light_uniforms_array));
-      light_uniforms_array[0] = vec4(0.3f, 0.3f, 0.3f, 50.0f);
-      light_uniforms_array[2] = vec4(0.707f, 0.707f, 0.707f, 0.0f);
+      light_uniforms_array[0] = vec4(0.1f, 0.1f, 0.1f, 50.0f);
+      light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f);
       light_uniforms_array[3] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
       light_uniforms_array[4] = vec4(1.0f, 0.0f, 0.0f, 1.0f);
       num_light_uniforms = 5;
@@ -74,7 +80,7 @@ namespace octet {
 
       // Binary Space Partition
 
-      depth = 0;
+      depth = 8;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
@@ -139,6 +145,12 @@ namespace octet {
         camera_position[2] += 0.25f;
       }
 
+      if (is_key_down('R')) {
+        camera_position[3] += 0.25f * (camera_position[2]/5.0f);
+      } else if (is_key_down('Y')) {
+        camera_position[3] -= 0.25f * (camera_position[2]/5.0f);
+      }
+
       if (is_key_down('F')) {
         camera_rotation[1] += 5.0f;
         if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
@@ -153,6 +165,22 @@ namespace octet {
       } else if (is_key_down('T')) {
         camera_rotation[0] += 5.0f;
         if (camera_rotation[0] > 90.0f) camera_rotation[0] = 90.0f;
+      }
+
+      if (is_key_down('J')) {
+        light_rotation[0] += 5.0f;
+        if (light_rotation[0] >= 360.0f) light_rotation[0] -= 360.0f;
+      } else if (is_key_down('L')) {
+        light_rotation[0] -= 5.0f;
+        if (light_rotation[0] < 0.0f) light_rotation[0] += 360.0f;
+      }
+
+      if (is_key_down('I')) {
+        light_rotation[1] -= 5.0f;
+        if (light_rotation[1] < -90.0f) light_rotation[1] = -90.0f;
+      } else if (is_key_down('K')) {
+        light_rotation[1] += 5.0f;
+        if (light_rotation[1] > 90.0f) light_rotation[1] = 90.0f;
       }
     }
 
@@ -180,7 +208,7 @@ namespace octet {
       modelToWorld.loadIdentity();
 
       cameraToWorld.loadIdentity();
-      cameraToWorld.translate(camera_position.x(), 0.0f, camera_position.y());
+      cameraToWorld.translate(camera_position.x(), camera_position.w(), camera_position.y());
       cameraToWorld.rotate(camera_rotation[1], 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-camera_rotation[0], 1.0f, 0.0f, 0.0f);
       cameraToWorld.translate(0.0f, 0.0f, camera_position.z());
@@ -192,7 +220,7 @@ namespace octet {
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
 
-      light_uniforms_array[2] = vec4(0.707f, 0.707f, 0.707f, 0.0f) * worldToCamera;
+      light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
@@ -200,7 +228,8 @@ namespace octet {
       //
       // city_mesh render - not working for now
       //
-      city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      // city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+	    city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);

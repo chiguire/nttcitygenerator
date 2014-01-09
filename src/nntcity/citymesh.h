@@ -1,6 +1,8 @@
 namespace octet {
 
   const float HEIGHT_FACTOR = 2.0f/255.0f;
+  const float WATER_LEVEL = 0.5f;
+  const float BRIDGE_LEVEL = 0.8f;
 
   class CityMesh {
 
@@ -23,9 +25,9 @@ namespace octet {
         imageArray_ = new dynarray<image *>();
         char *files[] = {
           "assets/citytex/pavement.gif",
-          "assets/citytex/road.gif",
+          "assets/citytex/road_4.gif",
           "assets/citytex/grass.gif",
-          "assets/citytex/heightmap4.gif",
+          "assets/citytex/heightmap6.gif",
           "assets/citytex/water.gif",
           0
         };
@@ -49,8 +51,9 @@ namespace octet {
     void generateHeightmap() {
       heightmap.reset();
       image *heightmapImage = ((*getImageArray())[3]);
-      heightmap_width = heightmapImage->get_width()+1;
-      heightmap_height = heightmapImage->get_height()+1;
+      heightmap_width = heightmapImage->get_width()+2;
+      heightmap_height = heightmapImage->get_height()+2;
+      heightmap.resize(heightmap_width*heightmap_height);
 
       for (int j = 0; j != heightmap_height; j++) {
         float v_ = ((float)j-1) / (heightmap_height-2);
@@ -61,8 +64,11 @@ namespace octet {
   
           heightmapImage->sample2Dbilinear(u_, v_, color);
 
-          heightmap.push_back(color.x()*HEIGHT_FACTOR);
+          heightmap[j*heightmap_height+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
+
+          //printf("%.1f,", heightmap[j*heightmap_height+i]);
         }
+        //printf("\n");
       }
     }
 
@@ -96,7 +102,11 @@ namespace octet {
         heightmapImage->sample2Dbilinear(u_, v_, color);
         //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
 
-        result.push_back(color.x()*HEIGHT_FACTOR);
+        float h = color.x() * HEIGHT_FACTOR;
+        if (h < BRIDGE_LEVEL) {
+          h = BRIDGE_LEVEL;
+        }
+        result.push_back(h);
       }
     }
 
@@ -123,12 +133,12 @@ namespace octet {
         vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
 
         float points_distance = (v2 - v1).length();
-        unsigned int points = ceilf(points_distance)*2;
+        unsigned int points = ceilf(points_distance*2);
         get_road_heights(road_heights, v1, v2, points, cityDimensions, cityCenter, 0.5f, 0.25f, 0.25f);
 
 
         //bprintf("Midpoint (%.2f, %.2f, %.2f)\n", vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
         //mb.add_cuboid_heights(0.1f, 0.02f, points_distance/2.0f, points, road_heights.data());
@@ -141,7 +151,7 @@ namespace octet {
         //Creating pavements
         //left
         mb.init(0, 0);
-        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
         mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
@@ -154,7 +164,7 @@ namespace octet {
         //right
         mb.init(0, 0);
 
-        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(0.1f+0.01f, 0.0f, 0.0f);
 
@@ -169,32 +179,32 @@ namespace octet {
 
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
-      grassMaterial = new material((*getImageArray())[2], 1.0f);
+      grassMaterial = new material((*getImageArray())[2], false);
       //waterMaterial = new material((*getImageArray())[4]);
       waterMaterial = new material();
-      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), false, false);
+      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
       //Create surface mesh
 
       
       //Create heightmap
-      float citySize = cityDimensions.x() > cityDimensions.z()? cityDimensions.x() : cityDimensions.z();
-      citySize *= 2.0f; //city terrain border
-      
+      vec4 terrainDimensions = cityDimensions*2.0f;
+
       printf("Creating surface from heightmap.\n");
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(citySize, heightmap_width-1, heightmap_height-1, heightmap.data(), heightmap_width, heightmap_height);
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
 
       printf("Creating water plane.\n");
       mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y()+0.5f, cityCenter.z());
+      mb.translate(cityCenter.x(), cityCenter.y()+WATER_LEVEL, cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane(citySize, (int)citySize, (int)citySize);
-      mb.get_mesh(waterMesh); 
+      mb.add_plane(terrainDimensions.x(), terrainDimensions.z(), 10, 10);
+      mb.get_mesh(waterMesh);
     }
+
 
 
 
@@ -218,7 +228,32 @@ namespace octet {
       //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //waterMesh.render();
     }
+
+
+
+	 void debugRender_newShader(dynarray<Street> *streetsList, city_bump_shader &city_shader, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      surfaceMesh.render();
+
+      roadMaterial->render_road(city_shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+
+      for (int i = 0; i != streetsList->size(); ++i) {
+        (*streetsList)[i].roadMesh.render();
+      }
+
+      pavementMaterial->render_road(city_shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+
+      for (int i = 0; i != streetsList->size(); ++i) {
+        (*streetsList)[i].pavementMeshLeft.render();
+        (*streetsList)[i].pavementMeshRight.render();
+      }
+
+      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      waterMesh.render();
+    }
+
   };
+
 
 
   dynarray <image *> *CityMesh::imageArray_;
@@ -231,7 +266,7 @@ namespace octet {
       cshader = cshader_;
     }
 
-    void render(vec3 *camera_position, vec3 *camera_rotation) {
+    void render(vec4 *camera_position, vec3 *camera_rotation) {
       mat4t modelToWorld;
       modelToWorld.loadIdentity();
 
@@ -239,7 +274,7 @@ namespace octet {
       cameraToWorld.loadIdentity();
       cameraToWorld.rotate((*camera_rotation)[1], 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-(*camera_rotation)[0], 1.0f, 0.0f, 0.0f);
-      cameraToWorld.translate(0.0f, 0.0f, camera_position->z());
+      cameraToWorld.translate(0.0f, 0.0f, 5.0f); //camera_position->z());
 
       mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld, 0.1f, 1000.0f, 0.08f, 0.08f);
 
@@ -271,6 +306,7 @@ namespace octet {
       };
 
       glDisable(GL_DEPTH_TEST);
+      glEnableVertexAttribArray(attribute_pos);
 
       cshader->render(modelToProjection, vec4(0.0f, 0.0f, 1.0f, 1.0f));
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, x_arrow);

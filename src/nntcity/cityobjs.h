@@ -87,7 +87,9 @@ namespace octet {
     vec4 * debugColors;
 
 
-    City () {}
+    City ()
+    :randomizer(time(NULL))
+    {}
 
     static City *createFromRectangle(float width, float height) {
       vec4 vert_[4];
@@ -332,10 +334,10 @@ namespace octet {
       s->render(modelToProjection, debugColors[depth]);
 
       float vertices[] = {
-        node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  
-        node->vertices[1].x(), node->vertices[1].y(), node->vertices[1].z(),  
-        node->vertices[2].x(), node->vertices[2].y(), node->vertices[2].z(),  
-        node->vertices[3].x(), node->vertices[3].y(), node->vertices[3].z()
+        -node->vertices[0].x(), -node->vertices[0].y(), -node->vertices[0].z(),  
+        -node->vertices[1].x(), -node->vertices[1].y(), -node->vertices[1].z(),  
+        -node->vertices[2].x(), -node->vertices[2].y(), -node->vertices[2].z(),  
+        -node->vertices[3].x(), -node->vertices[3].y(), -node->vertices[3].z()
       };
 
    /*   printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
@@ -420,8 +422,14 @@ namespace octet {
       // TODO Heuristic: choose sides intersected by frustrum
     //  int r = randomizer.get(0, 10);
     //  BSPNode *child = (r % 2 ==0)? b->left: b->right;
-
-      stepPartition_(depth - 1, b->right);
+      float r0 = randomizer.get(0.0f, 1.0f);
+      float r1 = randomizer.get(0.0f, 1.0f);
+      if (r0 > 0.5f) {
+        stepPartition_(depth - 1, b->left);
+      }
+      if (r1 > 0.5f) {
+        stepPartition_(depth - 1, b->right);
+      }
     }
 
     void generateStreets( BSPNode * node) {
