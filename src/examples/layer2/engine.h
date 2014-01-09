@@ -80,7 +80,7 @@ namespace octet {
 
       // Binary Space Partition
 
-      depth = 8;
+      depth = 0;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
@@ -228,8 +228,8 @@ namespace octet {
       //
       // city_mesh render - not working for now
       //
-      // city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
-	    city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+	    //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);
