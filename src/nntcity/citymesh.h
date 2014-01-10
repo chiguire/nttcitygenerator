@@ -114,7 +114,7 @@ namespace octet {
     void init(dynarray<Street> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
 
       printf("Generating heightmap.\n");
-      generateHeightmap();
+      generateHeightmap(); 
 
       printf("Creating road meshes.\n");
 
@@ -140,8 +140,8 @@ namespace octet {
         //bprintf("Midpoint (%.2f, %.2f, %.2f)\n", vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
         mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        //mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
-        mb.add_cuboid_heights(0.1f, 0.02f, points_distance/2.0f, points, road_heights.data());
+        mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
+        //mb.add_cuboid_heights(0.1f, 0.02f, points_distance/2.0f, points, road_heights.data());
 
         mesh *m = new mesh();
         mb.get_mesh(*m);
@@ -154,8 +154,8 @@ namespace octet {
         mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
-        //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f-0.1f);
-        mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
+        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
+        //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
         
         m = new mesh();
         mb.get_mesh(*m);
@@ -168,8 +168,8 @@ namespace octet {
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.translate(0.1f+0.01f, 0.0f, 0.0f);
 
-        //mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
-        mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
+        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
+        //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
 
         m = new mesh();
         mb.get_mesh(*m);
@@ -185,6 +185,7 @@ namespace octet {
       waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
       //Create surface mesh
 
+      
       //Create heightmap
       vec4 terrainDimensions = cityDimensions*2.0f;
 
@@ -206,9 +207,10 @@ namespace octet {
 
 
 
-	void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      surfaceMesh.render();
+
+		void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      //surfaceMesh.render();
 
       roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
 
@@ -223,8 +225,8 @@ namespace octet {
         (*streetsList)[i].pavementMeshRight.render();
       }
 
-      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      waterMesh.render();
+      //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      //waterMesh.render();
     }
 
 
