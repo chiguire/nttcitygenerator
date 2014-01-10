@@ -102,7 +102,7 @@ namespace octet {
         heightmapImage->sample2Dbilinear(u_, v_, color);
         //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
 
-        float h = color.x() * HEIGHT_FACTOR;
+        float h = (color.x() * HEIGHT_FACTOR)+HEIGHT_FACTOR*3;
         if (h < BRIDGE_LEVEL) {
           h = BRIDGE_LEVEL;
         }
