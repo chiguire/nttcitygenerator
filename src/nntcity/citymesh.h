@@ -72,6 +72,59 @@ namespace octet {
       }
     }
 
+
+
+  /*
+  //Not yet functional, didn't manage to get it working in time
+  //Calculate the bezier point
+  vec4 drawBezierGeneralized(vec4 &firstPoint, vec4 &secondPoint, vec4 &thirdPoint, vec4 &fourthPoint) {
+    vec4 pointOfResult = vec4(0,0,0,0);
+    float points = 4;
+
+    for(int i=0;i<4;i++)
+    {
+      if(i == 0) {
+        pointOfResult.x = firstPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.y;
+      }
+      if(i == 1) {
+        pointOfResult.x = secondPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.y;
+      }
+      if(i == 2) {
+        pointOfResult.x = thirdPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.y;
+      }
+      if(i == 3) {
+        pointOfResult.x = fourthPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.y;
+      }
+    }
+    //cout<<P.x<<endl<<P.y;
+    //cout<<endl<<endl;
+    return pointOfResult;
+  }
+
+
+  int factorial(int n)
+  {
+    if (n<=1)
+     return(1);
+    else
+     n=n*factorial(n-1);
+    return n;
+  }
+
+  float binomial_coff(float n,float k)
+  {
+    float ans;
+    ans = factorial(n) / (factorial(k)*factorial(n-k));
+    return ans;
+  }
+  */
+
+
+
     // Samples the heights of the heightmap to create a projected road on the surface
     // result - the array of float with the heights
     // v1, v2 - start and end of the road
