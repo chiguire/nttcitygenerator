@@ -28,7 +28,7 @@ namespace octet {
           "assets/citytex/road_4.gif",
           "assets/citytex/grass_3.gif",
           "assets/citytex/heightmap6.gif",
-          "assets/citytex/water.gif",
+          "assets/citytex/water_2.gif",
           0
         };
 
@@ -233,7 +233,7 @@ namespace octet {
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
       grassMaterial = new material((*getImageArray())[2], false);
-      //waterMaterial = new material((*getImageArray())[4]);
+      // waterMaterial = new material((*getImageArray())[4]);
       waterMaterial = new material();
       waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
       //Create surface mesh
