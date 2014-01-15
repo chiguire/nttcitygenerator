@@ -26,7 +26,7 @@ namespace octet {
         char *files[] = {
           "assets/citytex/pavement.gif",
           "assets/citytex/road_4.gif",
-          "assets/citytex/grass.gif",
+          "assets/citytex/grass_3.gif",
           "assets/citytex/heightmap6.gif",
           "assets/citytex/water.gif",
           0
@@ -262,8 +262,8 @@ namespace octet {
 
 
 		void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      //surfaceMesh.render();
+      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      surfaceMesh.render();
 
       roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
 
@@ -278,8 +278,8 @@ namespace octet {
         (*streetsList)[i].pavementMeshRight.render();
       }
 
-      //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      //waterMesh.render();
+      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      waterMesh.render();
     }
 
 

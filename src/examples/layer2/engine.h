@@ -268,9 +268,7 @@ namespace octet {
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
     
-      //
-      // city_mesh render - not working for now
-      //
+    
       city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 	    //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
