@@ -26,6 +26,8 @@ namespace octet {
     vec4 light_uniforms_array[5];
     int num_light_uniforms;
     int num_lights;
+    int  mouse_x, mouse_y;
+    int prev_x, prev_y;
 
     vec3 light_rotation;
 
@@ -182,12 +184,52 @@ namespace octet {
         if (light_rotation[1] > 90.0f) light_rotation[1] = 90.0f;
       }
     }
+    
+    void mouseMovement()
+    {
+      if (prev_x < mouse_x)
+      {
+        camera_rotation[1] -= 4.0f;
+        prev_x = mouse_x;
+
+        if (camera_rotation[1] < 0.0f)
+          camera_rotation[1] += 360.0f;
+
+      }
+      else if (prev_x > mouse_x)
+      {
+        camera_rotation[1] += 4.0f;
+        prev_x = mouse_x;
+
+        if (camera_rotation[1] >= 360.0f)
+          camera_rotation[1] -= 360.0f;
+      }
+
+      if (prev_y < mouse_y)
+      {
+        camera_rotation[0] += 4.0f;
+        prev_y = mouse_y;
+
+        if (camera_rotation[0] > 90.0f)
+          camera_rotation[0] = 90.0f;
+      }
+      else if (prev_y > mouse_y)
+      {
+        camera_rotation[0] -= 4.0f;
+        prev_y = mouse_y;
+
+        if (camera_rotation[0] < -90.0f)
+          camera_rotation[0] = -90.0f;
+      }
+
+    }
 
 
     // this is called to draw the world
     void draw_world(int x, int y, int w, int h) {
 
       keyboardInput();
+      mouseMovement();
 
       // set a viewport - includes whole window area
       glViewport(x, y, w, h);
@@ -211,6 +253,7 @@ namespace octet {
       cameraToWorld.rotate(camera_rotation[1], 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-camera_rotation[0], 1.0f, 0.0f, 0.0f);
       cameraToWorld.translate(0.0f, 0.0f, camera_position.z());
+      get_mouse_pos(mouse_x, mouse_y);
 
       mat4t worldToCamera;
       cameraToWorld.invertQuick(worldToCamera);
@@ -224,9 +267,7 @@ namespace octet {
       //ball.update(cameraToWorld);
       //picker.update(app_scene);
     
-      //
-      // city_mesh render - not working for now
-      //
+    
       city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 	    //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 

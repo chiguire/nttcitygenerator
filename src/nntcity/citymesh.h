@@ -26,9 +26,9 @@ namespace octet {
         char *files[] = {
           "assets/citytex/pavement.gif",
           "assets/citytex/road_4.gif",
-          "assets/citytex/grass.gif",
+          "assets/citytex/grass_3.gif",
           "assets/citytex/heightmap6.gif",
-          "assets/citytex/water.gif",
+          "assets/citytex/water_2.gif",
           0
         };
 
@@ -72,6 +72,59 @@ namespace octet {
       }
     }
 
+
+
+  /*
+  //Not yet functional, didn't manage to get it working in time
+  //Calculate the bezier point
+  vec4 drawBezierGeneralized(vec4 &firstPoint, vec4 &secondPoint, vec4 &thirdPoint, vec4 &fourthPoint) {
+    vec4 pointOfResult = vec4(0,0,0,0);
+    float points = 4;
+
+    for(int i=0;i<4;i++)
+    {
+      if(i == 0) {
+        pointOfResult.x = firstPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.y;
+      }
+      if(i == 1) {
+        pointOfResult.x = secondPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.y;
+      }
+      if(i == 2) {
+        pointOfResult.x = thirdPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.y;
+      }
+      if(i == 3) {
+        pointOfResult.x = fourthPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.x;
+        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.y;
+      }
+    }
+    //cout<<P.x<<endl<<P.y;
+    //cout<<endl<<endl;
+    return pointOfResult;
+  }
+
+
+  int factorial(int n)
+  {
+    if (n<=1)
+     return(1);
+    else
+     n=n*factorial(n-1);
+    return n;
+  }
+
+  float binomial_coff(float n,float k)
+  {
+    float ans;
+    ans = factorial(n) / (factorial(k)*factorial(n-k));
+    return ans;
+  }
+  */
+
+
+
     // Samples the heights of the heightmap to create a projected road on the surface
     // result - the array of float with the heights
     // v1, v2 - start and end of the road
@@ -102,7 +155,7 @@ namespace octet {
         heightmapImage->sample2Dbilinear(u_, v_, color);
         //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
 
-        float h = color.x() * HEIGHT_FACTOR;
+        float h = (color.x() * HEIGHT_FACTOR)+HEIGHT_FACTOR*3;
         if (h < BRIDGE_LEVEL) {
           h = BRIDGE_LEVEL;
         }
@@ -201,7 +254,7 @@ namespace octet {
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterial = new material((*getImageArray())[1]);
       grassMaterial = new material((*getImageArray())[2], false);
-      //waterMaterial = new material((*getImageArray())[4]);
+      // waterMaterial = new material((*getImageArray())[4]);
       waterMaterial = new material();
       waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
       //Create surface mesh
@@ -230,8 +283,8 @@ namespace octet {
 
 
 		void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      //surfaceMesh.render();
+      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      surfaceMesh.render();
 
       roadMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
 
@@ -246,8 +299,8 @@ namespace octet {
         (*streetsList)[i].pavementMeshRight.render();
       }
 
-      //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      //waterMesh.render();
+      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      waterMesh.render();
     }
 
 
