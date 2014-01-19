@@ -2,15 +2,26 @@ namespace octet {
 
   class Street{
     public:
-
+    
+    vec4 points[2];
     mesh roadMesh;
     mesh pavementMeshLeft;
+    dynarray<vec4> pavementMeshLeftPoints;
     mesh pavementMeshRight;
-    vec4 points[2];
+    dynarray<vec4> pavementMeshRightPoints;
+    float angleCS[2];
+    float translatedDistance[2];
+    
 
     Street() {
       memset(points, 0, sizeof(vec4)*2);
     }
+
+    //Copy constructor that may be maybe modified
+    Street(Street &s) {                                                       
+      this->points[0] = s.points[0];
+      this->points[1] = s.points[1];
+    } 
 
     Street(vec4 p1, vec4 p2){
       this->points[0] = p1;
@@ -239,37 +250,165 @@ namespace octet {
       }
     }
 
-    void calculateStreetMeshesLength(){
+  /*  void calculateIntersectionsSpace(){
       for(int i=0; i!= streetsIntersections.size(); ++i){
-      //  for(int j=0; j!= streetsIntersections[i]->streets.size(); ++j){
-                
-                
-                 
-                //We calculate the distance to translate the intersection point of each pair of streets
-                Street *streetsToModify [2];
-                streetsToModify[0] = streetsIntersections[i]->streets[0];
-                streetsToModify[1] = streetsIntersections[i]->streets[1];
+        int numStreets = streetsIntersections[i]->streets.size()-1;
 
-                vec4 streetVectors [2];
+        for(int j=0; j!= streetsIntersections[i]->streets.size()-1; ++j){
+                                 
+            //----------------------We calculate the distance to translate each pair of streets from the intersection point----------------------
+            
+            //We obtain two pair of streets
+            Street *streetsToModify [2];
+            streetsToModify[0] = streetsIntersections[i]->streets[j];
+            streetsToModify[1] = streetsIntersections[i]->streets[j+1];
 
-                for(int x=0; x!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++x){
-                  for(int y=0; y!=sizeof(streetsToModify[x]->points)/sizeof(streetsToModify[x]->points[0]);++y){
-                    if(all(streetsIntersections[i]->point == streetsToModify[x]->points[y])){
-                      streetVectors[x] = streetsToModify[x]->points[(y==1) ? 0 : y+1] - streetsIntersections[i]->point;
-                    }
+            //We obtain their defining vectors
+            vec4 streetVectors [2];
+
+            for(int x=0; x!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++x){
+              for(int y=0; y!=sizeof(streetsToModify[x]->points)/sizeof(streetsToModify[x]->points[0]);++y){
+                if(all(streetsIntersections[i]->point == streetsToModify[x]->points[y])){
+                  streetVectors[x] = streetsToModify[x]->points[(y==1) ? 0 : y+1] - streetsIntersections[i]->point;
+                }
+              }
+            } 
+
+            float operation = dot(streetVectors[0],streetVectors[1]) / (streetVectors[0].length()*streetVectors[1].length());
+
+            if(operation < -1.0f){
+              operation = -1.0f;
+            }
+
+            if(operation > 1.0f){
+              operation = 1.0f;
+            }
+
+            float angleBetweenStreets = acos(operation);
+
+            float streetWidth = 0.26f;
+
+            float distanceToTranslate = streetWidth / (2 * tanf(angleBetweenStreets/2));
+
+
+            //------------------------------We calculate the coordinates of the new point of the streets---------------------------------
+
+            float angleStreetsCS[2];  
+                
+            for(int p=0; p!=sizeof(streetVectors)/sizeof(streetVectors[0]);++p){
+              if(streetVectors[p].x() != 0.0f){
+                angleStreetsCS[p] = atan(streetVectors[p].z()/streetVectors[p].x());
+              }else if(streetVectors[p].z() > 0.0f){
+                angleStreetsCS[p] = 3.14159265359f / 2; // 90 º
+              }else{
+                angleStreetsCS[p] = 3*(3.14159265359f / 2); // 270 º
+              }
+
+            }
+
+            //Change the angle to be in a 360º basis
+            for(int q=0; q!=sizeof(streetVectors)/sizeof(streetVectors[0]);++q){
+              if(streetVectors[q].x() < 0.0f){
+                angleStreetsCS[q] = 3.14159265359f + angleStreetsCS[q];
+              }
+
+              if(streetVectors[q].x() > 0.0f && streetVectors[q].z() < 0.0f ){
+                angleStreetsCS[q] = 2 * (3.14159265359f) + angleStreetsCS[q];
+              }
+            }
+
+
+            //We store the biggest distance among iterations and the angle according to the coordinate system
+            for(int z=0; z!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++z){
+              for(int w=0; w!=sizeof(streetsToModify[z]->points)/sizeof(streetsToModify[z]->points[0]);++w){
+                if(all(streetsIntersections[i]->point == streetsToModify[z]->points[w])){
+                  if(streetsToModify[z]->translatedDistance[w] < distanceToTranslate){
+                    streetsToModify[z]->translatedDistance[w] = distanceToTranslate;
+                    streetsToModify[z]->angleCS[w] = angleStreetsCS[z];
                   }
-                } 
+                }
+              }
+            }                  
+        }
 
-                float angleBetweenStreets = acos(dot(streetVectors[0],streetVectors[1]) / (streetVectors[0].length()*streetVectors[1].length()));
+        //We finally move the point
+        for(int l=0; l!= streetsIntersections[i]->streets.size(); ++l){
+          for(int m=0; m!=sizeof(streetsIntersections[i]->streets[l]->points)/sizeof(streetsIntersections[i]->streets[l]->points[0]);++m){
+            if(all(streetsIntersections[i]->point == streetsIntersections[i]->streets[l]->points[m])){
+              streetsIntersections[i]->streets[l]->points[m][0] += streetsIntersections[i]->streets[l]->translatedDistance[m] * cos(streetsIntersections[i]->streets[l]->angleCS[m]);
+              streetsIntersections[i]->streets[l]->points[m][2] += streetsIntersections[i]->streets[l]->translatedDistance[m] * sin(streetsIntersections[i]->streets[l]->angleCS[m]);
+            }
+          }
+        }
+      }
+    } */
 
-                float streetWidth = 0.26f;
+    int getStreetsIndex(Street *st){
+      for(int i=0; i!= streetsList.size(); ++i){
+        if(all(streetsList[i].points[0] == st->points[0]) && all(streetsList[i].points[1] == st->points[1])){
+            return i;
+        }
+      }
+    }
 
-                float distanceToTranslate = streetWidth / (2 * tanf(angleBetweenStreets/2));
+    void calculateMeshesIntersections(){
+
+      float streetWidth = 0.26f;
+      float pavementWidth = 0.04;
+      
+      std::vector< std::vector<int> > checkIntersections(streetsList.size(),std::vector<int>(streetsList.size()));
+
+      int index = 0;
+
+      for(int i=index; i!= streetsIntersections.size(); ++i){
+        int numStreets = streetsIntersections[i]->streets.size()-1;
+        for(int j=0; j!= streetsIntersections[i]->streets.size(); ++j){
+          for(int k=0; k!= streetsIntersections[i]->streets.size(); ++k){
+
+            if(!( streetsIntersections[i]->streets[j]->equalsTo(streetsIntersections[i]->streets[k]))){
+              //----------------------We calculate the distance to translate each pair of streets from the intersection point----------------------
+
+              //We obtain two pair of streets
+              Street *streetsToModify [2];
+              streetsToModify[0] = streetsIntersections[i]->streets[j];
+              streetsToModify[1] = streetsIntersections[i]->streets[k];
+
+              //We obtain their defining vectors setting the origin as the intersection point
+              vec4 streetVectors [2];
+
+              for(int x=0; x!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++x){
+                for(int y=0; y!=sizeof(streetsToModify[x]->points)/sizeof(streetsToModify[x]->points[0]);++y){
+                  if(all(streetsIntersections[i]->point == streetsToModify[x]->points[y])){
+                    streetVectors[x] = streetsToModify[x]->points[(y==1) ? 0 : y+1] - streetsIntersections[i]->point;
+                  }
+                }
+              } 
+
+              float operation = dot(streetVectors[0],streetVectors[1]) / (streetVectors[0].length()*streetVectors[1].length());
+
+              if(operation <= -0.99f){
+                operation = -1.0f;
+              }
+
+              if(operation > 0.99f){
+                operation = 1.0f;
+              }
+
+              float angleBetweenStreets = acos(operation);
+
+              int intAngleBetweenStreets = (angleBetweenStreets*(180.0f/3.14159265359f));
+
+              if(intAngleBetweenStreets != 180){
+
+                float exteriorDistance = (streetWidth / 2) / sin(angleBetweenStreets/2);
+
+                float interiorDistance = ((streetWidth / 2) - pavementWidth) / sin(angleBetweenStreets/2);
 
 
-                //We calculate the coordinates of the translated point
+                //------------------------------We calculate the coordinates of the new point of the streets---------------------------------
+
                 float angleStreetsCS[2];  
-                
+
                 for(int p=0; p!=sizeof(streetVectors)/sizeof(streetVectors[0]);++p){
                   if(streetVectors[p].x() != 0.0f){
                     angleStreetsCS[p] = atan(streetVectors[p].z()/streetVectors[p].x());
@@ -281,7 +420,7 @@ namespace octet {
 
                 }
 
-
+                //Change the angle to be in a 360º basis
                 for(int q=0; q!=sizeof(streetVectors)/sizeof(streetVectors[0]);++q){
                   if(streetVectors[q].x() < 0.0f){
                     angleStreetsCS[q] = 3.14159265359f + angleStreetsCS[q];
@@ -292,19 +431,207 @@ namespace octet {
                   }
                 }
 
+                //We get the smallest street angle and we sum or substract angleBetweenStreets/2 to get the distance vector angle
+                float resultingAngle = 0.0f;
+                float tempAngle = 0.0f;
+                float angleDif = 0.0f;
 
+                if(angleStreetsCS[0] < angleStreetsCS[1]){
+                  
+                  angleDif = angleStreetsCS[1] - angleStreetsCS[0];
 
-
-                for(int l=0; l!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++l){
-                  for(int m=0; m!=sizeof(streetsToModify[l]->points)/sizeof(streetsToModify[l]->points[0]);++m){
-                    if(all(streetsIntersections[i]->point == streetsToModify[l]->points[m])){
-                      streetsToModify[l]->points[m][0] += distanceToTranslate * cos(angleStreetsCS[l]);
-                      streetsToModify[l]->points[m][2] += distanceToTranslate * sin(angleStreetsCS[l]);
-                    }
+                  if(angleDif < 3.14159265359f){
+                    resultingAngle = angleStreetsCS[0] + (angleBetweenStreets/2);
+                  }else{
+                    resultingAngle = angleStreetsCS[0] - (angleBetweenStreets/2);
                   }
-                }                 
+                }else{
+                  angleDif = angleStreetsCS[0] - angleStreetsCS[1];
+
+                  if(angleDif < 3.14159265359f){
+                    resultingAngle = angleStreetsCS[1] + (angleBetweenStreets/2);
+                  }else{
+                    resultingAngle = angleStreetsCS[1] - (angleBetweenStreets/2);
+                  }
+                }
+
+                //We calculate and store the points that define the meshes
+
+                //We obtain the street vectors as v1 - v0
+                vec4 streetVectorsStandard [2];
+                streetVectorsStandard[0] = streetsToModify[0]->points[1] - streetsToModify[0]->points[0];
+                streetVectorsStandard [1] = streetsToModify[1]->points[1] - streetsToModify[1]->points[0];
+
+                for(int z=0; z!=sizeof(streetsToModify)/sizeof(streetsToModify[0]);++z){
+                  for(int w=0; w!=sizeof(streetsToModify[z]->points)/sizeof(streetsToModify[z]->points[0]);++w){
+                    if(all(streetsIntersections[i]->point == streetsToModify[z]->points[w])){
+                 
+                      vec4 exteriorPointPavement (streetsToModify[z]->points[w][0] + exteriorDistance * cos(resultingAngle),0,
+                         streetsToModify[z]->points[w][2] + exteriorDistance * sin(resultingAngle),1);
+
+                       vec4 interiorPointPavement (streetsToModify[z]->points[w][0] + interiorDistance * cos(resultingAngle),0,
+                         streetsToModify[z]->points[w][2] + interiorDistance * sin(resultingAngle),1);
+
+
+                       vec4 exteriorPointVector = exteriorPointPavement - streetsToModify[z]->points[0];
+
+                       exteriorPointVector[1] =  -exteriorPointVector[2];                 
+                       streetVectorsStandard[z][1] = -streetVectorsStandard[z][2];
+
+                       //We obtain the Cross Product to determine if the points belong to the right of the left pavement
+                       float crossProductResult = (streetVectorsStandard[z].x() *exteriorPointVector.y()) - (streetVectorsStandard[z].y() * exteriorPointVector.x()); 
+                 
+                  
+                       if(crossProductResult < 0 && !checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])]){
+
+                         /*printf("Right - (%.2f, %.2f), (%.2f, %.2f)\n",streetsToModify[z]->points[0].x(),streetsToModify[z]->points[0].z(),
+                           streetsToModify[z]->points[1].x(),streetsToModify[z]->points[1].z());*/
+
+                         streetsToModify[z]->pavementMeshRightPoints.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+                         streetsToModify[z]->pavementMeshRightPoints.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+                         streetsToModify[z]->pavementMeshRightPoints.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+                         streetsToModify[z]->pavementMeshRightPoints.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+
+                         checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])] = true;
+
+                       }else if(crossProductResult > 0 && !checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])]){
+
+                        /* printf("Left - (%.2f, %.2f), (%.2f, %.2f)\n",streetsToModify[z]->points[0].x(),streetsToModify[z]->points[0].z(),
+                           streetsToModify[z]->points[1].x(),streetsToModify[z]->points[1].z());*/
+
+                         streetsToModify[z]->pavementMeshLeftPoints.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+                         streetsToModify[z]->pavementMeshLeftPoints.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+                         streetsToModify[z]->pavementMeshLeftPoints.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+                         streetsToModify[z]->pavementMeshLeftPoints.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+
+                         checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])] = true;
+                       }
+
+                      }
+                    } 
+                  }
+              }
+            }
+          }
+        }
+      }
+      printMeshesPoints();
+      generatePointsIncompleteMeshes();
+    
+    } 
+
+    //generates 4 additional points for the Meshes that just have 4 points
+    void generatePointsIncompleteMeshes(){
+
+      float streetWidth = 0.26f;
+      float pavementWidth = 0.04;
+
+      for(int i=0; i!= streetsList.size(); ++i){
+          if(streetsList[i].pavementMeshLeftPoints.size() == 4 || streetsList[i].pavementMeshRightPoints.size() == 4){
+            
+            Street *st = &streetsList[i];
+            
+            //We determine which point of the street is the closest one to the Incomplete Mesh
+            
+            vec4 incompleteMeshPoint;            
+
+            if(st->pavementMeshLeftPoints.size() == 4){
+              incompleteMeshPoint = st->pavementMeshLeftPoints[0];
+            }else{
+              incompleteMeshPoint = st->pavementMeshRightPoints[0];
+            }
+
+            
+            vec4 streetPoint;
+            float distance = 0.0;            
+
+            for(int j=0; j!= sizeof(st->points)/sizeof(st->points[0]); ++j){
+
+             float dis = sqrt( (incompleteMeshPoint.x() - st->points[j].x()) * (incompleteMeshPoint.x() - st->points[j].x()) + 
+                               (incompleteMeshPoint.z() - st->points[j].z()) * (incompleteMeshPoint.z() - st->points[j].z()) );
+
+
+              if(dis > distance){
+                distance = dis;
+                streetPoint = st->points[j];
+              }
+            }
+
+
+            vec4 streetVector = st->points[1] - st->points[0];
+              
+            vec4 perpendicularVector;
+
+            if(st->pavementMeshLeftPoints.size() == 4){
+              perpendicularVector = vec4(streetVector[2],streetVector[1],-streetVector[0],1);
+            }else{
+              perpendicularVector = vec4(-streetVector[2],streetVector[1],streetVector[0],1);
+            }
+
+            float anglePerpendicularVector = 0.0f;
+            //We obtain the angle of the perpendicular vector to the street
+                            
+            if(perpendicularVector.x() != 0.0f){
+              anglePerpendicularVector = atan(perpendicularVector.z()/perpendicularVector.x());
+            }else if(perpendicularVector.z() > 0.0f){
+              anglePerpendicularVector = 3.14159265359f / 2; // 90 º
+            }else{
+              anglePerpendicularVector = 3*(3.14159265359f / 2); // 270 º
+            }
+
+          //Change the angle to be in a 360º basis
+            if(perpendicularVector.x() < 0.0f){
+              anglePerpendicularVector = 3.14159265359f + anglePerpendicularVector;
+            }
+
+            if(perpendicularVector.x() > 0.0f && perpendicularVector.z() < 0.0f ){
+              anglePerpendicularVector = 2 * (3.14159265359f) + anglePerpendicularVector;
+            } 
+            
+                            
+            vec4 exteriorPointPavement (streetPoint[0] + (streetWidth / 2) * cos(anglePerpendicularVector),0,
+                         streetPoint[2] + (streetWidth / 2) * sin(anglePerpendicularVector),1);
+
+            vec4 interiorPointPavement (streetPoint[0] + ((streetWidth / 2) - pavementWidth) * cos(anglePerpendicularVector),0,
+              streetPoint[2] + ((streetWidth / 2) - pavementWidth) * sin(anglePerpendicularVector),1);
+
+            
+            if(st->pavementMeshRightPoints.size() == 4){
+
+              st->pavementMeshRightPoints.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+              st->pavementMeshRightPoints.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->pavementMeshRightPoints.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->pavementMeshRightPoints.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+
+            }else if(st->pavementMeshLeftPoints.size() == 4){
+
+              st->pavementMeshLeftPoints.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+              st->pavementMeshLeftPoints.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->pavementMeshLeftPoints.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->pavementMeshLeftPoints.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+
+            }
                 
-       // }
+          }
+      }
+    }
+
+    void printMeshesPoints(){
+      printf("%d Streets:\n\n",streetsList.size());
+
+      for(int i=0; i!= streetsList.size(); ++i){
+        printf("%d. (%.2f, %.2f), (%.2f, %.2f).\n",i+1,
+          streetsList[i].points[0].x(), streetsList[i].points[0].z(),  
+          streetsList[i].points[1].x(), streetsList[i].points[1].z());
+        printf("\n*Right Pavement points:\n");
+        for(int j=0; j!= streetsList[i].pavementMeshRightPoints.size(); ++j){
+          printf("  %d. (%.2f, %.2f, %.2f)\n",j,streetsList[i].pavementMeshRightPoints[j].x(), streetsList[i].pavementMeshRightPoints[j].y(), streetsList[i].pavementMeshRightPoints[j].z());
+        }
+        printf("\n*Left Pavement points:\n");
+        for(int k=0; k!= streetsList[i].pavementMeshLeftPoints.size(); ++k){
+          printf("  %d. (%.2f, %.2f, %.2f)\n",k,streetsList[i].pavementMeshLeftPoints[k].x(), streetsList[i].pavementMeshLeftPoints[k].y(), streetsList[i].pavementMeshLeftPoints[k].z());
+        }
+        printf("\n");
       }
     }
 
@@ -334,10 +661,10 @@ namespace octet {
       s->render(modelToProjection, debugColors[depth]);
 
       float vertices[] = {
-        -node->vertices[0].x(), -node->vertices[0].y(), -node->vertices[0].z(),  
-        -node->vertices[1].x(), -node->vertices[1].y(), -node->vertices[1].z(),  
-        -node->vertices[2].x(), -node->vertices[2].y(), -node->vertices[2].z(),  
-        -node->vertices[3].x(), -node->vertices[3].y(), -node->vertices[3].z()
+        node->vertices[0].x(), node->vertices[0].y(), node->vertices[0].z(),  
+        node->vertices[1].x(), node->vertices[1].y(), node->vertices[1].z(),  
+        node->vertices[2].x(), node->vertices[2].y(), node->vertices[2].z(),  
+        node->vertices[3].x(), node->vertices[3].y(), node->vertices[3].z()
       };
 
    /*   printf("Rendering vertices: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f,), (%.2f, %.2f).\n",
@@ -417,19 +744,21 @@ namespace octet {
       }
 
 
+      //stepPartition_(depth - 1, b->left);
 
       // Heuristic to choose side: random by now
       // TODO Heuristic: choose sides intersected by frustrum
-    //  int r = randomizer.get(0, 10);
-    //  BSPNode *child = (r % 2 ==0)? b->left: b->right;
-      float r0 = randomizer.get(0.0f, 1.0f);
-      float r1 = randomizer.get(0.0f, 1.0f);
-      if (r0 > 0.5f) {
+
+      
+      float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
+      if (r >= 0.5f) {
         stepPartition_(depth - 1, b->left);
       }
-      if (r1 > 0.5f) {
+      if (r < 0.5f) {
         stepPartition_(depth - 1, b->right);
       }
+      
     }
 
     void generateStreets( BSPNode * node) {

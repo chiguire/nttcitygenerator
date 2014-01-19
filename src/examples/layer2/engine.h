@@ -80,7 +80,7 @@ namespace octet {
 
       // Binary Space Partition
 
-      depth = 0;
+      depth = 7;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
@@ -96,11 +96,10 @@ namespace octet {
       city->printStreets();
 
       city->calculateIntersections();
-      city->printIntersections();
-      city->calculateStreetMeshesLength();
-
-      city->printStreets();
-
+      //city->printIntersections();
+      //city->calculateIntersectionsSpace();
+      city->calculateMeshesIntersections();
+      //city->printMeshesPoints();
       //
       // city_mesh declaration
       // city_mesh initialization

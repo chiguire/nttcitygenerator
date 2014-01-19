@@ -59,6 +59,20 @@ namespace octet {
       indices.push_back(cur_vertex+3);
     }
 
+    void add_face(vec4 v1, vec4 v2, vec4 v3, vec4 v4, vec4 normal){
+      unsigned short cur_vertex = (unsigned short)vertices.size();
+      add_vertex(v1, normal, 0, 0);
+      add_vertex(v2, normal, 0, 1);
+      add_vertex(v3, normal, 1, 1);
+      add_vertex(v4, normal, 1, 0);
+      indices.push_back(cur_vertex+0);
+      indices.push_back(cur_vertex+1);
+      indices.push_back(cur_vertex+2);
+      indices.push_back(cur_vertex+0);
+      indices.push_back(cur_vertex+2);
+      indices.push_back(cur_vertex+3);
+    }
+
     // add a ring in the x-y plane. Return index of first index
     unsigned add_ring(float radius, const vec4 &normal, unsigned num_vertices, float v, float uvscale) {
       float rnv = 1.0f / num_vertices;
@@ -186,6 +200,17 @@ namespace octet {
       matrix.rotateX180();
       add_front_face(x, z, y);
       matrix.rotateX90();
+    }
+
+    void add_cuboid_vertices(dynarray<vec4> *vertices){
+      //Up face
+      add_face((*vertices)[0], (*vertices)[1], (*vertices)[5], (*vertices)[4], vec4(0, 1, 0, 0));
+      //Down face
+      add_face((*vertices)[3], (*vertices)[2], (*vertices)[6], (*vertices)[7], vec4(0, -1, 0, 0));
+      //Right face
+      add_face((*vertices)[2], (*vertices)[6], (*vertices)[5], (*vertices)[1], vec4(1, 0, 0, 0));
+      //Left face
+      add_face((*vertices)[3], (*vertices)[7], (*vertices)[4], (*vertices)[0], vec4(-1, 0, 0, 0));
     }
 
     void add_cuboid_heights(float x, float y, float z, unsigned nz, float *heights = NULL) {

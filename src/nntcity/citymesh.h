@@ -138,7 +138,7 @@ namespace octet {
 
 
         //bprintf("Midpoint (%.2f, %.2f, %.2f)\n", vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
+        mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
         mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
         mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
         //mb.add_cuboid_heights(0.1f, 0.02f, points_distance/2.0f, points, road_heights.data());
@@ -149,31 +149,52 @@ namespace octet {
 
 
         //Creating pavements
-        //left
+        //right
+
         mb.init(0, 0);
-        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
-        mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
-        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
-        //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
+
+        if((*streetsList)[i].pavementMeshRightPoints.size() > 0 ){
+
+          mb.add_cuboid_vertices(&((*streetsList)[i].pavementMeshRightPoints));
+
+
+        }else{
+
+          mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+          mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
+          mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
+          mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
+          //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
+
+        }
+
+        
         
         m = new mesh();
-        mb.get_mesh(*m);
-        (*streetsList)[i].pavementMeshLeft = (*m);
+        mb.get_mesh(*m); 
+        m->set_mode(GL_TRIANGLES);
+        (*streetsList)[i].pavementMeshRight = (*m);
 
-        //right
+        //Left
+
         mb.init(0, 0);
 
-        mb.translate(-vMidpoint.x(), -vMidpoint.y(), -vMidpoint.z());
-        mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        mb.translate(0.1f+0.01f, 0.0f, 0.0f);
+        if((*streetsList)[i].pavementMeshLeftPoints.size() > 0 ){
+          mb.add_cuboid_vertices(&((*streetsList)[i].pavementMeshLeftPoints));
+        }else{
+  
+          mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+          mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
+          mb.translate(0.1f+0.01f, 0.0f, 0.0f);
 
-        mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
-        //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
+          mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
+          //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
+        }
 
         m = new mesh();
         mb.get_mesh(*m);
-        (*streetsList)[i].pavementMeshRight = (*m);
+        m->set_mode(GL_TRIANGLES);
+        (*streetsList)[i].pavementMeshLeft = (*m);
       }
 
 
