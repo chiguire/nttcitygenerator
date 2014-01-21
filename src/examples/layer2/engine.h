@@ -231,7 +231,7 @@ namespace octet {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       compassCard.render(&camera_position, &camera_rotation);
 
