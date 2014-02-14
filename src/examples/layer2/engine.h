@@ -127,17 +127,31 @@ namespace octet {
 
     void keyboardInput() 
     {
+      vec4 direction(0.0f);
+
       if (is_key_down('W')) {
-        camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
+        direction[1] = -0.25f * (camera_position[2]/5.0f);
+        //camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
       } else if (is_key_down('S')) {
-        camera_position[1] += 0.25f * (camera_position[2]/5.0f);
+        direction[1] = 0.25f * (camera_position[2]/5.0f);
+        //camera_position[1] += 0.25f * (camera_position[2]/5.0f);
       }
 
       if (is_key_down('A')) {
-        camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
+        direction[0] = -0.25f * (camera_position[2]/5.0f);
+        //camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
       } else if (is_key_down('D')) {
-        camera_position[0] += 0.25f * (camera_position[2]/5.0f);
+        direction[0] = 0.25f * (camera_position[2]/5.0f);
+        //camera_position[0] += 0.25f * (camera_position[2]/5.0f);
       }
+
+      mat4t directionMatrix(1.0f);
+      directionMatrix.rotate(-camera_rotation[1], 0.0f, 0.0f, 1.0f);
+      direction = direction * directionMatrix;
+
+      //printf("Direction: (%.2f, %.2f)\n", direction[0], direction[1]);
+      camera_position[0] += direction[0];
+      camera_position[1] += direction[1];
 
       if (is_key_down('Q')) {
         camera_position[2] -= 0.25f;
