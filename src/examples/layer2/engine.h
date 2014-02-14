@@ -187,6 +187,8 @@ namespace octet {
     
     void mouseMovement()
     {
+      bool is_mouse_down = is_key_down(key_lmb) && is_key_down(key_alt);
+      if (!is_mouse_down) return;
       if (prev_x < mouse_x)
       {
         camera_rotation[1] -= 4.0f;
@@ -264,10 +266,6 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      //ball.update(cameraToWorld);
-      //picker.update(app_scene);
-    
-    
       city_mesh->debugRender(streetList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 	    //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 

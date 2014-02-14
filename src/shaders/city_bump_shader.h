@@ -199,7 +199,7 @@ namespace octet {
       glUniform4fv(light_uniforms_index, num_light_uniforms, (float*)light_uniforms);
       glUniform1i(num_lights_index, num_lights);
 
-	  glUniform1f(tile_size_index, tile_size);
+	    glUniform1f(tile_size_index, tile_size);
 
       // we use textures 0-3 for material properties.
       static const GLint samplers[] = { 0, 1, 2, 3, 4, 5 };
