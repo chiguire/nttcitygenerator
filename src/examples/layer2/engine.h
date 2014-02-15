@@ -31,9 +31,6 @@ namespace octet {
 
     vec3 light_rotation;
 
-    // helper to rotate camera about scene
-    //mouse_ball ball;
-
     // helper for picking objects on the screen
     //object_picker picker;
 
@@ -50,11 +47,13 @@ namespace octet {
 
     int depth;
 
+    text_overlay textOverlay;
+
   public:
     // this is called when we construct the class
     engine(int argc, char **argv) 
     : app(argc, argv)
-    //, ball()
+    , textOverlay()
     , camera_position(0.0f, 0.0f, 10.0f, 0.0f)
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
@@ -121,7 +120,8 @@ namespace octet {
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      //picker.init(this);
+
+      textOverlay.init();
     }
 
 
@@ -149,7 +149,6 @@ namespace octet {
       directionMatrix.rotate(-camera_rotation[1], 0.0f, 0.0f, 1.0f);
       direction = direction * directionMatrix;
 
-      //printf("Direction: (%.2f, %.2f)\n", direction[0], direction[1]);
       camera_position[0] += direction[0];
       camera_position[1] += direction[1];
 
@@ -288,6 +287,8 @@ namespace octet {
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
       city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+
+      textOverlay.render(object_shader, object_shader, vx, vy, 0);
 
       compassCard.render(&camera_position, &camera_rotation);
 
