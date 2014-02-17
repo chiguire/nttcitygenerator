@@ -81,7 +81,7 @@ namespace octet {
 
       // Binary Space Partition
 
-      depth = 7;
+      depth = 8;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
@@ -196,6 +196,11 @@ namespace octet {
         light_rotation[1] += 5.0f;
         if (light_rotation[1] > 90.0f) light_rotation[1] = 90.0f;
       }
+
+      if(is_key_down(key_space)){
+        this->camera_position = vec4(0.0f, 0.0f, 10.0f, 0.0f);
+        this->camera_rotation = vec3(45.0f, 0.0f, 0.0f);
+      }
     }
     
     void mouseMovement()
@@ -263,11 +268,8 @@ namespace octet {
       mat4t modelToWorld;
       modelToWorld.loadIdentity();
 
-      cameraToWorld.loadIdentity();
-      cameraToWorld.translate(camera_position.x(), camera_position.w(), camera_position.y());
-      cameraToWorld.rotate(camera_rotation[1], 0.0f, 1.0f, 0.0f);
-      cameraToWorld.rotate(-camera_rotation[0], 1.0f, 0.0f, 0.0f);
-      cameraToWorld.translate(0.0f, 0.0f, camera_position.z());
+      setCamara();
+
       get_mouse_pos(mouse_x, mouse_y);
 
       mat4t worldToCamera;
@@ -286,12 +288,21 @@ namespace octet {
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       textOverlay.render(object_shader, object_shader, vx, vy, 0);
 
       compassCard.render(&camera_position, &camera_rotation);
 
+    }
+
+    void setCamara() 
+    {
+      cameraToWorld.loadIdentity();
+      cameraToWorld.translate(camera_position.x(), camera_position.w(), camera_position.y());
+      cameraToWorld.rotate(camera_rotation[1], 0.0f, 1.0f, 0.0f);
+      cameraToWorld.rotate(-camera_rotation[0], 1.0f, 0.0f, 0.0f);
+      cameraToWorld.translate(0.0f, 0.0f, camera_position.z());
     }
 
   };
