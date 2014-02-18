@@ -301,6 +301,12 @@ namespace octet {
     }
 
 
+	void create_buildings() {
+
+
+	}
+
+
 
 
 		void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
