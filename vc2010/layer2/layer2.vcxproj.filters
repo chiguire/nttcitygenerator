@@ -352,6 +352,9 @@
     <ClInclude Include="..\..\src\shaders\city_bump_shader.h">
       <Filter>octet\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\nntcity\polygonintersect.h">
+      <Filter>octet\nttcity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\resources\mesh_builder.inl">

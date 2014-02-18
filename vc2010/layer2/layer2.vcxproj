@@ -74,6 +74,7 @@
     <ClInclude Include="..\..\src\math\vec4.h" />
     <ClInclude Include="..\..\src\nntcity\citymesh.h" />
     <ClInclude Include="..\..\src\nntcity\cityobjs.h" />
+    <ClInclude Include="..\..\src\nntcity\polygonintersect.h" />
     <ClInclude Include="..\..\src\physics\physics.h" />
     <ClInclude Include="..\..\src\physics\physics_world.h" />
     <ClInclude Include="..\..\src\platform\app_common.h" />
