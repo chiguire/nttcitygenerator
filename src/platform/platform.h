@@ -199,9 +199,9 @@ static char *get_sprintf_buffer() {
 #include "../resources/mesh_builder.inl"
 
 // city headers
+#include "../../nntcity/polygonintersect.h"
 #include "../../nntcity/cityobjs.h"
 #include "../../nntcity/citymesh.h"
-#include "../../nntcity/polygonintersect.h"
 
 namespace octet {
   inline resource *resource::new_type(atom_t type) {

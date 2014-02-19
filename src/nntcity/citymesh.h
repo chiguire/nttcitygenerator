@@ -6,6 +6,9 @@ namespace octet {
 
   class CityMesh {
 
+    mesh roadLeftMesh;
+    mesh roadRightMesh;
+    mesh pavementMesh;
     mesh surfaceMesh;
     mesh waterMesh;
 
@@ -18,7 +21,7 @@ namespace octet {
     dynarray<float> heightmap;
     int heightmap_width;
     int heightmap_height;
-    
+
     static dynarray<image *> *imageArray_;
 
     static dynarray<image *> *getImageArray() {
@@ -61,9 +64,9 @@ namespace octet {
         float v_ = ((float)j-1) / (heightmap_height-2);
         for (int i = 0; i != heightmap_width; i++) {
           vec4 color;
-          
+
           float u_ = ((float)i-1) / (heightmap_width-2);
-  
+
           heightmapImage->sample2Dbilinear(u_, v_, color);
 
           heightmap[j*heightmap_height+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
@@ -76,54 +79,54 @@ namespace octet {
 
 
 
-  /*
-  //Not yet functional, didn't manage to get it working in time
-  //Calculate the bezier point
-  vec4 drawBezierGeneralized(vec4 &firstPoint, vec4 &secondPoint, vec4 &thirdPoint, vec4 &fourthPoint) {
+    /*
+    //Not yet functional, didn't manage to get it working in time
+    //Calculate the bezier point
+    vec4 drawBezierGeneralized(vec4 &firstPoint, vec4 &secondPoint, vec4 &thirdPoint, vec4 &fourthPoint) {
     vec4 pointOfResult = vec4(0,0,0,0);
     float points = 4;
 
     for(int i=0;i<4;i++)
     {
-      if(i == 0) {
-        pointOfResult.x = firstPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.x;
-        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.y;
-      }
-      if(i == 1) {
-        pointOfResult.x = secondPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.x;
-        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.y;
-      }
-      if(i == 2) {
-        pointOfResult.x = thirdPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.x;
-        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.y;
-      }
-      if(i == 3) {
-        pointOfResult.x = fourthPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.x;
-        pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.y;
-      }
+    if(i == 0) {
+    pointOfResult.x = firstPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.x;
+    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.y;
+    }
+    if(i == 1) {
+    pointOfResult.x = secondPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.x;
+    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.y;
+    }
+    if(i == 2) {
+    pointOfResult.x = thirdPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.x;
+    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.y;
+    }
+    if(i == 3) {
+    pointOfResult.x = fourthPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.x;
+    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.y;
+    }
     }
     //cout<<P.x<<endl<<P.y;
     //cout<<endl<<endl;
     return pointOfResult;
-  }
+    }
 
 
-  int factorial(int n)
-  {
+    int factorial(int n)
+    {
     if (n<=1)
-     return(1);
+    return(1);
     else
-     n=n*factorial(n-1);
+    n=n*factorial(n-1);
     return n;
-  }
+    }
 
-  float binomial_coff(float n,float k)
-  {
+    float binomial_coff(float n,float k)
+    {
     float ans;
     ans = factorial(n) / (factorial(k)*factorial(n-k));
     return ans;
-  }
-  */
+    }
+    */
 
 
 
@@ -153,7 +156,7 @@ namespace octet {
 
         u_ = ((1.0f-u_)*multiplier)+offsetX;
         v_ = (v_*multiplier)+offsetY;
-        
+
         heightmapImage->sample2Dbilinear(u_, v_, color);
         //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
 
@@ -167,120 +170,16 @@ namespace octet {
 
 
     void init(dynarray<Street> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
+      mesh_builder mb;
+      mesh_builder mbRoadLeft;
+      mesh_builder mbRoadRight;
+      mesh_builder mbPavement;
 
       printf("Generating heightmap.\n");
       generateHeightmap(); 
 
       printf("Creating road meshes.\n");
 
-      mesh_builder mb; 
-      for (int i = 0; i < streetsList->size(); i++) {
-        dynarray<float> road_heights;
-
-        // Creating road
-        mb.init(0, 0);
-        vec4 v1 = (*streetsList)[i].points[0];
-        vec4 v2 = (*streetsList)[i].points[1];
-
-        //printf("Adding street %d, from (%.2f, %.2f) to (%.2f, %.2f)\n", (i+1), v1.x(), v1.z(), v2.x(), v2.z());
-
-        float angleY = atan2f(v2.x() - v1.x(), v2.z() - v1.z())*180.0f/3.14159265359f;
-        vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
-
-        float points_distance = (v2 - v1).length();
-        unsigned int points = ceilf(points_distance*2);
-        get_road_heights(road_heights, v1, v2, points, cityDimensions, cityCenter, 0.5f, 0.25f, 0.25f);
-
-        mb.init(0, 0);
-        
-        ////bprintf("Midpoint (%.2f, %.2f, %.2f)\n", vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        //mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-        //mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-        //mb.add_cuboid(0.1f, 0.02f, points_distance/2.0f);
-        ////mb.add_cuboid_heights(0.1f, 0.02f, points_distance/2.0f, points, road_heights.data());
-        
-        if((*streetsList)[i].roadMeshRightPoints.size() > 0)
-        mb.add_cuboid_vertices(&((*streetsList)[i].roadMeshRightPoints));
-
-        mesh * m = new mesh();
-        mb.get_mesh(*m); 
-        m->set_mode(GL_TRIANGLES);
-        (*streetsList)[i].roadMeshRight = (*m);
-       
-        mb.init();
-
-        if((*streetsList)[i].roadMeshLeftPoints.size() > 0)
-        mb.add_cuboid_vertices(&((*streetsList)[i].roadMeshLeftPoints));
-
-        m = new mesh();
-        mb.get_mesh(*m); 
-        m->set_mode(GL_TRIANGLES);
-        (*streetsList)[i].roadMeshLeft = (*m);
-
-
-        
-
-
-        //Creating pavements
-        //right
-
-        mb.init(0, 0);
-
-        if((*streetsList)[i].pavementMeshRightPoints.size() > 0 ){
-
-          mb.add_cuboid_vertices(&((*streetsList)[i].pavementMeshRightPoints));
-
-
-        }else{
-
-          mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-          mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-          mb.translate(-0.1f-0.01f, 0.0f, 0.0f);
-          mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
-          //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
-
-        }
-
-        
-        
-        m = new mesh();
-        mb.get_mesh(*m); 
-        m->set_mode(GL_TRIANGLES);
-        (*streetsList)[i].pavementMeshRight = (*m);
-
-        //Left
-
-        mb.init(0, 0);
-
-        if((*streetsList)[i].pavementMeshLeftPoints.size() > 0 ){
-          mb.add_cuboid_vertices(&((*streetsList)[i].pavementMeshLeftPoints));
-        }else{
-  
-          mb.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
-          mb.rotate(angleY, 0.0f, 1.0f, 0.0f);
-          mb.translate(0.1f+0.01f, 0.0f, 0.0f);
-
-          mb.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
-          //mb.add_cuboid_heights(0.02f, 0.04f, points_distance/2.0f, points, road_heights.data());
-        }
-
-        m = new mesh();
-        mb.get_mesh(*m);
-        m->set_mode(GL_TRIANGLES);
-        (*streetsList)[i].pavementMeshLeft = (*m);
-      }
-
-
-      pavementMaterial = new material((*getImageArray())[0]);
-      roadMaterialLeft = new material((*getImageArray())[1]);
-      roadMaterialRight = new material((*getImageArray())[2]);
-      grassMaterial = new material((*getImageArray())[3], false);
-      // waterMaterial = new material((*getImageArray())[4]);
-      waterMaterial = new material();
-      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
-      //Create surface mesh
-
-      
       //Create heightmap
       vec4 terrainDimensions = cityDimensions*2.0f;
 
@@ -298,39 +197,105 @@ namespace octet {
       mb.rotate(-90, 1, 0, 0);
       mb.add_plane(terrainDimensions.x(), terrainDimensions.z(), 10, 10);
       mb.get_mesh(waterMesh);
+
+      float separationX = terrainDimensions.x()/(heightmap_width-2);
+      float separationZ = terrainDimensions.z()/(heightmap_height-2);
+      int gridWidth = heightmap_width-2;
+      int gridHeight = heightmap_height-2;
+
+      // Creating road meshes
+      mbRoadLeft.init(0, 0);
+      mbRoadRight.init(0, 0);
+      mbPavement.init(0, 0);
+
+      for (unsigned int i = 0; i < streetsList->size(); i++) {
+        Street &street = (*streetsList)[i];
+        dynarray<float> road_heights;
+
+        // Creating road
+        vec4 v1 = street.points[0];
+        vec4 v2 = street.points[1];
+
+        float angleY = atan2f(v2.x() - v1.x(), v2.z() - v1.z())*180.0f/3.14159265359f;
+        vec4 vMidpoint = vec4(v1.x() + (v2.x()-v1.x())/2.0f, v1.y() + (v2.y()-v1.y())/2.0f, v1.z() + (v2.z()-v1.z())/2.0f, 1.0f);
+
+        //street.intersectGrid(cityCenter.x(), cityCenter.z(), separationX, separationZ, gridWidth, gridHeight);
+
+        float points_distance = (v2 - v1).length();
+
+
+        /*if (street.roadMeshLeftIntersectedPoints.size() > 0) {
+          mb.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices);
+        }*/
+        if(street.roadMeshRightPoints.size() > 0)
+          mbRoadRight.add_cuboid_vertices(&street.roadMeshRightPoints);
+        
+        /*if (street.roadMeshRightIntersectedPoints.size() > 0) {
+          mb.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices);
+        }*/
+        if(street.roadMeshLeftPoints.size() > 0)
+          mbRoadLeft.add_cuboid_vertices(&street.roadMeshLeftPoints);
+
+        // Right Pavement
+        if(street.pavementMeshRightPoints.size() > 0 ){
+          mbPavement.add_cuboid_vertices(&street.pavementMeshRightPoints);
+        }
+        /*if (street.pavementMeshRightIntersectedPoints.size() > 0) {
+          mb.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices);
+        }*/ else {
+          mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+          mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
+          mbPavement.translate(-0.1f-0.01f, 0.0f, 0.0f);
+          mbPavement.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
+          mbPavement.loadIdentity();
+        }
+        
+        // Left Pavement
+        if(street.pavementMeshLeftPoints.size() > 0 ){
+          mbPavement.add_cuboid_vertices(&street.pavementMeshLeftPoints);
+        }/*
+        if (street.pavementMeshLeftIntersectedPoints.size() > 0) {
+          mb.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices);
+        }*/ else {
+          mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
+          mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
+          mbPavement.translate(0.1f+0.01f, 0.0f, 0.0f);
+          mbPavement.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
+          mbPavement.loadIdentity();
+        }
+      }
+
+      mbRoadLeft.get_mesh(roadLeftMesh); 
+      mbRoadRight.get_mesh(roadRightMesh); 
+      mbPavement.get_mesh(pavementMesh); 
+
+      pavementMaterial = new material((*getImageArray())[0]);
+      roadMaterialLeft = new material((*getImageArray())[1]);
+      roadMaterialRight = new material((*getImageArray())[2]);
+      grassMaterial = new material((*getImageArray())[3], false);
+      // waterMaterial = new material((*getImageArray())[4]);
+      waterMaterial = new material();
+      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
     }
 
 
-  void create_buildings() {
+    void create_buildings() {
 
 
-  }
-
-
-
+    }
 
     void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
       //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //surfaceMesh.render();
 
       roadMaterialLeft->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-
-      for (int i = 0; i != streetsList->size(); ++i) {
-        (*streetsList)[i].roadMeshLeft.render();
-      }
+      roadLeftMesh.render();
 
       roadMaterialRight->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-
-      for (int i = 0; i != streetsList->size(); ++i) {
-        (*streetsList)[i].roadMeshRight.render();
-      }
+      roadRightMesh.render();
 
       pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-
-      for (int i = 0; i != streetsList->size(); ++i) {
-        (*streetsList)[i].pavementMeshLeft.render();
-        (*streetsList)[i].pavementMeshRight.render();
-      }
+      pavementMesh.render();
 
       //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //waterMesh.render();
@@ -387,11 +352,11 @@ namespace octet {
 
       float x_arrow[] = {
         -1.0f, 0.0f, 0.0f,
-         1.0f, 0.0f, 0.0f,
-         0.8f, 0.2f, 0.0f,
-         1.0f, 0.0f, 0.0f,
-         0.8f, -0.2f, 0.0f,
-         1.0f, 0.0f, 0.0f
+        1.0f, 0.0f, 0.0f,
+        0.8f, 0.2f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        0.8f, -0.2f, 0.0f,
+        1.0f, 0.0f, 0.0f
       };
 
       float y_arrow[] = {
@@ -431,5 +396,5 @@ namespace octet {
       glEnable(GL_DEPTH_TEST);
     }
   };
- 
+
 }

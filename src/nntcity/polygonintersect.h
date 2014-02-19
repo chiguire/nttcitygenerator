@@ -48,10 +48,10 @@ namespace octet {
         }
       }
 
-      minGrid.i = floor((minGrid.x - gridOrigin.x)/separationX);
-      minGrid.j = floor((minGrid.y - gridOrigin.y)/separationY);
-      maxGrid.i = floor((maxGrid.x - gridOrigin.x)/separationX);
-      maxGrid.j = floor((maxGrid.y - gridOrigin.y)/separationY);
+      minGrid.i = (int)floor((minGrid.x - gridOrigin.x)/separationX);
+      minGrid.j = (int)floor((minGrid.y - gridOrigin.y)/separationY);
+      maxGrid.i = (int)floor((maxGrid.x - gridOrigin.x)/separationX);
+      maxGrid.j = (int)floor((maxGrid.y - gridOrigin.y)/separationY);
 
       for (int j = minGrid.j; j <= maxGrid.j; j++) {
         for (int i = minGrid.i; i <= maxGrid.i; i++) {

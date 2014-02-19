@@ -213,6 +213,16 @@ namespace octet {
       add_face((*vertices)[3], (*vertices)[7], (*vertices)[4], (*vertices)[0], vec4(-1, 0, 0, 0));
     }
 
+    void add_vertices(dynarray<vec4> &vertices_, dynarray<short> &indices_) {
+      unsigned short cur_vertex = (unsigned short)vertices.size();
+      for (auto i = vertices_.begin(); i != vertices_.end(); i++) {
+        add_vertex(*i, vec4(0.0f, 1.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+      }
+      for (auto i = indices_.begin(); i != indices_.end(); i++) {
+        indices.push_back(cur_vertex+*i);
+      }
+    }
+
     void add_cuboid_heights(float x, float y, float z, unsigned nz, float *heights = NULL) {
       add_front_face(x, y, z, 0.0f, heights[0]);
       matrix.rotateY180();
@@ -390,6 +400,9 @@ namespace octet {
       matrix.rotate(angle, x, y, z);
     }
 
+    void loadIdentity() {
+      matrix.loadIdentity();
+    }
   };
 }
 
