@@ -117,6 +117,38 @@ namespace octet {
   
   };
 
+  class BuildingArea {
+  public:
+	  vec4 points[4];
+	  mesh areaMesh;
+
+	  BuildingArea() {
+		  memset(points, 0, sizeof(vec4)*4);
+	  }
+
+	  BuildingArea(vec4 p0, vec4 p1, vec4 p2, vec4 p3) {
+		  points[0] = p0;
+		  points[1] = p1;
+		  points[2] = p2;
+		  points[3] = p3;
+	  }
+
+	  //Copy constructor that may be maybe modified
+      BuildingArea(BuildingArea &b) {                                                       
+		this->points[0] = b.points[0];
+		this->points[1] = b.points[1];
+		this->points[2] = b.points[2];
+		this->points[3] = b.points[3];
+		} 
+
+	  bool equalsTo(BuildingArea *b2){
+      return all(this->points[0] == b2->points[0]) &&
+		  all(this->points[1] == b2->points[1]) &&
+		  all(this->points[2] == b2->points[2]) &&
+		  all(this->points[3] == b2->points[3]);
+    }
+  };
+
 
   class StreetIntersection{
   public:
@@ -173,6 +205,7 @@ namespace octet {
     mat4t modelToWorld;
 
     dynarray<Street> streetsList;
+	dynarray<BuildingArea> buildingAreaList;
 
     dynarray <StreetIntersection*> streetsIntersections;
 
@@ -846,6 +879,56 @@ namespace octet {
       }
     }
 
+	void calculateBuildingsCenters() {
+		nodeRecursion(&root);
+	}
+
+	void nodeRecursion(BSPNode *b) {
+
+		if (b->right ) {
+
+			nodeRecursion(b->right);
+		}
+		if (b->left) {
+			nodeRecursion(b->left);
+		}	
+		else {
+
+			// find the center point of quadrangle 
+
+			vec4 v0 = b->vertices[0];
+			vec4 v1 = b->vertices[1];
+			vec4 v2 = b->vertices[2];
+			vec4 v3 = b->vertices[3];
+
+			vec4 v0t = b->vertices[0]*0.8;
+			vec4 v1t = b->vertices[1]*0.8;
+			vec4 v2t = b->vertices[2]*0.8;
+			vec4 v3t = b->vertices[3]*0.8;
+
+			float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;
+			float nZ = (v0.z() + v1.z() + v2.z() + v3.z())/4;
+
+			float nXt = (v0t.x() + v1t.x() + v2t.x() + v3t.x())/4;
+			float nZt = (v0t.z() + v1t.z() + v2t.z() + v3t.z())/4;
+
+			vec4 quad_center = vec4(nX, 0.0f, nZ, 1.0f);
+			vec4 quad_center_t = vec4(nXt, 0.0f, nZt, 1.0f);
+
+			vec4 dist_vector = vec4(quad_center.x()-quad_center_t.x(), 0, quad_center.z()-quad_center_t.z(), 1);
+
+			buildingAreaList.push_back(BuildingArea(v0t+dist_vector, v1t+dist_vector, v2t+dist_vector, v3t+dist_vector));
+
+			printf("-------------------- \n");
+			printf("calculateBuildingsCenters \n");
+			printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
+			printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
+			printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
+			printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+		}
+
+	}
+
     private:
 
     void debugRenderRect_(color_shader *s, mat4t *cameraToWorld, float aspectRatio, unsigned int depth, BSPNode *node) {
@@ -1064,6 +1147,9 @@ namespace octet {
 
       outloop:;
     }
+
+
+	
 
   
   }; 

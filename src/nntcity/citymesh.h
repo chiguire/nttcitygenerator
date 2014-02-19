@@ -169,7 +169,7 @@ namespace octet {
     }
 
 
-    void init(dynarray<Street> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
+    void init(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, vec4 &cityDimensions, vec4 &cityCenter) {
       mesh_builder mb;
       mesh_builder mbRoadLeft;
       mesh_builder mbRoadRight;
@@ -180,36 +180,18 @@ namespace octet {
 
       printf("Creating road meshes.\n");
 
-      //Create heightmap
-      vec4 terrainDimensions = cityDimensions*2.0f;
-
-      printf("Creating surface from heightmap.\n");
-      mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
-      mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
-      mb.get_mesh(surfaceMesh);
-      //surfaceMesh.set_mode(GL_LINE_STRIP);
-
-      printf("Creating water plane.\n");
-      mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y()+WATER_LEVEL, cityCenter.z());
-      mb.rotate(-90, 1, 0, 0);
-      mb.add_plane(terrainDimensions.x(), terrainDimensions.z(), 10, 10);
-      mb.get_mesh(waterMesh);
-
-      float separationX = terrainDimensions.x()/(heightmap_width-2);
-      float separationZ = terrainDimensions.z()/(heightmap_height-2);
-      int gridWidth = heightmap_width-2;
-      int gridHeight = heightmap_height-2;
-
-      // Creating road meshes
-      mbRoadLeft.init(0, 0);
-      mbRoadRight.init(0, 0);
-      mbPavement.init(0, 0);
-
-      for (unsigned int i = 0; i < streetsList->size(); i++) {
-        Street &street = (*streetsList)[i];
+      
+      for (int i = 0; i < buildingAreaList->size(); i++) {
+        mb.init(0, 0);
+        
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, 2.0); 
+        
+        mesh * m = new mesh();
+        mb.get_mesh(*m);
+        m->set_mode(GL_TRIANGLES);
+        (*buildingAreaList)[i].areaMesh = (*m);
+      }
+      for (int i = 0; i < streetsList->size(); i++) {
         dynarray<float> road_heights;
 
         // Creating road
@@ -263,11 +245,17 @@ namespace octet {
           mbPavement.add_cuboid(0.02f, 0.04f, points_distance/2.0f);
           mbPavement.loadIdentity();
         }
+
       }
 
       mbRoadLeft.get_mesh(roadLeftMesh); 
       mbRoadRight.get_mesh(roadRightMesh); 
       mbPavement.get_mesh(pavementMesh); 
+
+	 
+
+
+
 
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterialLeft = new material((*getImageArray())[1]);
@@ -279,13 +267,7 @@ namespace octet {
     }
 
 
-    void create_buildings() {
-
-
-    }
-
-    void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
-      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+    void debugRender(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //surfaceMesh.render();
 
       roadMaterialLeft->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -296,6 +278,10 @@ namespace octet {
 
       pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       pavementMesh.render();
+
+	  for (int i = 0; i != buildingAreaList->size(); ++i) {
+		  (*buildingAreaList)[i].areaMesh.render();
+	  }
 
       //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //waterMesh.render();
