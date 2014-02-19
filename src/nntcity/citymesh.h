@@ -166,7 +166,7 @@ namespace octet {
     }
 
 
-    void init(dynarray<Street> *streetsList, vec4 &cityDimensions, vec4 &cityCenter) {
+    void init(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, vec4 &cityDimensions, vec4 &cityCenter) {
 
       printf("Generating heightmap.\n");
       generateHeightmap(); 
@@ -174,6 +174,19 @@ namespace octet {
       printf("Creating road meshes.\n");
 
       mesh_builder mb; 
+
+	   for (int i = 0; i < buildingAreaList->size(); i++) {
+		  mb.init(0, 0);
+		  
+		  mb.add_extrude_polygon((*buildingAreaList)[i].points, 2.0); 
+		  
+		  mesh * m = new mesh();
+		  mb.get_mesh(*m);
+		  m->set_mode(GL_TRIANGLES);
+		  (*buildingAreaList)[i].areaMesh = (*m);
+	  }
+
+
       for (int i = 0; i < streetsList->size(); i++) {
         dynarray<float> road_heights;
 
@@ -268,7 +281,13 @@ namespace octet {
         mb.get_mesh(*m);
         m->set_mode(GL_TRIANGLES);
         (*streetsList)[i].pavementMeshLeft = (*m);
+
       }
+
+
+	 
+
+
 
 
       pavementMaterial = new material((*getImageArray())[0]);
@@ -301,15 +320,7 @@ namespace octet {
     }
 
 
-  void create_buildings() {
-
-
-  }
-
-
-
-
-    void debugRender(dynarray<Street> *streetsList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
+    void debugRender(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {
       //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //surfaceMesh.render();
 
@@ -331,6 +342,10 @@ namespace octet {
         (*streetsList)[i].pavementMeshLeft.render();
         (*streetsList)[i].pavementMeshRight.render();
       }
+
+	  for (int i = 0; i != buildingAreaList->size(); ++i) {
+		  (*buildingAreaList)[i].areaMesh.render();
+	  }
 
       //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       //waterMesh.render();
