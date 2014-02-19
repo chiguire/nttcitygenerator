@@ -192,6 +192,7 @@ namespace octet {
         (*buildingAreaList)[i].areaMesh = (*m);
       }
       for (int i = 0; i < streetsList->size(); i++) {
+        Street &street = (*streetsList)[i];
         dynarray<float> road_heights;
 
         // Creating road
