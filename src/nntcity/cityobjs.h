@@ -1035,10 +1035,10 @@ namespace octet {
       float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
       if (r >= 0.5f) {
-        stepPartition_(depth - 1, b->left, false);
+        stepPartition_(depth - 1, b->left, noStreet);
       }
       if (r < 0.5f) {
-        stepPartition_(depth - 1, b->right, false);
+        stepPartition_(depth - 1, b->right, noStreet);
       }
       
     }
