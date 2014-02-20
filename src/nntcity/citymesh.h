@@ -168,6 +168,21 @@ namespace octet {
       }
     }
 
+    float sample_heightmap(vec4 &vertex, vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY) {
+      image *heightmapImage = ((*getImageArray())[4]);
+      vec4 color;
+
+      float u_ = (vertex.x()-cityCenter.x()+cityDimensions.x()*0.5f) / (cityDimensions.x());
+      float v_ = (vertex.z()-cityCenter.z()+cityDimensions.z()*0.5f) / (cityDimensions.z());
+
+      u_ = (u_*multiplier)+offsetX;
+      v_ = ((1-v_)*multiplier)+offsetY;
+
+      heightmapImage->sample2Dbilinear(u_, v_, color);
+
+      return (color.x() * HEIGHT_FACTOR)+HEIGHT_FACTOR*3;
+    }
+
 
     void init(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, vec4 &cityDimensions, vec4 &cityCenter) {
       mesh_builder mb;
@@ -219,6 +234,12 @@ namespace octet {
         (*buildingAreaList)[i].areaMesh = (*m);
       }
 
+      const float MULTIPLIER = 0.5f;
+      const float OFFSET_X = 0.25f;
+      const float OFFSET_Y = 0.25f;
+      const float ROAD_RAISE = 0.08f;
+      const float PAVEMENT_RAISE = 0.09f;
+
       for (int i = 0; i < streetsList->size(); i++) {
         Street &street = (*streetsList)[i];
         dynarray<float> road_heights;
@@ -232,28 +253,36 @@ namespace octet {
         
         street.intersectGridStreet(cityCenter.x(), cityCenter.z(), separationX, separationZ, gridWidth, gridHeight);
 
-        for (auto j = street.roadMeshLeftIntersectedPoints.begin(); j != street.roadMeshLeftIntersectedPoints.end(); j++)
-          (*j)[1] = 0.02;
+        for (auto j = street.roadMeshLeftIntersectedPoints.begin(); j != street.roadMeshLeftIntersectedPoints.end(); j++) {
+          (*j)[1] = sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + ROAD_RAISE;
+        }
 
-        for (auto j = street.roadMeshRightIntersectedPoints.begin(); j != street.roadMeshRightIntersectedPoints.end(); j++)
-          (*j)[1] = 0.02;
+        for (auto j = street.roadMeshRightIntersectedPoints.begin(); j != street.roadMeshRightIntersectedPoints.end(); j++) {
+          (*j)[1] = sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + ROAD_RAISE;
+        }
 
-        for (auto j = street.pavementMeshLeftIntersectedPoints.begin(); j != street.pavementMeshLeftIntersectedPoints.end(); j++)
-          (*j)[1] = 0.04;
+        for (auto j = street.pavementMeshLeftIntersectedPoints.begin(); j != street.pavementMeshLeftIntersectedPoints.end(); j++) {
+          (*j)[1] = sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + PAVEMENT_RAISE;
+        }
 
-        for (auto j = street.pavementMeshRightIntersectedPoints.begin(); j != street.pavementMeshRightIntersectedPoints.end(); j++)
-          (*j)[1] = 0.04;
+        for (auto j = street.pavementMeshRightIntersectedPoints.begin(); j != street.pavementMeshRightIntersectedPoints.end(); j++) {
+          (*j)[1] = sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + PAVEMENT_RAISE;
+        }
 
         float points_distance = (v2 - v1).length();
 
         if (street.roadMeshLeftIntersectedPoints.size() > 0) {
-          mbRoadRight.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices);
+          mbRoadRight.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices,
+                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
+                                   heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
         }/*
         if(street.roadMeshRightPoints.size() > 0)
           mbRoadRight.add_cuboid_vertices(&street.roadMeshRightPoints);*/
         
         if (street.roadMeshRightIntersectedPoints.size() > 0) {
-          mbRoadLeft.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices);
+          mbRoadLeft.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices, 
+                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
+                                  heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
         }/*
         if(street.roadMeshLeftPoints.size() > 0)
           mbRoadLeft.add_cuboid_vertices(&street.roadMeshLeftPoints);*/
@@ -263,7 +292,9 @@ namespace octet {
           mbPavement.add_cuboid_vertices(&street.pavementMeshRightPoints);
         }*/
         if (street.pavementMeshRightIntersectedPoints.size() > 0) {
-          mbPavement.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices);
+          mbPavement.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices,
+                                  cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
+                                  heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
         } else {
           mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
           mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
@@ -277,7 +308,9 @@ namespace octet {
           mbPavement.add_cuboid_vertices(&street.pavementMeshLeftPoints);
         }*/
         if (street.pavementMeshLeftIntersectedPoints.size() > 0) {
-          mbPavement.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices);
+          mbPavement.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices, 
+                                  cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
+                                  heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
         } else {
           mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
           mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
@@ -291,6 +324,10 @@ namespace octet {
       mbRoadRight.get_mesh(roadRightMesh); 
       mbPavement.get_mesh(pavementMesh);
 
+      //roadLeftMesh.set_mode(GL_LINES);
+      //roadRightMesh.set_mode(GL_LINES);
+      //pavementMesh.set_mode(GL_LINES);
+
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterialLeft = new material((*getImageArray())[1]);
       roadMaterialRight = new material((*getImageArray())[2]);
@@ -302,7 +339,8 @@ namespace octet {
 
 
     void debugRender(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      //surfaceMesh.render();
+      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      surfaceMesh.render();
 
       roadMaterialLeft->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       roadLeftMesh.render();

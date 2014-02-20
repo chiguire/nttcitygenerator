@@ -213,10 +213,21 @@ namespace octet {
       add_face((*vertices)[3], (*vertices)[7], (*vertices)[4], (*vertices)[0], vec4(-1, 0, 0, 0));
     }
 
-    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_) {
+    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_, 
+                      vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY,
+                      unsigned nx, unsigned ny, float *heightmap, unsigned hmx, unsigned hmy) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
-      for (auto i = vertices_.begin(); i != vertices_.end(); i++) {
-        add_vertex(*i, vec4(0.0f, 1.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+
+      dynarray<vec4> normalMap;
+      generateNormalMap(normalMap, nx, ny, heightmap, hmx, hmy);
+
+      for (int i = 0; i != vertices_.size(); i++) {
+        vec4 &vertex = vertices_[i];
+        float u_ = (vertex.x()-cityCenter.x()+cityDimensions.x()*0.5f) / (cityDimensions.x());
+        float v_ = (vertex.z()-cityCenter.z()+cityDimensions.z()*0.5f) / (cityDimensions.z());
+        u_ = (u_*multiplier)+offsetX;
+        v_ = ((1-v_)*multiplier)+offsetY;
+        add_vertex(vertex, normalMap[nx*(int)floor(v_*ny)+(int)floor(u_*nx)], 0.0f, 0.0f);
       }
       for (auto i = indices_.begin(); i != indices_.end(); i++) {
         indices.push_back(cur_vertex+*i);
