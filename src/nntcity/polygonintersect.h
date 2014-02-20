@@ -19,20 +19,20 @@ namespace octet {
     // Obtain a series of triangles that represent the intersection of
     // a polygon with a axis-aligned grid, in 2D.
     // polygon must have an even number of floats
-    static void intersectGrid(dynarray<float> &polygon, 
+    static void intersectGrid(dynarray<vec4> &polygon, 
                        float centerX, float centerY, 
                        float separationX, float separationY, 
                        int width, int height, 
-                       dynarray<float> &resultVertices, dynarray<short> &resultIndices) {
+                       dynarray<vec4> &resultVertices, dynarray<unsigned short> &resultIndices) {
       resultVertices.reset();
       resultIndices.reset();
 
-      IntersectVertex gridOrigin(centerX-separationY*(width/2.0f), centerY-separationY*(height/2.0f));
-      IntersectVertex minGrid(centerX+separationX*(width/2+1), centerY+separationY*(height/2+1));
-      IntersectVertex maxGrid(centerX-separationY*(width/2+1), centerY-separationY*(height/2+1));
+      IntersectVertex gridOrigin(centerX-separationX*(width/2.0f), centerY-separationY*(height/2.0f));
+      IntersectVertex minGrid(centerX+separationX*(width/2.0f+1), centerY+separationY*(height/2.0f+1));
+      IntersectVertex maxGrid(centerX-separationX*(width/2.0f+1), centerY-separationY*(height/2.0f+1));
       
-      for (int i = 0; i != polygon.size(); i += 2) {
-        IntersectVertex a(polygon[i], polygon[i+1]);
+      for (int i = 0; i != polygon.size(); i ++) {
+        IntersectVertex a(polygon[i].x(), polygon[i].z());
 
         if (a.x < minGrid.x) {
           minGrid.x = a.x;
@@ -55,34 +55,37 @@ namespace octet {
 
       for (int j = minGrid.j; j <= maxGrid.j; j++) {
         for (int i = minGrid.i; i <= maxGrid.i; i++) {
+          dynarray<vec4> polygonIntersect;
           float square[] = {
-            gridOrigin.x + i*separationX, gridOrigin.y + i*separationY,
-            gridOrigin.x + (i+1)*separationX, gridOrigin.y + (i+1)*separationY 
+            gridOrigin.x + i*separationX, gridOrigin.y + j*separationY,
+            gridOrigin.x + (i+1)*separationX, gridOrigin.y + (j+1)*separationY 
           };
-          dynarray<float> polygonIntersect;
+          //printf("Comparing against square: (%.2f, %.2f), (%.2f, %.2f): ", square[0], square[1], square[2], square[3]);
           PolygonIntersections::intersectPolygonAABB(polygon, square, polygonIntersect);
           if (polygonIntersect.size() > 0) {
-            unsigned short cur_vertex = (unsigned short)resultVertices.size()/2;
-            int num_triangles = (polygonIntersect.size()/2)-2;
-            for (auto k = polygonIntersect.begin(); k != polygonIntersect.end(); k++) {
-              resultVertices.push_back(*k);
-            }
-            for (int k = 0; k != num_triangles; k++) {
-              resultIndices.push_back(cur_vertex+0);
-              resultIndices.push_back(cur_vertex+i+1);
-              resultIndices.push_back(cur_vertex+i+2);
+            unsigned short cur_vertex = (unsigned short)resultVertices.size();
+            int num_triangles = polygonIntersect.size()-2;
+            if (num_triangles > 0) {
+              for (auto k = polygonIntersect.begin(); k != polygonIntersect.end(); k++) {
+                resultVertices.push_back(*k);
+              }
+              for (int k = 0; k != num_triangles; k++) {
+                resultIndices.push_back(cur_vertex+0);
+                resultIndices.push_back(cur_vertex+k+1);
+                resultIndices.push_back(cur_vertex+k+2);
+              }
             }
           }
         }
       }
     }
 
-    static void intersectPolygonAABB(dynarray<float> &polygon, float bounds[], dynarray<float> &result) {
+    static void intersectPolygonAABB(dynarray<vec4> &polygon, float bounds[], dynarray<vec4> &result) {
       IntersectVertex boundsMin(1000000.0f, 1000000.0f);
       IntersectVertex boundsMax(-1000000.0f, -1000000.0f);
 
-      for (int i = 0; i != polygon.size(); i += 2) {
-        IntersectVertex v(polygon[i], polygon[i+1]);
+      for (int i = 0; i != polygon.size(); i++) {
+        IntersectVertex v(polygon[i].x(), polygon[i].z());
 
         if (v.x < boundsMin.x) {
           boundsMin.x = v.x;
@@ -101,40 +104,41 @@ namespace octet {
       // Four possibilities where aabb does not clip polygon at all
       if (boundsMax.x < bounds[0] || boundsMin.x > bounds[2] ||
         boundsMax.y < bounds[1] || boundsMin.y > bounds[3]) {
+        //printf("No polygon generated.\n");
         return;
       }
 
       // If polygon is completely inside aabb then return polygon as is
       if (boundsMin.x > bounds[0] && boundsMax.x < bounds[2] &&
         boundsMin.y > bounds[1] && boundsMax.y < bounds[3]) {
+        result.reset();
         for (auto k = polygon.begin(); k != polygon.end(); k++) {
           result.push_back(*k);
         } 
+        //printf("Whole polygon contained.\n");
         return;
       }
       
-      dynarray<float> intermediate1;
-      dynarray<float> intermediate2;
-      dynarray<float> &intermediate = intermediate1;
+      dynarray<vec4> intermediate1;
+      dynarray<vec4> intermediate2;
+      dynarray<vec4> *intermediate = &intermediate1;
 
       //Sutherland-Hodgman
       //Clip left of bounds[0]
-      for (int i = 0; i != polygon.size(); i += 2) {
-        int previousIndex = (polygon.size()+(i-1)*2)%polygon.size();
-        IntersectVertex a(polygon[previousIndex], polygon[previousIndex+1]);
-        IntersectVertex b(polygon[i], polygon[i+1]);
+      for (int i = 0; i != polygon.size(); i++) {
+        int previousIndex = (polygon.size()+i-1)%polygon.size();
+        IntersectVertex a(polygon[previousIndex].x(), polygon[previousIndex].z());
+        IntersectVertex b(polygon[i].x(), polygon[i].z());
         float bound = bounds[0];
 
         if (a.x >= bound && b.x >= bound) {
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
         if (a.x >= bound && b.x < bound) {
           float slope = (b.y-a.y)/(b.x-a.x);
           float origin = a.y - slope*a.x;
           float y0 = slope*bound+origin;
-          intermediate.push_back(bound);
-          intermediate.push_back(y0);
+          intermediate->push_back(vec4(bound, 0, y0, 1));
         }
         if (a.x < bound && b.x < bound) {
           //Do nothing
@@ -143,38 +147,33 @@ namespace octet {
           float slope = (b.y-a.y)/(b.x-a.x);
           float origin = a.y - slope*a.x;
           float y0 = slope*bound+origin;
-          intermediate.push_back(bound);
-          intermediate.push_back(y0);
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(bound, 0, y0, 1));
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
       }
 
-      intermediate = intermediate2;
-      intermediate.reset();
+      intermediate = &intermediate2;
+      intermediate->reset();
 
       //Clip top of bounds[1]
-      for (int i = 0; i != intermediate1.size(); i += 2) {
-        int previousIndex = (intermediate1.size()+(i-1)*2)%intermediate1.size();
-        IntersectVertex a(intermediate1[previousIndex], intermediate1[previousIndex+1]);
-        IntersectVertex b(intermediate1[i], intermediate1[i+1]);
+      for (int i = 0; i != intermediate1.size(); i++) {
+        int previousIndex = (intermediate1.size()+i-1)%intermediate1.size();
+        IntersectVertex a(intermediate1[previousIndex].x(), intermediate1[previousIndex].z());
+        IntersectVertex b(intermediate1[i].x(), intermediate1[i].z());
         float bound = bounds[1];
 
         if (a.y >= bound && b.y >= bound) {
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
         if (a.y >= bound && b.y < bound) {
           if (abs(b.x - a.x) < CITY_EPSILON) {
             //slope is infinite
-            intermediate.push_back(b.x);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(b.x, 0, bound, 1));
           } else {
             float slope = (b.y-a.y)/(b.x-a.x);
             float origin = a.y - slope*a.x;
             float x0 = (bound-origin)/slope;
-            intermediate.push_back(x0);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(x0, 0, bound, 1));
           }
         }
         if (a.y < bound && b.y < bound) {
@@ -183,40 +182,35 @@ namespace octet {
         if (a.y < bound && b.y >= bound) {
           if (abs(b.x - a.x) < CITY_EPSILON) {
             //slope is infinite
-            intermediate.push_back(b.x);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(b.x, 0, bound, 1));
           } else {
             float slope = (b.y-a.y)/(b.x-a.x);
             float origin = a.y - slope*a.x;
             float x0 = (bound-origin)/slope;
-            intermediate.push_back(x0);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(x0, 0, bound, 1));
           }
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
       }
 
-      intermediate = intermediate1;
-      intermediate.reset();
+      intermediate = &intermediate1;
+      intermediate->reset();
 
       //Clip right of bounds[2]
-      for (int i = 0; i != intermediate2.size(); i += 2) {
-        int previousIndex = (intermediate2.size()+(i-1)*2)%intermediate2.size();
-        IntersectVertex a(intermediate2[previousIndex], intermediate2[previousIndex+1]);
-        IntersectVertex b(intermediate2[i], intermediate2[i+1]);
+      for (int i = 0; i != intermediate2.size(); i++) {
+        int previousIndex = (intermediate2.size()+i-1)%intermediate2.size();
+        IntersectVertex a(intermediate2[previousIndex].x(), intermediate2[previousIndex].z());
+        IntersectVertex b(intermediate2[i].x(), intermediate2[i].z());
         float bound = bounds[2];
 
         if (a.x <= bound && b.x <= bound) {
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
         if (a.x <= bound && b.x > bound) {
           float slope = (b.y-a.y)/(b.x-a.x);
           float origin = a.y - slope*a.x;
           float y0 = slope*bound+origin;
-          intermediate.push_back(bound);
-          intermediate.push_back(y0);
+          intermediate->push_back(vec4(bound, 0, y0, 1));
         }
         if (a.x > bound && b.x > bound) {
           //Do nothing
@@ -225,38 +219,33 @@ namespace octet {
           float slope = (b.y-a.y)/(b.x-a.x);
           float origin = a.y - slope*a.x;
           float y0 = slope*bound+origin;
-          intermediate.push_back(bound);
-          intermediate.push_back(y0);
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(bound, 0, y0, 1));
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
       }
 
-      intermediate = intermediate2;
-      intermediate.reset();
+      intermediate = &intermediate2;
+      intermediate->reset();
 
       //Clip bottom of bounds[3]
-      for (int i = 0; i != intermediate1.size(); i += 2) {
-        int previousIndex = (intermediate1.size()+(i-1)*2)%intermediate1.size();
-        IntersectVertex a(intermediate1[previousIndex], intermediate1[previousIndex+1]);
-        IntersectVertex b(intermediate1[i], intermediate1[i+1]);
+      for (int i = 0; i != intermediate1.size(); i++) {
+        int previousIndex = (intermediate1.size()+i-1)%intermediate1.size();
+        IntersectVertex a(intermediate1[previousIndex].x(), intermediate1[previousIndex].z());
+        IntersectVertex b(intermediate1[i].x(), intermediate1[i].z());
         float bound = bounds[3];
     
         if (a.y <= bound && b.y <= bound) {
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
         if (a.y <= bound && b.y > bound) {
           if (abs(b.x - a.x) < CITY_EPSILON) {
             //slope is infinite
-            intermediate.push_back(b.x);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(b.x, 0, bound, 1));
           } else {
             float slope = (b.y-a.y)/(b.x-a.x);
             float origin = a.y - slope*a.x;
             float x0 = (bound-origin)/slope;
-            intermediate.push_back(x0);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(x0, 0, bound, 1));
           }
         }
         if (a.y > bound && b.y > bound) {
@@ -265,24 +254,25 @@ namespace octet {
         if (a.y > bound && b.y <= bound) {
           if (abs(b.x - a.x) < CITY_EPSILON) {
             //slope is infinite
-            intermediate.push_back(b.x);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(b.x, 0, bound, 1));
           } else {
             float slope = (b.y-a.y)/(b.x-a.x);
             float origin = a.y - slope*a.x;
             float x0 = (bound-origin)/slope;
-            intermediate.push_back(x0);
-            intermediate.push_back(bound);
+            intermediate->push_back(vec4(x0, 0, bound, 1));
           }
-          intermediate.push_back(b.x);
-          intermediate.push_back(b.y);
+          intermediate->push_back(vec4(b.x, 0, b.y, 1));
         }
       }
       
       //Copy intermediate results to final result
-      for (auto k = intermediate.begin(); k != intermediate.end(); k++) {
+      result.reset();
+      //printf("Clipped result: [");
+      for (auto k = intermediate->begin(); k != intermediate->end(); k++) {
           result.push_back(*k);
+          //printf("(%.2f, %.2f), ", k->x(), k->y());
       } 
+      //printf("]\n");
     }
   };  
 }

@@ -213,7 +213,7 @@ namespace octet {
       add_face((*vertices)[3], (*vertices)[7], (*vertices)[4], (*vertices)[0], vec4(-1, 0, 0, 0));
     }
 
-    void add_vertices(dynarray<vec4> &vertices_, dynarray<short> &indices_) {
+    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
       for (auto i = vertices_.begin(); i != vertices_.end(); i++) {
         add_vertex(*i, vec4(0.0f, 1.0f, 0.0f, 1.0f), 0.0f, 0.0f);
@@ -372,42 +372,42 @@ namespace octet {
       }
     }
 
-	void add_extrude_polygon(vec4 *vertices, int height){
+  void add_extrude_polygon(vec4 *vertices, int height){
 
-		vec4 nv0 = vec4(vertices[0].x(), vertices[0].y() , vertices[0].z(), vertices[0].w());
-		vec4 nv1 = vec4(vertices[1].x(), vertices[1].y() , vertices[1].z(), vertices[0].w());
-		vec4 nv2 = vec4(vertices[2].x(), vertices[2].y() , vertices[2].z(), vertices[0].w());
-		vec4 nv3 = vec4(vertices[3].x(), vertices[3].y() , vertices[3].z(), vertices[0].w());
+    vec4 nv0 = vec4(vertices[0].x(), vertices[0].y() , vertices[0].z(), vertices[0].w());
+    vec4 nv1 = vec4(vertices[1].x(), vertices[1].y() , vertices[1].z(), vertices[0].w());
+    vec4 nv2 = vec4(vertices[2].x(), vertices[2].y() , vertices[2].z(), vertices[0].w());
+    vec4 nv3 = vec4(vertices[3].x(), vertices[3].y() , vertices[3].z(), vertices[0].w());
 
-		vec4 mv0 = vec4(vertices[0].x(), vertices[0].y()+height , vertices[0].z(), vertices[0].w());
-		vec4 mv1 = vec4(vertices[1].x(), vertices[1].y()+height , vertices[1].z(), vertices[0].w());
-		vec4 mv2 = vec4(vertices[2].x(), vertices[2].y()+height , vertices[2].z(), vertices[0].w());
-		vec4 mv3 = vec4(vertices[3].x(), vertices[3].y()+height , vertices[3].z(), vertices[0].w());
+    vec4 mv0 = vec4(vertices[0].x(), vertices[0].y()+height , vertices[0].z(), vertices[0].w());
+    vec4 mv1 = vec4(vertices[1].x(), vertices[1].y()+height , vertices[1].z(), vertices[0].w());
+    vec4 mv2 = vec4(vertices[2].x(), vertices[2].y()+height , vertices[2].z(), vertices[0].w());
+    vec4 mv3 = vec4(vertices[3].x(), vertices[3].y()+height , vertices[3].z(), vertices[0].w());
 
-	  // bottom face
+    // bottom face
       //add_face((*vertices)[0], (*vertices)[1], (*vertices)[2], (*vertices)[3], vec4(0, -1, 0, 0));
-	  // top face
-	  
-	  add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
-	  add_face(mv0, mv1, mv2, mv3, vec4(0, 1, 0, 0));
+    // top face
+    
+    add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
+    add_face(mv0, mv1, mv2, mv3, vec4(0, 1, 0, 0));
 
-	  add_face(nv0, nv1, mv1, mv0, vec4(1, 0, 0, 0));
-	  add_face(nv1, nv2, mv2, mv1, vec4(1, 0, 0, 0));
-	  add_face(nv2, nv3, mv3, mv2, vec4(1, 0, 0, 0));
-	  add_face(nv3, nv0, mv0, mv3, vec4(1, 0, 0, 0));
+    add_face(nv0, nv1, mv1, mv0, vec4(1, 0, 0, 0));
+    add_face(nv1, nv2, mv2, mv1, vec4(1, 0, 0, 0));
+    add_face(nv2, nv3, mv3, mv2, vec4(1, 0, 0, 0));
+    add_face(nv3, nv0, mv0, mv3, vec4(1, 0, 0, 0));
 
-	  // others
-	  /*
-	  add_face((*vertices)[0], (*vertices)[1], nv1, nv0, vec4(1, 0, 0, 0));
-	  add_face((*vertices)[1], (*vertices)[2], nv2, nv1, vec4(0, 0, 0, 1));
-	  add_face((*vertices)[2], (*vertices)[3], nv3, nv2, vec4(-1, 0, 0, 0));
-	  add_face((*vertices)[3], (*vertices)[0], nv0, nv3, vec4(0, 0, 0, -1));
-	 */
-	 
-	}
+    // others
+    /*
+    add_face((*vertices)[0], (*vertices)[1], nv1, nv0, vec4(1, 0, 0, 0));
+    add_face((*vertices)[1], (*vertices)[2], nv2, nv1, vec4(0, 0, 0, 1));
+    add_face((*vertices)[2], (*vertices)[3], nv3, nv2, vec4(-1, 0, 0, 0));
+    add_face((*vertices)[3], (*vertices)[0], nv0, nv3, vec4(0, 0, 0, -1));
+   */
+   
+  }
 
 
-	// add a sphere to the model at the current matrix location
+  // add a sphere to the model at the current matrix location
     // as in glutSolidSphere.
     // This is not a very nice sphere so later I must add a geosphere.
     void add_sphere(float radius, unsigned slices, unsigned stacks, float uvscale=1) {
