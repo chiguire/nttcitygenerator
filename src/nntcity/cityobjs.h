@@ -473,8 +473,13 @@ namespace octet {
       float streetWidth = 0.26f;
       float pavementWidth = 0.04;
       float roadWidth = 0.20f;
+
+      unsigned int streetsListSize = streetsList.size();
       
-      std::vector< std::vector<int> > checkIntersections(streetsList.size(),std::vector<int>(streetsList.size()));
+      dynarray<bool> checkIntersections(streetsListSize*streetsListSize);
+      for (int i = 0; i != streetsListSize*streetsListSize; i++) {
+        checkIntersections[i] = false;
+      }
 
       int index = 0;
 
@@ -608,7 +613,7 @@ namespace octet {
 
                        //ROAD & PAVEMENT MESHES CALCULATION
 
-                       if(crossProductResult < 0 && !checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])]){
+                       if(crossProductResult < 0 && !checkIntersections[getStreetsIndex(streetsToModify[z])+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize]){
 
                          streetsToModify[z]->roadMeshRightPoints.push_back(vec4(streetsIntersections[i]->point.x(),0.02f,streetsIntersections[i]->point.z(),streetsIntersections[i]->point.w()));
                          streetsToModify[z]->roadMeshRightPoints.push_back(vec4(exteriorPointRoad.x(),0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
@@ -620,9 +625,9 @@ namespace octet {
                          streetsToModify[z]->pavementMeshRightPoints.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
                          streetsToModify[z]->pavementMeshRightPoints.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
 
-                         checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])] = true;
+                         checkIntersections[getStreetsIndex(streetsToModify[z])+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize] = true;
 
-                       }else if(crossProductResult > 0 && !checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])]){
+                       } else if(crossProductResult > 0 && !checkIntersections[getStreetsIndex(streetsToModify[z])+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize]){
 
                          streetsToModify[z]->roadMeshLeftPoints.push_back(vec4(streetsIntersections[i]->point.x(),0.02f,streetsIntersections[i]->point.z(),streetsIntersections[i]->point.w()));
                          streetsToModify[z]->roadMeshLeftPoints.push_back(vec4(exteriorPointRoad.x(),0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
@@ -634,7 +639,7 @@ namespace octet {
                          streetsToModify[z]->pavementMeshLeftPoints.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
                          streetsToModify[z]->pavementMeshLeftPoints.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
 
-                         checkIntersections[getStreetsIndex(streetsToModify[z])][getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])] = true;
+                         checkIntersections[getStreetsIndex(streetsToModify[z])+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize] = true;
                        }
 
                       }
