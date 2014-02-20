@@ -19,7 +19,7 @@ namespace octet {
     resources dict;
 
     // shaders to draw triangles
-	  city_bump_shader city_bump_shader_;
+    city_bump_shader city_bump_shader_;
     bump_shader object_shader;
     color_shader cshader;
 
@@ -42,7 +42,7 @@ namespace octet {
     CityMesh *city_mesh;
 
     dynarray<Street> *streetList;
-	dynarray<BuildingArea> *buildingAreaList;
+    dynarray<BuildingArea> *buildingAreaList;
 
     CompassCard compassCard;
 
@@ -65,9 +65,9 @@ namespace octet {
     // this is called once OpenGL is initialized
     void app_init() {
       // Shader Set Up
-	  city_bump_shader_.init(); // false is default
+    city_bump_shader_.init(); // false is default
       object_shader.init(false);
-	
+  
       cshader.init();
       compassCard.init(&cshader);
 
@@ -109,9 +109,8 @@ namespace octet {
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
 
-	    city->calculateBuildingsCenters();
-	    buildingAreaList = &city->buildingAreaList;
-
+      city->calculateBuildingsAreas(0.9);
+      buildingAreaList = &city->buildingAreaList;
       vec4 dimensions;
       vec4 center;
 
@@ -286,7 +285,7 @@ namespace octet {
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
       city_mesh->debugRender(streetList,  buildingAreaList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
-	    //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);

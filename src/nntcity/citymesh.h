@@ -228,7 +228,8 @@ namespace octet {
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
-        mb.add_extrude_polygon((*buildingAreaList)[i].points, 2.0); 
+    float random_height = std::rand()%5 +1;
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
@@ -353,9 +354,9 @@ namespace octet {
       pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       pavementMesh.render();
 
-      /*for (int i = 0; i != buildingAreaList->size(); ++i) {
+      for (int i = 0; i != buildingAreaList->size(); ++i) {
         (*buildingAreaList)[i].areaMesh.render();
-      }*/
+      }
 
       waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
       waterMesh.render();

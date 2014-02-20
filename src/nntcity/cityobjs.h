@@ -195,8 +195,8 @@ namespace octet {
     mat4t modelToWorld;
 
     dynarray<Street> streetsList;
-  dynarray<BuildingArea> buildingAreaList;
-
+    dynarray<BuildingArea> buildingAreaList;
+  
     dynarray <StreetIntersection*> streetsIntersections;
 
     class random randomizer;
@@ -247,7 +247,7 @@ namespace octet {
     void stepPartition(unsigned int depth/* camera frustrum */) {
 
       setDebugColors(depth);
-      stepPartition_(depth, &root);
+      stepPartition_(depth, &root, false);
 
     }
 
@@ -777,55 +777,10 @@ namespace octet {
       }
     }
 
-  void calculateBuildingsCenters() {
-    nodeRecursion(&root);
+  void calculateBuildingsAreas(float scale) {
+    calculateBuildingsAreas_(&root, scale);
   }
 
-  void nodeRecursion(BSPNode *b) {
-
-    if (b->right ) {
-
-      nodeRecursion(b->right);
-    }
-    if (b->left) {
-      nodeRecursion(b->left);
-    }	
-    else {
-
-      // find the center point of quadrangle 
-
-      vec4 v0 = b->vertices[0];
-      vec4 v1 = b->vertices[1];
-      vec4 v2 = b->vertices[2];
-      vec4 v3 = b->vertices[3];
-
-      vec4 v0t = b->vertices[0]*0.8;
-      vec4 v1t = b->vertices[1]*0.8;
-      vec4 v2t = b->vertices[2]*0.8;
-      vec4 v3t = b->vertices[3]*0.8;
-
-      float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;
-      float nZ = (v0.z() + v1.z() + v2.z() + v3.z())/4;
-
-      float nXt = (v0t.x() + v1t.x() + v2t.x() + v3t.x())/4;
-      float nZt = (v0t.z() + v1t.z() + v2t.z() + v3t.z())/4;
-
-      vec4 quad_center = vec4(nX, 0.0f, nZ, 1.0f);
-      vec4 quad_center_t = vec4(nXt, 0.0f, nZt, 1.0f);
-
-      vec4 dist_vector = vec4(quad_center.x()-quad_center_t.x(), 0, quad_center.z()-quad_center_t.z(), 1);
-
-      buildingAreaList.push_back(BuildingArea(v0t+dist_vector, v1t+dist_vector, v2t+dist_vector, v3t+dist_vector));
-
-      printf("-------------------- \n");
-      printf("calculateBuildingsCenters \n");
-      printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
-      printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
-      printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
-      printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
-    }
-
-  }
 
     private:
 
@@ -872,8 +827,61 @@ namespace octet {
 
     }
 
+  void calculateBuildingsAreas_(BSPNode *b, float scale) {
 
-    void stepPartition_(unsigned int depth, BSPNode *b) {
+    if (b->right ) {
+      calculateBuildingsAreas_(b->right, scale);
+    }
+
+    if (b->left) {
+      calculateBuildingsAreas_(b->left, scale);
+    } else {
+      vec4 v0 = b->vertices[0];
+      vec4 v1 = b->vertices[1];
+      vec4 v2 = b->vertices[2];
+      vec4 v3 = b->vertices[3];
+
+      vec4 v0t = b->vertices[0]*scale;
+      vec4 v1t = b->vertices[1]*scale;
+      vec4 v2t = b->vertices[2]*scale;
+      vec4 v3t = b->vertices[3]*scale;
+      
+      // find the center point of quadrangle 
+      float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;
+      float nZ = (v0.z() + v1.z() + v2.z() + v3.z())/4;
+      
+      // find the center point of scaled quadrangle
+      float nXt = (v0t.x() + v1t.x() + v2t.x() + v3t.x())/4;
+      float nZt = (v0t.z() + v1t.z() + v2t.z() + v3t.z())/4;
+      
+      vec4 quad_center = vec4(nX, 0.0f, nZ, 1.0f);
+      vec4 quad_center_t = vec4(nXt, 0.0f, nZt, 1.0f);
+      vec4 dist_vector = vec4(quad_center.x()-quad_center_t.x(), 0, quad_center.z()-quad_center_t.z(), 1);
+
+      BuildingArea buildingArea = BuildingArea(v0t+dist_vector, v1t+dist_vector, v2t+dist_vector, v3t+dist_vector);
+
+      
+      
+      BSPNode buildingNodeRoot = BSPNode();
+      buildingNodeRoot.vertices[0] = buildingArea.points[0];
+      buildingNodeRoot.vertices[1] = buildingArea.points[1];
+      buildingNodeRoot.vertices[2] = buildingArea.points[2];
+      buildingNodeRoot.vertices[3] = buildingArea.points[3];
+
+      stepPartition_(5, &buildingNodeRoot, true);
+
+      printf("-------------------- \n");
+      printf("Building Areas points \n");
+      printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
+      printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
+      printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
+      printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+    }
+  }
+
+
+
+    void stepPartition_(unsigned int depth, BSPNode *b, bool noStreet) {
       if (depth == 0) return;
 
       if (!b->right || !b->left) { // It was a leaf node, expand it
@@ -915,8 +923,8 @@ namespace octet {
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
 
-        generateStreets(b->left);
-        generateStreets(b->right);
+        generateStreets(b->left, noStreet);
+        generateStreets(b->right, noStreet);
 
       }
 
@@ -930,15 +938,15 @@ namespace octet {
       float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
       if (r >= 0.5f) {
-        stepPartition_(depth - 1, b->left);
+        stepPartition_(depth - 1, b->left, noStreet);
       }
       if (r < 0.5f) {
-        stepPartition_(depth - 1, b->right);
+        stepPartition_(depth - 1, b->right, noStreet);
       }
       
     }
 
-    void generateStreets( BSPNode * node) {
+    void generateStreets( BSPNode * node, bool noStreet) {
       
       dynarray<Street> localList;
 
@@ -955,9 +963,14 @@ namespace octet {
  
       }
 
+     if (!noStreet){
       for(int m=0; m!=localList.size(); m++){
-        streetsList.push_back(localList[m]);
+      streetsList.push_back(localList[m]);
       }
+    }
+    else {
+      buildingAreaList.push_back(BuildingArea(node->vertices[0], node->vertices[1], node->vertices[2], node->vertices[3]));
+    }
     }
 
     bool streetAlreadyExists(vec4 sp1Son, vec4 sp2Son){
