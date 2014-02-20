@@ -109,16 +109,14 @@ namespace octet {
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
 
-	  city->calculateBuildingsCenters();
-	  buildingAreaList = &city->buildingAreaList;
+	    city->calculateBuildingsCenters();
+	    buildingAreaList = &city->buildingAreaList;
 
       vec4 dimensions;
       vec4 center;
 
       city->getDimensions(dimensions);
       city->getCenter(center);
-
-	  
 
       city_mesh->init(streetList, buildingAreaList, dimensions, center);
 

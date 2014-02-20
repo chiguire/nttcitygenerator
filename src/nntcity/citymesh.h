@@ -71,9 +71,7 @@ namespace octet {
 
           heightmap[j*heightmap_height+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
 
-          //printf("%.1f,", heightmap[j*heightmap_height+i]);
         }
-        //printf("\n");
       }
     }
 
@@ -180,7 +178,11 @@ namespace octet {
 
       heightmapImage->sample2Dbilinear(u_, v_, color);
 
-      return (color.x() * HEIGHT_FACTOR)+HEIGHT_FACTOR*3;
+      float h = (color.x() * HEIGHT_FACTOR);
+      if (h < BRIDGE_LEVEL) {
+        h = BRIDGE_LEVEL;
+      }
+      return h;
     }
 
 
@@ -355,8 +357,8 @@ namespace octet {
         (*buildingAreaList)[i].areaMesh.render();
       }*/
 
-      //waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      //waterMesh.render();
+      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      waterMesh.render();
     }
   };
 
