@@ -55,7 +55,9 @@ namespace octet {
     static const int DRAW_ROADS = 0x4;
     static const int DRAW_BUILDINGS = 0x8;
     static const int DRAW_HELP = 0x10;
-    static const int DRAW_COMPASS = 0x11;
+    static const int DRAW_COMPASS = 0x20;
+    static const int DRAW_TERRAIN_NORMALS = 0x40;
+    static const int DRAW_ROADS_NORMALS = 0x80;
 
     int drawFlags;
 
@@ -68,7 +70,7 @@ namespace octet {
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
-    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS)
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS | ~DRAW_TERRAIN_NORMALS | ~DRAW_ROADS_NORMALS )
     {
     }
 
@@ -207,73 +209,95 @@ namespace octet {
         light_rotation[1] += 5.0f;
         if (light_rotation[1] > 90.0f) light_rotation[1] = 90.0f;
       }
-
-      if (is_key_down('Z') && !justPressed) {
-        if (drawFlags & DRAW_TERRAIN) {
-          printf("%#010x\n", drawFlags);
-          drawFlags = drawFlags & ~DRAW_TERRAIN;
-          printf("%#010x\n", drawFlags);
-        } else {
-          drawFlags = drawFlags | DRAW_TERRAIN;
-        }
-        justPressed = true;
-      } else {
-        justPressed = false;
-      }
-
-      if (is_key_down('X') && !justPressed) {
-        if (drawFlags & DRAW_WATER) {
-          drawFlags = drawFlags & ~DRAW_WATER;
-        } else {
-          drawFlags = drawFlags | DRAW_WATER;
-        }
-        justPressed = true;
-      } else {
-        justPressed = false;
-      }
-
-      if (is_key_down('C') && !justPressed) {
-        if (drawFlags & DRAW_ROADS) {
-          drawFlags = drawFlags & ~DRAW_ROADS;
-        } else {
-          drawFlags = drawFlags | DRAW_ROADS;
-        }
-        justPressed = true;
-      } else {
-        justPressed = false;
-      }
-
-      if (is_key_down('V') && !justPressed) {
-        if (drawFlags & DRAW_BUILDINGS) {
-          drawFlags = drawFlags & ~DRAW_BUILDINGS;
-        } else {
-          drawFlags = drawFlags | DRAW_BUILDINGS;
-        }
-        justPressed = true;
-      } else {
-        justPressed = false;
-      }
-
-      if (is_key_down('B') && !justPressed) {
-        if (drawFlags & DRAW_HELP) {
-          drawFlags = drawFlags & ~DRAW_HELP;
-        } else {
-          drawFlags = drawFlags | DRAW_HELP;
-        }
-        justPressed = true;
-      } else {
-        justPressed = false;
-      }
       
-      if (is_key_down('N') && !justPressed) {
-        if (drawFlags & DRAW_COMPASS) {
-          drawFlags = drawFlags & ~DRAW_COMPASS;
-        } else {
-          drawFlags = drawFlags | DRAW_COMPASS;
+      if (is_key_down(key_alt)) {
+        if (is_key_down('Z') && !justPressed) {
+          if (drawFlags & DRAW_TERRAIN_NORMALS) {
+            drawFlags = drawFlags & ~DRAW_TERRAIN_NORMALS;
+          } else {
+            drawFlags = drawFlags | DRAW_TERRAIN_NORMALS;
+          }
+          justPressed = true;
+        } else if (!is_key_down('Z')) {
+          justPressed = false;
         }
-        justPressed = true;
+
+        if (is_key_down('X') && !justPressed) {
+          if (drawFlags & DRAW_ROADS_NORMALS) {
+            drawFlags = drawFlags & ~DRAW_ROADS_NORMALS;
+          } else {
+            drawFlags = drawFlags | DRAW_ROADS_NORMALS;
+          }
+          justPressed = true;
+        } else if (!is_key_down('X')) {
+          justPressed = false;
+        }
       } else {
-        justPressed = false;
+        if (is_key_down('Z') && !justPressed) {
+          if (drawFlags & DRAW_TERRAIN) {
+            drawFlags = drawFlags & ~DRAW_TERRAIN;
+          } else {
+            drawFlags = drawFlags | DRAW_TERRAIN;
+          }
+          justPressed = true;
+        } else if (!is_key_down('Z')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('X') && !justPressed) {
+          if (drawFlags & DRAW_WATER) {
+            drawFlags = drawFlags & ~DRAW_WATER;
+          } else {
+            drawFlags = drawFlags | DRAW_WATER;
+          }
+          justPressed = true;
+        } else if (!is_key_down('X')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('C') && !justPressed) {
+          if (drawFlags & DRAW_ROADS) {
+            drawFlags = drawFlags & ~DRAW_ROADS;
+          } else {
+            drawFlags = drawFlags | DRAW_ROADS;
+          }
+          justPressed = true;
+        } else if (!is_key_down('C')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('V') && !justPressed) {
+          if (drawFlags & DRAW_BUILDINGS) {
+            drawFlags = drawFlags & ~DRAW_BUILDINGS;
+          } else {
+            drawFlags = drawFlags | DRAW_BUILDINGS;
+          }
+          justPressed = true;
+        } else if (!is_key_down('V')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('B') && !justPressed) {
+          if (drawFlags & DRAW_HELP) {
+            drawFlags = drawFlags & ~DRAW_HELP;
+          } else {
+            drawFlags = drawFlags | DRAW_HELP;
+          }
+          justPressed = true;
+        } else if (!is_key_down('B')) {
+          justPressed = false;
+        }
+      
+        if (is_key_down('N') && !justPressed) {
+          if (drawFlags & DRAW_COMPASS) {
+            drawFlags = drawFlags & ~DRAW_COMPASS;
+          } else {
+            drawFlags = drawFlags | DRAW_COMPASS;
+          }
+          justPressed = true;
+        } else if (!is_key_down('N')) {
+          justPressed = false;
+        }
       }
       
       if(is_key_down(key_space)){
@@ -360,7 +384,7 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
+      city_mesh->debugRender(object_shader, cshader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
@@ -369,10 +393,9 @@ namespace octet {
       }
 
       //Unbind vertex buffers so normal vertex arrays can work
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
       if (drawFlags & DRAW_COMPASS) {
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         compassCard.render(&camera_position, &camera_rotation);
       }
 

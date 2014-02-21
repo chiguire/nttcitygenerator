@@ -12,6 +12,11 @@ namespace octet {
     mesh surfaceMesh;
     mesh waterMesh;
 
+    mesh roadLeftNormalsMesh;
+    mesh roadRightNormalsMesh;
+    mesh pavementNormalsMesh;
+    mesh surfaceNormalsMesh;
+
     material *roadMaterialLeft;
     material *roadMaterialRight;
     material *pavementMaterial;
@@ -327,6 +332,11 @@ namespace octet {
       mbRoadRight.get_mesh(roadRightMesh); 
       mbPavement.get_mesh(pavementMesh);
 
+      roadLeftNormalsMesh.make_normal_visualizer(roadLeftMesh, 0.3f, attribute_normal);
+      roadRightNormalsMesh.make_normal_visualizer(roadRightMesh, 0.3f, attribute_normal);
+      pavementNormalsMesh.make_normal_visualizer(pavementMesh, 0.3f, attribute_normal);
+      surfaceNormalsMesh.make_normal_visualizer(surfaceMesh, 0.3f, attribute_normal);
+
       //roadLeftMesh.set_mode(GL_LINES);
       //roadRightMesh.set_mode(GL_LINES);
       //pavementMesh.set_mode(GL_LINES);
@@ -341,7 +351,7 @@ namespace octet {
     }
 
 
-    void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
+    void debugRender(bump_shader &shader, color_shader &cshader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
         dynarray<BuildingArea> *buildingAreaList, int drawFlags) {
 
       if (drawFlags & 0x1) {
@@ -370,6 +380,18 @@ namespace octet {
       if (drawFlags & 0x2) {
         waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         waterMesh.render();
+      }
+
+      if (drawFlags & 0x40) {
+        cshader.render(modelToProjection, vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        surfaceNormalsMesh.render();
+      }
+
+      if (drawFlags & 0x80) {
+        cshader.render(modelToProjection, vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        roadLeftNormalsMesh.render();
+        roadRightNormalsMesh.render();
+        pavementNormalsMesh.render();
       }
     }
   };
