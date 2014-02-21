@@ -24,6 +24,7 @@ namespace octet {
     material *waterMaterial;
 
     dynarray<float> heightmap;
+    dynarray<vec4> normalmap;
     int heightmap_width;
     int heightmap_height;
 
@@ -74,13 +75,42 @@ namespace octet {
 
           heightmapImage->sample2Dbilinear(u_, v_, color);
 
-          heightmap[j*heightmap_height+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
+          heightmap[j*heightmap_width+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
 
         }
       }
     }
 
+    void generateNormalMap(float separationX, float separationY) {
+      image *heightmapImage = ((*getImageArray())[4]);
+      unsigned int nx = heightmapImage->get_width();
+      unsigned int ny = heightmapImage->get_height();
+      unsigned int hmx = nx + 2;
+      unsigned int hmy = ny + 2;
 
+      normalmap.reset();
+      normalmap.resize(nx*ny);      
+
+      for (unsigned j = 0; j != ny; j++) {
+        for (unsigned i = 0; i != nx; i++) {
+          vec4 normal(0.0f, 0.0f, 0.0f, 1.0f);
+
+          float h01 = heightmap[hmx*(j+1)+(i+1-1)];
+          float h21 = heightmap[hmx*(j+1)+(i+1+1)];
+          float h10 = heightmap[hmx*(j+1-1)+(i+1)];
+          float h12 = heightmap[hmx*(j+1+1)+(i+1)];
+          vec3 va(separationX, h21 - h01, 0.0f);
+          vec3 vb(0.0f, h12 - h10, separationY);
+          va = va.normalize();
+          vb = vb.normalize();
+
+          vec3 c = va.cross(vb);
+          normal = vec4(c[0], c[1], c[2], 1.0f);
+          normal = normal.normalize();
+          normalmap[nx*j+i] = normal;
+        }
+      }
+    }
 
     /*
     //Not yet functional, didn't manage to get it working in time
@@ -197,19 +227,20 @@ namespace octet {
       mesh_builder mbRoadRight;
       mesh_builder mbPavement;
 
-      printf("Generating heightmap.\n");
-      generateHeightmap(); 
-
-      printf("Creating road meshes.\n");
-
       //Create heightmap
       vec4 terrainDimensions = cityDimensions*2.0f;
+
+      printf("Generating heightmap and normalmap.\n");
+      generateHeightmap();
+      generateNormalMap(terrainDimensions.x()/(heightmap_width-2), terrainDimensions.z()/(heightmap_height-2));
+
+      printf("Creating road meshes.\n");
 
       printf("Creating surface from heightmap.\n");
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
   
@@ -282,7 +313,7 @@ namespace octet {
         if (street.roadMeshLeftIntersectedPoints.size() > 0) {
           mbRoadRight.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices,
                                    cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                   heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
+                                   heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
         }/*
         if(street.roadMeshRightPoints.size() > 0)
           mbRoadRight.add_cuboid_vertices(&street.roadMeshRightPoints);*/
@@ -290,7 +321,7 @@ namespace octet {
         if (street.roadMeshRightIntersectedPoints.size() > 0) {
           mbRoadLeft.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices, 
                                    cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
+                                  heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
         }/*
         if(street.roadMeshLeftPoints.size() > 0)
           mbRoadLeft.add_cuboid_vertices(&street.roadMeshLeftPoints);*/
@@ -302,7 +333,7 @@ namespace octet {
         if (street.pavementMeshRightIntersectedPoints.size() > 0) {
           mbPavement.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices,
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
+                                  heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
         } else {
           mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
           mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
@@ -318,7 +349,7 @@ namespace octet {
         if (street.pavementMeshLeftIntersectedPoints.size() > 0) {
           mbPavement.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices, 
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, heightmap.data(), heightmap_width, heightmap_height);
+                                  heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
         } else {
           mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
           mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
@@ -406,7 +437,7 @@ namespace octet {
       cshader = cshader_;
     }
 
-    void render(vec4 *camera_position, vec3 *camera_rotation) {
+    void render(vec4 *camera_position, vec3 *camera_rotation, float aspectRatio) {
       mat4t modelToWorld;
       modelToWorld.loadIdentity();
 
@@ -414,9 +445,9 @@ namespace octet {
       cameraToWorld.loadIdentity();
       cameraToWorld.rotate((*camera_rotation)[1], 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-(*camera_rotation)[0], 1.0f, 0.0f, 0.0f);
-      cameraToWorld.translate(0.0f, 0.0f, 5.0f); //camera_position->z());
+      cameraToWorld.translate(0.0f, 0.0f, 10.0f); //camera_position->z());
 
-      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld, 0.1f, 1000.0f, 0.08f, 0.08f);
+      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld, 0.1f, 1000.0f, 0.08f, 0.08f*aspectRatio, 0.1f*aspectRatio);
 
       float x_arrow[] = {
         -1.0f, 0.0f, 0.0f,

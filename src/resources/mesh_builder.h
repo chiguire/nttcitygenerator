@@ -215,11 +215,8 @@ namespace octet {
 
     void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_, 
                       vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY,
-                      unsigned nx, unsigned ny, float *heightmap, unsigned hmx, unsigned hmy) {
+                      unsigned nx, unsigned ny, vec4 *normalMap, unsigned hmx, unsigned hmy, float *heightmap) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
-
-      dynarray<vec4> normalMap;
-      generateNormalMap(normalMap, nx, ny, heightmap, hmx, hmy);
 
       for (int i = 0; i != vertices_.size(); i++) {
         vec4 &vertex = vertices_[i];
@@ -328,20 +325,17 @@ namespace octet {
 
     // add a subdivided size*size plane with nx*ny squares, z value is
     // given by an image
-    void add_plane_heightmap(float xSize, float ySize, unsigned nx, unsigned ny, float *heightmap, unsigned hmx, unsigned hmy) {
+    void add_plane_heightmap(float xSize, float ySize, unsigned nx, unsigned ny, vec4 *normalmap, unsigned hmx, unsigned hmy, float *heightmap) {
       float xsize = xSize / nx;
       float ysize = ySize / ny;
       float xSizeBy2 = xSize * 0.5f;
       float ySizeBy2 = ySize * 0.5f;
 
-      dynarray<vec4> normalMap;
-      generateNormalMap(normalMap, nx, ny, heightmap, hmx, hmy);
-
       unsigned short cur_vertex = (unsigned short)vertices.size();
 
       for (unsigned j = 0; j != ny; ++j) {
         for (unsigned i = 0; i != nx; ++i) {
-          add_vertex(vec4( i*xsize-xSizeBy2, j*ysize-ySizeBy2, heightmap[hmy*(j+1)+(i+1)], 1), normalMap[ny*j+i], ((float)i)/nx, ((float)j)/ny);
+          add_vertex(vec4( i*xsize-xSizeBy2, j*ysize-ySizeBy2, heightmap[hmx*(j+1)+(i+1)], 1), normalmap[nx*j+i], ((float)i)/nx, ((float)j)/ny);
         }
       }
 
@@ -353,32 +347,6 @@ namespace octet {
           indices.push_back(cur_vertex+ny*(j+0)+(i+0));
           indices.push_back(cur_vertex+ny*(j+1)+(i+1));
           indices.push_back(cur_vertex+ny*(j+1)+(i+0));
-        }
-      }
-    }
-
-    void generateNormalMap(dynarray<vec4> &normalMap, unsigned nx, unsigned ny, float *heightmap, unsigned hmx, unsigned hmy) {
-      normalMap.reset();
-      normalMap.resize(nx*ny);      
-
-      for (unsigned j = 0; j != ny; j++) {
-        for (unsigned i = 0; i != nx; i++) {
-          vec4 normal(0.0f, 0.0f, 0.0f, 1.0f);
-
-          float h11 = heightmap[hmy*(j+1)+(i+1)];
-          float h01 = heightmap[hmy*(j+1)+(i+1-1)];
-          float h21 = heightmap[hmy*(j+1)+(i+1+1)];
-          float h10 = heightmap[hmy*(j+1-1)+(i+1)];
-          float h12 = heightmap[hmy*(j+1+1)+(i+1)];
-          vec3 va(2.0f, 0.0f, h21 - h01);
-          vec3 vb(0.0f, 2.0f, h12 - h10);
-          va = va.normalize();
-          vb = vb.normalize();
-
-          vec3 c = va.cross(vb);
-          normal = vec4(c[0], c[1], c[2], 1.0f);
-          normal = normal.normalize();
-          normalMap[ny*j+i] = normal;
         }
       }
     }

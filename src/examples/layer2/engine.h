@@ -70,7 +70,7 @@ namespace octet {
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
-    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS | ~DRAW_TERRAIN_NORMALS | ~DRAW_ROADS_NORMALS )
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS )
     {
     }
 
@@ -380,7 +380,7 @@ namespace octet {
       
       mat4t modelToCamera = modelToWorld * worldToCamera;
 
-      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
+      mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld, 0.1f, 1000.0f, 0.0f, 0.0f, 0.1f*vy/float(vx));
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
@@ -396,7 +396,7 @@ namespace octet {
       if (drawFlags & DRAW_COMPASS) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        compassCard.render(&camera_position, &camera_rotation);
+        compassCard.render(&camera_position, &camera_rotation, float(vy)/float(vx));
       }
 
     }
