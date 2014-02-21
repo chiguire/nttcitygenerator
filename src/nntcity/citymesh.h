@@ -341,25 +341,36 @@ namespace octet {
     }
 
 
-    void debugRender(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights) {      //grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      surfaceMesh.render();
+    void debugRender(bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
+        dynarray<BuildingArea> *buildingAreaList, int drawFlags) {
 
-      roadMaterialLeft->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      roadLeftMesh.render();
-
-      roadMaterialRight->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      roadRightMesh.render();
-
-      pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      pavementMesh.render();
-
-      for (int i = 0; i != buildingAreaList->size(); ++i) {
-        (*buildingAreaList)[i].areaMesh.render();
+      if (drawFlags & 0x1) {
+        grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        surfaceMesh.render();
       }
 
-      waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-      waterMesh.render();
+      if (drawFlags & 0x4) {
+        roadMaterialLeft->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        roadLeftMesh.render();
+
+        roadMaterialRight->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        roadRightMesh.render();
+
+        pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        pavementMesh.render();
+      }
+
+      if (drawFlags & 0x8) {
+        pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        for (int i = 0; i != buildingAreaList->size(); ++i) {
+          (*buildingAreaList)[i].areaMesh.render();
+        }
+      }
+
+      if (drawFlags & 0x2) {
+        waterMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        waterMesh.render();
+      }
     }
   };
 

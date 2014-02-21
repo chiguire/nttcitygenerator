@@ -50,6 +50,15 @@ namespace octet {
 
     text_overlay textOverlay;
 
+    static const int DRAW_TERRAIN = 0x1;
+    static const int DRAW_WATER = 0x2;
+    static const int DRAW_ROADS = 0x4;
+    static const int DRAW_BUILDINGS = 0x8;
+    static const int DRAW_HELP = 0x10;
+    static const int DRAW_COMPASS = 0x11;
+
+    int drawFlags;
+
   public:
     // this is called when we construct the class
     engine(int argc, char **argv) 
@@ -58,14 +67,15 @@ namespace octet {
     , camera_position(0.0f, 0.0f, 10.0f, 0.0f)
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
-    , light_rotation(45.0f, 30.0f, 0.0f)
+    , light_rotation(45.0f, 30.0f, 0.0f) 
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS)
     {
     }
 
     // this is called once OpenGL is initialized
     void app_init() {
       // Shader Set Up
-    city_bump_shader_.init(); // false is default
+      //city_bump_shader_.init(); // false is default
       object_shader.init(false);
   
       cshader.init();
@@ -81,7 +91,6 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-
       depth = 8;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
@@ -130,31 +139,46 @@ namespace octet {
 
     void keyboardInput() 
     {
+      static bool justPressed = false;
       vec4 direction(0.0f);
+      
+      if (!is_key_down(key_alt)) {
+        if (is_key_down('W')) {
+          direction[1] = -0.25f * (camera_position[2]/5.0f);
+        } else if (is_key_down('S')) {
+          direction[1] = 0.25f * (camera_position[2]/5.0f);
+        }
 
-      if (is_key_down('W')) {
-        direction[1] = -0.25f * (camera_position[2]/5.0f);
-        //camera_position[1] -= 0.25f * (camera_position[2]/5.0f);
-      } else if (is_key_down('S')) {
-        direction[1] = 0.25f * (camera_position[2]/5.0f);
-        //camera_position[1] += 0.25f * (camera_position[2]/5.0f);
+        if (is_key_down('A')) {
+          direction[0] = -0.25f * (camera_position[2]/5.0f);
+        } else if (is_key_down('D')) {
+          direction[0] = 0.25f * (camera_position[2]/5.0f);
+        }
+
+        mat4t directionMatrix(1.0f);
+        directionMatrix.rotate(-camera_rotation[1], 0.0f, 0.0f, 1.0f);
+        direction = direction * directionMatrix;
+
+        camera_position[0] += direction[0];
+        camera_position[1] += direction[1];
+      } else {
+        if (is_key_down('A')) {
+          camera_rotation[1] += 5.0f;
+          if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
+        } else if (is_key_down('D')) {
+          camera_rotation[1] -= 5.0f;
+          if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
+        }
+
+        if (is_key_down('W')) {
+          camera_rotation[0] -= 5.0f;
+          if (camera_rotation[0] < -90.0f) camera_rotation[0] = -90.0f;
+        } else if (is_key_down('S')) {
+          camera_rotation[0] += 5.0f;
+          if (camera_rotation[0] > 90.0f) camera_rotation[0] = 90.0f;
+        }
       }
-
-      if (is_key_down('A')) {
-        direction[0] = -0.25f * (camera_position[2]/5.0f);
-        //camera_position[0] -= 0.25f * (camera_position[2]/5.0f);
-      } else if (is_key_down('D')) {
-        direction[0] = 0.25f * (camera_position[2]/5.0f);
-        //camera_position[0] += 0.25f * (camera_position[2]/5.0f);
-      }
-
-      mat4t directionMatrix(1.0f);
-      directionMatrix.rotate(-camera_rotation[1], 0.0f, 0.0f, 1.0f);
-      direction = direction * directionMatrix;
-
-      camera_position[0] += direction[0];
-      camera_position[1] += direction[1];
-
+      
       if (is_key_down('Q')) {
         camera_position[2] -= 0.25f;
         if (camera_position[2] < 0.5f) camera_position[2] = 0.5f;
@@ -166,22 +190,6 @@ namespace octet {
         camera_position[3] += 0.25f * (camera_position[2]/5.0f);
       } else if (is_key_down('Y')) {
         camera_position[3] -= 0.25f * (camera_position[2]/5.0f);
-      }
-
-      if (is_key_down('F')) {
-        camera_rotation[1] += 5.0f;
-        if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
-      } else if (is_key_down('H')) {
-        camera_rotation[1] -= 5.0f;
-        if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
-      }
-
-      if (is_key_down('G')) {
-        camera_rotation[0] -= 5.0f;
-        if (camera_rotation[0] < -90.0f) camera_rotation[0] = -90.0f;
-      } else if (is_key_down('T')) {
-        camera_rotation[0] += 5.0f;
-        if (camera_rotation[0] > 90.0f) camera_rotation[0] = 90.0f;
       }
 
       if (is_key_down('J')) {
@@ -200,6 +208,74 @@ namespace octet {
         if (light_rotation[1] > 90.0f) light_rotation[1] = 90.0f;
       }
 
+      if (is_key_down('Z') && !justPressed) {
+        if (drawFlags & DRAW_TERRAIN) {
+          printf("%#010x\n", drawFlags);
+          drawFlags = drawFlags & ~DRAW_TERRAIN;
+          printf("%#010x\n", drawFlags);
+        } else {
+          drawFlags = drawFlags | DRAW_TERRAIN;
+        }
+        justPressed = true;
+      } else {
+        justPressed = false;
+      }
+
+      if (is_key_down('X') && !justPressed) {
+        if (drawFlags & DRAW_WATER) {
+          drawFlags = drawFlags & ~DRAW_WATER;
+        } else {
+          drawFlags = drawFlags | DRAW_WATER;
+        }
+        justPressed = true;
+      } else {
+        justPressed = false;
+      }
+
+      if (is_key_down('C') && !justPressed) {
+        if (drawFlags & DRAW_ROADS) {
+          drawFlags = drawFlags & ~DRAW_ROADS;
+        } else {
+          drawFlags = drawFlags | DRAW_ROADS;
+        }
+        justPressed = true;
+      } else {
+        justPressed = false;
+      }
+
+      if (is_key_down('V') && !justPressed) {
+        if (drawFlags & DRAW_BUILDINGS) {
+          drawFlags = drawFlags & ~DRAW_BUILDINGS;
+        } else {
+          drawFlags = drawFlags | DRAW_BUILDINGS;
+        }
+        justPressed = true;
+      } else {
+        justPressed = false;
+      }
+
+      if (is_key_down('B') && !justPressed) {
+        if (drawFlags & DRAW_HELP) {
+          drawFlags = drawFlags & ~DRAW_HELP;
+        } else {
+          drawFlags = drawFlags | DRAW_HELP;
+        }
+        justPressed = true;
+      } else {
+        justPressed = false;
+      }
+      
+      if (is_key_down('N') && !justPressed) {
+        if (drawFlags & DRAW_COMPASS) {
+          drawFlags = drawFlags & ~DRAW_COMPASS;
+        } else {
+          drawFlags = drawFlags | DRAW_COMPASS;
+        }
+        justPressed = true;
+      } else {
+        justPressed = false;
+      }
+      
       if(is_key_down(key_space)){
         this->camera_position = vec4(0.0f, 0.0f, 10.0f, 0.0f);
         this->camera_rotation = vec3(45.0f, 0.0f, 0.0f);
@@ -284,18 +360,21 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(streetList,  buildingAreaList, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      city_mesh->debugRender(object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
+      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
+
+      if (drawFlags & DRAW_HELP) {
+        textOverlay.render(object_shader, object_shader, vx, vy, 0);
+      }
 
       //Unbind vertex buffers so normal vertex arrays can work
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
-
-      textOverlay.render(object_shader, object_shader, vx, vy, 0);
-
-      compassCard.render(&camera_position, &camera_rotation);
+      if (drawFlags & DRAW_COMPASS) {
+        compassCard.render(&camera_position, &camera_rotation);
+      }
 
     }
 
