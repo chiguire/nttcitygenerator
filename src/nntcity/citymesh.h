@@ -22,6 +22,7 @@ namespace octet {
     material *pavementMaterial;
     material *grassMaterial;
     material *waterMaterial;
+	material *buldingMaterial;
 
     dynarray<float> heightmap;
     dynarray<vec4> normalmap;
@@ -40,6 +41,7 @@ namespace octet {
           "assets/citytex/grass_3.gif",
           "assets/citytex/heightmap6.gif",
           "assets/citytex/water_2.gif",
+		  "assets/citytex/building_h.gif",
           0
         };
 
@@ -376,6 +378,7 @@ namespace octet {
       roadMaterialLeft = new material((*getImageArray())[1]);
       roadMaterialRight = new material((*getImageArray())[2]);
       grassMaterial = new material((*getImageArray())[3], false);
+	  buldingMaterial = new material((*getImageArray())[6]);
       // waterMaterial = new material((*getImageArray())[4]);
       waterMaterial = new material();
       waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
@@ -402,7 +405,7 @@ namespace octet {
       }
 
       if (drawFlags & 0x8) {
-        pavementMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        buldingMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         for (int i = 0; i != buildingAreaList->size(); ++i) {
           (*buildingAreaList)[i].areaMesh.render();
         }
