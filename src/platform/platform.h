@@ -158,6 +158,7 @@ static char *get_sprintf_buffer() {
 #include "../shaders/phong_shader.h"
 #include "../shaders/bump_shader.h"
 #include "../shaders/city_bump_shader.h"
+#include "../shaders/city_buildings_bump_shader.h"
 
 #include "../physics/physics.h"
 
