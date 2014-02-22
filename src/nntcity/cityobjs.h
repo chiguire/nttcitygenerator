@@ -203,6 +203,9 @@ namespace octet {
 
     vec4 * debugColors;
 
+    static const float STREET_WIDTH;
+    static const float ROAD_WIDTH;
+    static const float PAVEMENT_WIDTH;
 
     City ()
     :randomizer(time(NULL))
@@ -363,10 +366,6 @@ namespace octet {
 
     void calculateMeshesIntersections(){
 
-      float streetWidth = 0.26f;
-      float pavementWidth = 0.04;
-      float roadWidth = 0.20f;
-
       unsigned int streetsListSize = streetsList.size();
       
       dynarray<bool> checkIntersections(streetsListSize*streetsListSize);
@@ -420,11 +419,11 @@ namespace octet {
 
               if (intAngleBetweenStreets != 180) {
 
-                float exteriorPavementDistance = (streetWidth / 2) / sin(angleBetweenStreets/2);
+                float exteriorPavementDistance = (STREET_WIDTH / 2) / sin(angleBetweenStreets/2);
 
-                float interiorPavementDistance = ((streetWidth / 2) - pavementWidth) / sin(angleBetweenStreets/2);
+                float interiorPavementDistance = ((STREET_WIDTH / 2) - PAVEMENT_WIDTH) / sin(angleBetweenStreets/2);
 
-                float exteriorRoadDistance = (roadWidth / 2) / sin(angleBetweenStreets/2);
+                float exteriorRoadDistance = (ROAD_WIDTH / 2) / sin(angleBetweenStreets/2);
 
                 //------------------------------We calculate the coordinates of the new point of the streets---------------------------------
                 float angleStreetsCS[2];  
@@ -550,7 +549,8 @@ namespace octet {
 
     //generates 4 or 8 additional points for the Road Meshes that just have 4 points
     void generatePointsEmptyRoadMeshes(){
-      float roadWidth = 0.20f;
+      float exteriorPavementDistance = (STREET_WIDTH / 2);
+      float interiorPavementDistance = ((STREET_WIDTH / 2) - PAVEMENT_WIDTH);
 
       for(int i=0; i!= streetsList.size(); ++i){
 
@@ -563,15 +563,18 @@ namespace octet {
           vec4 perpendicularVector;
 
           dynarray<vec4>* roadMeshToApplyChanges;
+          dynarray<vec4>* pavementMeshToApplyChanges;
 
           if(streetsList[i].roadMeshLeftPoints.size() == 0 ){
             perpendicularVector = vec4(streetVector[2],streetVector[1],-streetVector[0],1);
             roadMeshToApplyChanges = &(st->roadMeshLeftPoints);
+            pavementMeshToApplyChanges = &(st->pavementMeshLeftPoints);
           }
           
           if(streetsList[i].roadMeshRightPoints.size() == 0){
             perpendicularVector = vec4(-streetVector[2],streetVector[1],streetVector[0],1);
             roadMeshToApplyChanges = &(st->roadMeshRightPoints);
+            pavementMeshToApplyChanges = &(st->pavementMeshRightPoints);
           }
 
           float anglePerpendicularVector = 0.0f;
@@ -595,11 +598,11 @@ namespace octet {
             anglePerpendicularVector = 2 * (3.14159265359f) + anglePerpendicularVector;
           }
 
-          vec4 exteriorPointRoad1 (st->points[0].x() + (roadWidth / 2) * cos(anglePerpendicularVector),0,
-            st->points[0].z()  + (roadWidth / 2) * sin(anglePerpendicularVector),1);
+          vec4 exteriorPointRoad1 (st->points[0].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+            st->points[0].z()  + (ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
-          vec4 exteriorPointRoad2 (st->points[1].x() + (roadWidth / 2) * cos(anglePerpendicularVector),0,
-            st->points[1].z() + (roadWidth / 2) * sin(anglePerpendicularVector),1);
+          vec4 exteriorPointRoad2 (st->points[1].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+            st->points[1].z() + (ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
           roadMeshToApplyChanges->push_back(vec4(st->points[0].x(),0.02f,st->points[0].z(),st->points[0].w()));
           roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad1.x(),0.02f,exteriorPointRoad1.z(),exteriorPointRoad1.w()));
@@ -610,16 +613,25 @@ namespace octet {
           roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad2.x(),0.02f,exteriorPointRoad2.z(),exteriorPointRoad2.w()));
           roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad2.x(),-0.02f,exteriorPointRoad2.z(),exteriorPointRoad2.w()));
           roadMeshToApplyChanges->push_back(vec4(st->points[1].x(),-0.02f,st->points[1].z(),st->points[1].w())); 
+
+          
+
+          vec4 exteriorPointPavement (st->points[0].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+            st->points[0].z() + exteriorPavementDistance * sin(anglePerpendicularVector),1);
+
+          vec4 interiorPointPavement (st->points[1].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+            st->points[1].z() + interiorPavementDistance * sin(anglePerpendicularVector),1);
+          
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
         }
       }
     }
 
     //generates 4 additional points for the Pavement Meshes that just have 4 points
     void generatePointsIncompleteMeshes(){
-
-      float streetWidth = 0.26f;
-      float pavementWidth = 0.04;
-      float roadWidth = 0.20f;
 
       for(int i=0; i!= streetsList.size(); ++i){
           if(streetsList[i].pavementMeshLeftPoints.size() == 4 || streetsList[i].pavementMeshRightPoints.size() == 4 ||
@@ -685,14 +697,14 @@ namespace octet {
             } 
             
                             
-            vec4 exteriorPointPavement (streetPoint[0] + (streetWidth / 2) * cos(anglePerpendicularVector),0,
-                         streetPoint[2] + (streetWidth / 2) * sin(anglePerpendicularVector),1);
+            vec4 exteriorPointPavement (streetPoint[0] + (STREET_WIDTH / 2) * cos(anglePerpendicularVector),0,
+                         streetPoint[2] + (STREET_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
-            vec4 interiorPointPavement (streetPoint[0] + ((streetWidth / 2) - pavementWidth) * cos(anglePerpendicularVector),0,
-              streetPoint[2] + ((streetWidth / 2) - pavementWidth) * sin(anglePerpendicularVector),1);
+            vec4 interiorPointPavement (streetPoint[0] + ((STREET_WIDTH / 2) - PAVEMENT_WIDTH) * cos(anglePerpendicularVector),0,
+              streetPoint[2] + ((STREET_WIDTH / 2) - PAVEMENT_WIDTH) * sin(anglePerpendicularVector),1);
 
-            vec4 exteriorPointRoad (streetPoint[0] + (roadWidth / 2) * cos(anglePerpendicularVector),0,
-              streetPoint[2] + (roadWidth / 2) * sin(anglePerpendicularVector),1);
+            vec4 exteriorPointRoad (streetPoint[0] + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+              streetPoint[2] + (ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
             
             if(st->pavementMeshRightPoints.size() == 4){
@@ -1064,4 +1076,9 @@ namespace octet {
 
   
   }; 
+  
+  const float City::STREET_WIDTH = 0.26f;
+  const float City::ROAD_WIDTH = 0.20f;
+  const float City::PAVEMENT_WIDTH = 0.04;
+
 }

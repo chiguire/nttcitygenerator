@@ -7,7 +7,7 @@
 // Bump shader that uses textures for all material channels
 
 namespace octet {
-  class ___city_bump_shader : public shader {
+  class city_bump_shader : public shader {
     // indices to use with glUniform*()
 
     GLuint modelToProjection_index; // index for model space to projection space matrix

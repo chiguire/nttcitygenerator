@@ -20,7 +20,7 @@ namespace octet {
 
     // shaders to draw triangles
     city_bump_shader city_bump_shader_;
-	city_buildings_bump_shader city_buildings_bump_shader_; 
+	  city_buildings_bump_shader city_buildings_bump_shader_; 
     bump_shader object_shader;
     color_shader cshader;
 
@@ -80,7 +80,7 @@ namespace octet {
       // Shader Set Up
       //city_bump_shader_.init(); // false is default
       object_shader.init(false);
-	  city_buildings_bump_shader_.init();
+	    city_buildings_bump_shader_.init();
   
       cshader.init();
       compassCard.init(&cshader);
