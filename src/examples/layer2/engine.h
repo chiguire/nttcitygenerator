@@ -70,7 +70,7 @@ namespace octet {
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
-    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS )
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS /* | DRAW_TERRAIN_NORMALS | DRAW_ROADS_NORMALS */ )
     {
     }
 

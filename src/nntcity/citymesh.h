@@ -22,10 +22,11 @@ namespace octet {
     material *pavementMaterial;
     material *grassMaterial;
     material *waterMaterial;
-	material *buldingMaterial;
+	  material *buldingMaterial;
 
     dynarray<float> heightmap;
-    dynarray<vec4> normalmap;
+    dynarray<vec4> normalmapXY;
+    dynarray<vec4> normalmapXZ;
     int heightmap_width;
     int heightmap_height;
 
@@ -83,15 +84,21 @@ namespace octet {
       }
     }
 
-    void generateNormalMap(float separationX, float separationY) {
+    void generateNormalMap() {
       image *heightmapImage = ((*getImageArray())[4]);
       unsigned int nx = heightmapImage->get_width();
       unsigned int ny = heightmapImage->get_height();
       unsigned int hmx = nx + 2;
       unsigned int hmy = ny + 2;
 
-      normalmap.reset();
-      normalmap.resize(nx*ny);      
+      normalmapXY.reset();
+      normalmapXY.resize(nx*ny);      
+      normalmapXZ.reset();
+      normalmapXZ.resize(nx*ny);      
+
+      mat4t rotMat;
+      rotMat.loadIdentity();
+      rotMat.rotate(-90, 1.0f, 0.0f, 0.0f);
 
       for (unsigned j = 0; j != ny; j++) {
         for (unsigned i = 0; i != nx; i++) {
@@ -101,15 +108,13 @@ namespace octet {
           float h21 = heightmap[hmx*(j+1)+(i+1+1)];
           float h10 = heightmap[hmx*(j+1-1)+(i+1)];
           float h12 = heightmap[hmx*(j+1+1)+(i+1)];
-          vec3 va(separationX, h21 - h01, 0.0f);
-          vec3 vb(0.0f, h12 - h10, separationY);
-          va = va.normalize();
-          vb = vb.normalize();
-
+          vec3 va(2.0f, 0.0f, h21 - h01);
+          vec3 vb(0.0f, 2.0f, h12 - h10);
           vec3 c = va.cross(vb);
           normal = vec4(c[0], c[1], c[2], 1.0f);
           normal = normal.normalize();
-          normalmap[nx*j+i] = normal;
+          normalmapXY[nx*j+i] = normal;
+          normalmapXZ[nx*j+i] = normal*rotMat;
         }
       }
     }
@@ -234,7 +239,7 @@ namespace octet {
 
       printf("Generating heightmap and normalmap.\n");
       generateHeightmap();
-      generateNormalMap(terrainDimensions.x()/(heightmap_width-2), terrainDimensions.z()/(heightmap_height-2));
+      generateNormalMap();
 
       printf("Creating road meshes.\n");
 
@@ -242,7 +247,7 @@ namespace octet {
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, normalmapXY.data(), heightmap_width, heightmap_height, heightmap.data());
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
   
@@ -315,7 +320,7 @@ namespace octet {
         if (street.roadMeshLeftIntersectedPoints.size() > 0) {
           mbRoadRight.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices,
                                    cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                   heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
+                                   heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         }/*
         if(street.roadMeshRightPoints.size() > 0)
           mbRoadRight.add_cuboid_vertices(&street.roadMeshRightPoints);*/
@@ -323,7 +328,7 @@ namespace octet {
         if (street.roadMeshRightIntersectedPoints.size() > 0) {
           mbRoadLeft.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices, 
                                    cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
+                                  heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         }/*
         if(street.roadMeshLeftPoints.size() > 0)
           mbRoadLeft.add_cuboid_vertices(&street.roadMeshLeftPoints);*/
@@ -335,7 +340,7 @@ namespace octet {
         if (street.pavementMeshRightIntersectedPoints.size() > 0) {
           mbPavement.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices,
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
+                                  heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         } else {
           mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
           mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
@@ -351,7 +356,7 @@ namespace octet {
         if (street.pavementMeshLeftIntersectedPoints.size() > 0) {
           mbPavement.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices, 
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, normalmap.data(), heightmap_width, heightmap_height, heightmap.data());
+                                  heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         } else {
           mbPavement.translate(vMidpoint.x(), vMidpoint.y(), vMidpoint.z());
           mbPavement.rotate(angleY, 0.0f, 1.0f, 0.0f);
