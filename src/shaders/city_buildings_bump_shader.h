@@ -1,13 +1,7 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// (C) Andy Thomason 2012, 2013
-//
-// Modular Framework for OpenGLES2 rendering on multiple platforms.
-//
-// Bump shader that uses textures for all material channels
+
 
 namespace octet {
-  class city_bump_shader : public shader {
+  class city_buildings_bump_shader : public shader {
     // indices to use with glUniform*()
 
     GLuint modelToProjection_index; // index for model space to projection space matrix
@@ -16,8 +10,6 @@ namespace octet {
     GLuint light_uniforms_index;    // lighting parameters for fragment shader
     GLuint num_lights_index;        // how many lights?
     GLuint samplers_index;          // index for texture samplers
-	
-	GLuint tile_size_index;
 
     void init_uniforms(const char *vertex_shader, const char *fragment_shader) {
       // use the common shader code to compile and link the shaders
@@ -31,7 +23,6 @@ namespace octet {
       light_uniforms_index = glGetUniformLocation(program(), "light_uniforms");
       num_lights_index = glGetUniformLocation(program(), "num_lights");
       samplers_index = glGetUniformLocation(program(), "samplers");
-	  tile_size_index = glGetUniformLocation(program(), "tile_size");
     }
 
   public:
@@ -118,8 +109,6 @@ namespace octet {
         uniform vec4 light_uniforms[1+max_lights*4];
         uniform int num_lights;
         uniform sampler2D samplers[6];
-
-		uniform float tile_size;
       
         void main() {
           float shininess = texture2D(samplers[5], uv_).x * 255.0;
@@ -140,18 +129,24 @@ namespace octet {
             specular_light += specular_factor * light_color;
           }
 
-          vec4 diffuse = texture2D(samplers[0], uv_);
-          vec4 ambient = texture2D(samplers[1], uv_);
+
+		  vec4 ambient;
+		  vec4 diffuse; 
+		 
+		  if (nnormal.y > 0.2) {
+				  ambient = vec4(0.1, 0.1, 0.1, 1.0);
+				  diffuse = vec4(0.1, 0.1, 0.1, 1.0);
+		  } else {
+				  ambient = texture2D(samplers[1], uv_);
+				  diffuse = texture2D(samplers[0], uv_);
+		  }
+		 
+          
           vec4 emission = texture2D(samplers[2], uv_);
           vec4 specular = texture2D(samplers[3], uv_);
 
           vec3 ambient_light = light_uniforms[0].xyz;
 
-
-		  vec2 phase = fract(uv_ / tile_size);
-		  vec4 texture_tile = texture2D(samplers[1], phase);
-		  
-		  /*
           gl_FragColor.xyz = 
             ambient_light * ambient.xyz +
             diffuse_light * diffuse.xyz +
@@ -159,26 +154,7 @@ namespace octet {
             specular_light * specular.xyz
           ;
           gl_FragColor.w = diffuse.w;
-		  */
-		  
-		  gl_FragColor = ambient_light * texture_tile.xyz;
 
-		  /*
-		  gl_FragColor.xyz = 
-			ambient_light * texture_tile.xyz +
-			ambient_light * texture_tile.xyz +
-			emission.xyz + 
-			specular_light * specular.xyz;
-
-		  gl_FrafColor.w = diffuse.w;
-		  */
-
-          // how to debug your fragment shader: set gl_FragColor to the value you want to look at!
-          //gl_FragColor = diffuse;
-          //gl_FragColor = texture2D(samplers[5], uv_);
-          //gl_FragColor = vec4(ambient_light, 1);
-          //gl_FragColor = vec4(light_uniforms[2].xyz, 1);
-          //gl_FragColor = vec4(diffuse_light, 1);
         }
       );
     
@@ -187,8 +163,7 @@ namespace octet {
       init_uniforms(is_skinned ? skinned_vertex_shader : vertex_shader, fragment_shader);
     }
 
-
-    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float tile_size = 0.5f) {
+    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights) {
       // tell openGL to use the program
       shader::render();
 
@@ -199,13 +174,10 @@ namespace octet {
       glUniform4fv(light_uniforms_index, num_light_uniforms, (float*)light_uniforms);
       glUniform1i(num_lights_index, num_lights);
 
-	    glUniform1f(tile_size_index, tile_size);
-
       // we use textures 0-3 for material properties.
       static const GLint samplers[] = { 0, 1, 2, 3, 4, 5 };
       glUniform1iv(samplers_index, 6, samplers);
     }
-
 
     void render_skinned(const mat4t &cameraToProjection, const mat4t *modelToCamera, int num_matrices, const vec4 *light_uniforms, int num_light_uniforms, int num_lights) {
       // tell openGL to use the program

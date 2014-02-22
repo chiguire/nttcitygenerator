@@ -100,6 +100,11 @@ namespace octet {
       bind_textures();
     }
 
+	void renderBuilding(city_buildings_bump_shader &shader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, int num_light_uniforms, int num_lights) const {
+      shader.render(modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+      bind_textures();
+    }
+
     void render_skinned(bump_shader &shader, const mat4t &cameraToProjection, const mat4t *modelToCamera, int num_nodes, vec4 *light_uniforms, int num_light_uniforms, int num_lights) const {
       shader.render_skinned(cameraToProjection, modelToCamera, num_nodes, light_uniforms, num_light_uniforms, num_lights);
       bind_textures();

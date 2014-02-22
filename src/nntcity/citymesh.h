@@ -390,7 +390,7 @@ namespace octet {
     }
 
 
-    void debugRender(bump_shader &shader, color_shader &cshader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
+    void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
         dynarray<BuildingArea> *buildingAreaList, int drawFlags) {
 
       if (drawFlags & 0x1) {
@@ -410,7 +410,7 @@ namespace octet {
       }
 
       if (drawFlags & 0x8) {
-        buldingMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         for (int i = 0; i != buildingAreaList->size(); ++i) {
           (*buildingAreaList)[i].areaMesh.render();
         }

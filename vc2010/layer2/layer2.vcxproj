@@ -119,6 +119,7 @@
     <ClInclude Include="..\..\src\scene\smooth.h" />
     <ClInclude Include="..\..\src\scene\wireframe.h" />
     <ClInclude Include="..\..\src\shaders\bump_shader.h" />
+    <ClInclude Include="..\..\src\shaders\city_buildings_bump_shader.h" />
     <ClInclude Include="..\..\src\shaders\city_bump_shader.h" />
     <ClInclude Include="..\..\src\shaders\color_shader.h" />
     <ClInclude Include="..\..\src\shaders\phong_shader.h" />
