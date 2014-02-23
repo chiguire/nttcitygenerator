@@ -209,6 +209,7 @@ namespace octet {
 
     mat4t modelToWorld;
 
+	dynarray<BSPNode> subAreaNodes;
     dynarray<Street> streetsList;
     dynarray<BuildingArea> buildingAreaList;
   
@@ -223,6 +224,9 @@ namespace octet {
     static const float PAVEMENT_WIDTH;
     static const float ROAD_HEIGHT;
     static const float PAVEMENT_HEIGHT;
+
+	bool stop_iteration;
+
 
     City ()
     :randomizer(time(NULL))
@@ -268,10 +272,6 @@ namespace octet {
 
       setDebugColors(depth);
       stepPartition_(depth, &root, false);
-
-    }
-
-    void iterator() {
 
     }
 
@@ -815,7 +815,13 @@ namespace octet {
     }
 
   void calculateBuildingsAreas(float scale) {
+	stop_iteration = false;
     calculateBuildingsAreas_(&root, scale);
+
+	stop_iteration = true;
+	for (int i=0; i!=subAreaNodes.size(); ++i) {
+		calculateBuildingsAreas_(&subAreaNodes[i], 1.0);
+	}
   }
 
 
@@ -896,23 +902,31 @@ namespace octet {
       vec4 dist_vector = vec4(quad_center.x()-quad_center_t.x(), 0, quad_center.z()-quad_center_t.z(), 1);
 
       BuildingArea buildingArea = BuildingArea(v0t+dist_vector, v1t+dist_vector, v2t+dist_vector, v3t+dist_vector);
-
-      
-      
+	  
       BSPNode buildingNodeRoot = BSPNode();
       buildingNodeRoot.vertices[0] = buildingArea.points[0];
       buildingNodeRoot.vertices[1] = buildingArea.points[1];
       buildingNodeRoot.vertices[2] = buildingArea.points[2];
       buildingNodeRoot.vertices[3] = buildingArea.points[3];
 
-      stepPartition_(5, &buildingNodeRoot, true);
+	  if (!stop_iteration) {
+		stepPartition_(5, &buildingNodeRoot, true);
+		subAreaNodes.push_back(buildingNodeRoot);
+	  } else {
+		   buildingAreaList.push_back(BuildingArea(buildingArea));
+	  }
 
+	  
+
+	 
+	  /*
       printf("-------------------- \n");
-      printf("Building Areas points \n");
+      printf("Building Big Areas points \n");
       printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
       printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
       printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
       printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+	  */
     }
   }
 
@@ -1006,8 +1020,8 @@ namespace octet {
       }
     }
     else {
-      buildingAreaList.push_back(BuildingArea(node->vertices[0], node->vertices[1], node->vertices[2], node->vertices[3]));
-    }
+     // buildingAreaList.push_back(BuildingArea(node->vertices[0], node->vertices[1], node->vertices[2], node->vertices[3]));
+    } 
     }
 
     bool streetAlreadyExists(vec4 sp1Son, vec4 sp2Son){
