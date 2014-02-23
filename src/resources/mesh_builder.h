@@ -358,30 +358,18 @@ namespace octet {
     vec4 nv2 = vec4(vertices[2].x(), vertices[2].y() , vertices[2].z(), vertices[0].w());
     vec4 nv3 = vec4(vertices[3].x(), vertices[3].y() , vertices[3].z(), vertices[0].w());
 
-    vec4 mv0 = vec4(vertices[0].x(), vertices[0].y()+height , vertices[0].z(), vertices[0].w());
-    vec4 mv1 = vec4(vertices[1].x(), vertices[1].y()+height , vertices[1].z(), vertices[0].w());
-    vec4 mv2 = vec4(vertices[2].x(), vertices[2].y()+height , vertices[2].z(), vertices[0].w());
-    vec4 mv3 = vec4(vertices[3].x(), vertices[3].y()+height , vertices[3].z(), vertices[0].w());
+    vec4 mv0 = vec4(nv0.x(), nv0.y()+height , nv0.z(), nv0.w());
+    vec4 mv1 = vec4(nv1.x(), nv1.y()+height , nv1.z(), nv1.w());
+    vec4 mv2 = vec4(nv2.x(), nv2.y()+height , nv2.z(), nv2.w());
+    vec4 mv3 = vec4(nv3.x(), nv3.y()+height , nv3.z(), nv3.w());
 
-    // bottom face
-      //add_face((*vertices)[0], (*vertices)[1], (*vertices)[2], (*vertices)[3], vec4(0, -1, 0, 0));
-    // top face
-    
+
     add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
     add_face(mv0, mv1, mv2, mv3, vec4(0, 1, 0, 0));
-
     add_face(nv0, nv1, mv1, mv0, vec4(1, 0, 0, 0));
     add_face(nv1, nv2, mv2, mv1, vec4(1, 0, 0, 0));
     add_face(nv2, nv3, mv3, mv2, vec4(1, 0, 0, 0));
     add_face(nv3, nv0, mv0, mv3, vec4(1, 0, 0, 0));
-
-    // others
-    /*
-    add_face((*vertices)[0], (*vertices)[1], nv1, nv0, vec4(1, 0, 0, 0));
-    add_face((*vertices)[1], (*vertices)[2], nv2, nv1, vec4(0, 0, 0, 1));
-    add_face((*vertices)[2], (*vertices)[3], nv3, nv2, vec4(-1, 0, 0, 0));
-    add_face((*vertices)[3], (*vertices)[0], nv0, nv3, vec4(0, 0, 0, -1));
-   */
    
   }
 

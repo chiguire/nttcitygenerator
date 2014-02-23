@@ -268,10 +268,11 @@ namespace octet {
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
 
+	  // creating buildings
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
-    float random_height = std::rand()%5 +1;
+		float random_height = std::rand()%5 +1;
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
         
         mesh * m = new mesh();
