@@ -59,6 +59,9 @@ namespace octet {
     static const int DRAW_COMPASS = 0x20;
     static const int DRAW_TERRAIN_NORMALS = 0x40;
     static const int DRAW_ROADS_NORMALS = 0x80;
+    static const int DRAW_TERRAIN_WIREFRAME = 0x100;
+    static const int DRAW_ROADS_WIREFRAME = 0x200;
+    static const int DRAW_BUILDINGS_WIREFRAME = 0x400;
 
     int drawFlags;
 
@@ -71,7 +74,8 @@ namespace octet {
     , camera_rotation(45.0f, 0.0f, 0.0f)
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
-    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS /* | DRAW_TERRAIN_NORMALS | DRAW_ROADS_NORMALS */ )
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS
+     /* | DRAW_TERRAIN_NORMALS | DRAW_ROADS_NORMALS | DRAW_TERRAIN_WIREFRAME | DRAW_ROADS_WIREFRAME | DRAW_BUILDINGS_WIREFRAME*/ )
     {
     }
 
@@ -232,6 +236,45 @@ namespace octet {
           }
           justPressed = true;
         } else if (!is_key_down('X')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('C') && !justPressed) {
+          if (drawFlags & DRAW_TERRAIN_WIREFRAME) {
+            drawFlags = drawFlags & ~DRAW_TERRAIN_WIREFRAME;
+            city_mesh->set_mode(drawFlags, buildingAreaList);
+          } else {
+            drawFlags = drawFlags | DRAW_TERRAIN_WIREFRAME;
+            city_mesh->set_mode(drawFlags, buildingAreaList);
+          }
+          justPressed = true;
+        } else if (!is_key_down('C')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('V') && !justPressed) {
+          if (drawFlags & DRAW_ROADS_WIREFRAME) {
+            drawFlags = drawFlags & ~DRAW_ROADS_WIREFRAME;
+            city_mesh->set_mode(drawFlags, buildingAreaList);
+          } else {
+            drawFlags = drawFlags | DRAW_ROADS_WIREFRAME;
+            city_mesh->set_mode(drawFlags, buildingAreaList);
+          }
+          justPressed = true;
+        } else if (!is_key_down('V')) {
+          justPressed = false;
+        }
+
+        if (is_key_down('B') && !justPressed) {
+          if (drawFlags & DRAW_BUILDINGS_WIREFRAME) {
+            drawFlags = drawFlags & ~DRAW_BUILDINGS_WIREFRAME;
+            city_mesh->set_mode(drawFlags, buildingAreaList);
+          } else {
+            drawFlags = drawFlags | DRAW_BUILDINGS_WIREFRAME;
+            city_mesh->set_mode(drawFlags, buildingAreaList);
+          }
+          justPressed = true;
+        } else if (!is_key_down('B')) {
           justPressed = false;
         }
       } else {

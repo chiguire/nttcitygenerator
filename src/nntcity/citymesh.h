@@ -433,6 +433,35 @@ namespace octet {
         pavementNormalsMesh.render();
       }
     }
+
+    void set_mode(unsigned int drawFlags, dynarray<BuildingArea> *buildingAreaList) {
+      unsigned int WIREFRAME_MODE = GL_LINE_LOOP; 
+      if (drawFlags & 0x100) {
+        surfaceMesh.set_mode(WIREFRAME_MODE);
+      } else {
+        surfaceMesh.set_mode(GL_TRIANGLES);
+      }
+
+      if (drawFlags & 0x200) {
+        roadLeftMesh.set_mode(WIREFRAME_MODE);
+        roadRightMesh.set_mode(WIREFRAME_MODE);
+        pavementMesh.set_mode(WIREFRAME_MODE);
+      } else {
+        roadLeftMesh.set_mode(GL_TRIANGLES);
+        roadRightMesh.set_mode(GL_TRIANGLES);
+        pavementMesh.set_mode(GL_TRIANGLES);
+      }
+
+      if (drawFlags & 0x400) {
+        for (int i = 0; i != buildingAreaList->size(); ++i) {
+          (*buildingAreaList)[i].areaMesh.set_mode(WIREFRAME_MODE);
+        }
+      } else {
+        for (int i = 0; i != buildingAreaList->size(); ++i) {
+          (*buildingAreaList)[i].areaMesh.set_mode(GL_TRIANGLES);
+        }
+      }
+    }
   };
 
   dynarray <image *> *CityMesh::imageArray_;
