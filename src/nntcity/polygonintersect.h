@@ -18,18 +18,25 @@ namespace octet {
 
     // Obtain a series of triangles that represent the intersection of
     // a polygon with a axis-aligned grid, in 2D.
-    // polygon must have an even number of floats
+    // Polygons are a series of vec4s, must be aligned to XZ axis.
+    // centerX, centerZ - Geometrical center of the grid
+    // separationX, separationY - Dimensions of each grid tile
+    // halfSizeY - Dimension in Y of the extruded polygon
+    // width, height - Dimensions, in tile, of the grid
+    // resultVertices, resultIndices - Resulting polygons of the intersection, in vertex/index mode.
+    // borderVertices - Resulting vertices around the polygon border. For later extrusion purposes.
     static void intersectGrid(dynarray<vec4> &polygon, 
-                       float centerX, float centerY, 
-                       float separationX, float separationY, 
+                       float centerX, float centerZ, 
+                       float separationX, float separationZ, float halfSizeY,
                        int width, int height, 
                        dynarray<vec4> &resultVertices, dynarray<unsigned short> &resultIndices) {
+
+      IntersectVertex gridOrigin(centerX-separationX*(width/2.0f), centerZ-separationZ*(height/2.0f));
+      IntersectVertex minGrid(centerX+separationX*(width/2.0f+1), centerZ+separationZ*(height/2.0f+1));
+      IntersectVertex maxGrid(centerX-separationX*(width/2.0f+1), centerZ-separationZ*(height/2.0f+1));
+
       resultVertices.reset();
       resultIndices.reset();
-
-      IntersectVertex gridOrigin(centerX-separationX*(width/2.0f), centerY-separationY*(height/2.0f));
-      IntersectVertex minGrid(centerX+separationX*(width/2.0f+1), centerY+separationY*(height/2.0f+1));
-      IntersectVertex maxGrid(centerX-separationX*(width/2.0f+1), centerY-separationY*(height/2.0f+1));
       
       for (int i = 0; i != polygon.size(); i ++) {
         IntersectVertex a(polygon[i].x(), polygon[i].z());
@@ -49,16 +56,18 @@ namespace octet {
       }
 
       minGrid.i = (int)floor((minGrid.x - gridOrigin.x)/separationX);
-      minGrid.j = (int)floor((minGrid.y - gridOrigin.y)/separationY);
+      minGrid.j = (int)floor((minGrid.y - gridOrigin.y)/separationZ);
       maxGrid.i = (int)floor((maxGrid.x - gridOrigin.x)/separationX);
-      maxGrid.j = (int)floor((maxGrid.y - gridOrigin.y)/separationY);
+      maxGrid.j = (int)floor((maxGrid.y - gridOrigin.y)/separationZ);
 
+      // Intersecting XZ-aligned polygons
       for (int j = minGrid.j; j <= maxGrid.j; j++) {
         for (int i = minGrid.i; i <= maxGrid.i; i++) {
           dynarray<vec4> polygonIntersect;
+          dynarray<vec4> borderIntersect;
           float square[] = {
-            gridOrigin.x + i*separationX, gridOrigin.y + j*separationY,
-            gridOrigin.x + (i+1)*separationX, gridOrigin.y + (j+1)*separationY 
+            gridOrigin.x + i*separationX, gridOrigin.y + j*separationZ,
+            gridOrigin.x + (i+1)*separationX, gridOrigin.y + (j+1)*separationZ 
           };
           //printf("Comparing against square: (%.2f, %.2f), (%.2f, %.2f): ", square[0], square[1], square[2], square[3]);
           PolygonIntersections::intersectPolygonAABB(polygon, square, polygonIntersect);
@@ -78,8 +87,45 @@ namespace octet {
           }
         }
       }
+
+      // Extruding polygons in the Y-axis
+      /*
+      for (int i = 0; i != polygon.size(); i++) {
+        dynarray<vec4> borderVertices;
+        vec4 *vecA = &polygon[i];
+        vec4 *vecB = &polygon[(i+1)%polygon.size()];
+        IntersectVertex a(vecA->x(), vecA->z(), (int)floor((vecA->x() - gridOrigin.x)/separationX), (int)floor((vecA->z() - gridOrigin.y)/separationZ));
+        IntersectVertex b(vecB->x(), vecB->z(), (int)floor((vecB->x() - gridOrigin.x)/separationX), (int)floor((vecB->z() - gridOrigin.y)/separationZ));
+
+        intersectLineBorderGrid(a, b, gridOrigin, separationX, separationZ, borderVertices);
+
+        int num_triangles = borderVertices.size()*2-2;
+
+        if (num_triangles > 0) {
+          unsigned short cur_vertex = (unsigned short)resultVertices.size();
+
+          for (auto j = borderVertices.begin(); j != borderVertices.end(); j++) {
+            (*j)[1] = halfSizeY;
+            resultVertices.push_back(*j);
+            (*j)[1] = -halfSizeY;
+            resultVertices.push_back(*j);
+          }
+
+          for (int k = 0; k != num_triangles/2; k++) {
+            resultIndices.push_back(cur_vertex+k*2);
+            resultIndices.push_back(cur_vertex+k*2+1);
+            resultIndices.push_back(cur_vertex+k*2+2);
+            resultIndices.push_back(cur_vertex+k*2+1);
+            resultIndices.push_back(cur_vertex+k*2+3);
+            resultIndices.push_back(cur_vertex+k*2+2);
+          }
+        }
+      }*/
     }
 
+    // Given a polygon, intersect it with an AABB defined by bounds, outputing the
+    // vertices in result.
+    // bounds is defined as {x0, y0, x1, y1}, given that x0 < x1 && y0 < y1.
     static void intersectPolygonAABB(dynarray<vec4> &polygon, float bounds[], dynarray<vec4> &result) {
       IntersectVertex boundsMin(1000000.0f, 1000000.0f);
       IntersectVertex boundsMax(-1000000.0f, -1000000.0f);
@@ -273,6 +319,120 @@ namespace octet {
           //printf("(%.2f, %.2f), ", k->x(), k->y());
       } 
       //printf("]\n");
+    }
+    
+    // Intersects
+    static void intersectLineBorderGrid(const IntersectVertex &a, const IntersectVertex &b, const IntersectVertex &gridOrigin,
+                                 float separationX, float separationZ, dynarray<vec4> &borderVertices) {
+
+      borderVertices.push_back(vec4(a.x, 0, a.y, 1.0f));
+      
+      if (abs(a.x - b.x) < CITY_EPSILON) { //If both points are in the same x point
+        // Digital Differential Analysis --  http://lodev.org/cgtutor/raycasting.html
+        float slope = (b.x-a.x)/(b.y-a.y);
+        float origin = a.x - slope*a.y;
+        //float x0 = slope*_y0_+origin;
+        //float y0 = (_x0_-origin)/slope;
+        
+        int stepX = a.x < b.x? 1: -1;
+        int stepY = a.y < b.y? 1: -1;
+        int startX = a.x < b.x? 1: 0;
+        int startY = a.y < b.y? 1: 0;
+
+        //which position and box of the grid we're in
+        vec2 start(a.x, a.y);
+        vec2 current(a.x, a.y);
+
+        vec2 sideDistXp(gridOrigin.x+(a.i+startX)*separationX, ((gridOrigin.x+(a.i+startX)*separationX)-origin)/slope);
+        vec2 sideDistYp((gridOrigin.y+(a.j+startY)*separationZ)*slope+origin, gridOrigin.y+(a.j+startY)*separationZ);
+        float sideDistX = (sideDistXp - start).length();
+        float sideDistY = (sideDistYp - start).length();
+
+        //length of ray from one x or y-side to next x or y-side
+        vec2 deltaDistXp(stepX*separationX, stepY*separationX/slope);
+        vec2 deltaDistYp(stepX*separationZ*slope, stepY*separationZ);
+        
+        float lineLength = sqrtf((b.y-a.y)*(b.y-a.y)+(b.x-a.x)*(b.x-a.x));
+        float currentLineLength = (current - start).length();
+        while (currentLineLength < lineLength) {
+          if (sideDistX < sideDistY) {
+            if (sideDistX < lineLength) {
+              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
+              current = sideDistXp;
+            }
+            if (sideDistY < lineLength) {
+              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
+              current = sideDistYp;
+            }
+          } else {
+            if (sideDistY < lineLength) {
+              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
+              current = sideDistYp;
+            }
+            if (sideDistX < lineLength) {
+              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
+              current = sideDistXp;
+            }
+          }
+          sideDistXp += deltaDistXp;
+          sideDistYp += deltaDistYp;
+          sideDistX = (sideDistXp - start).length();
+          sideDistY = (sideDistYp - start).length();
+          current = (sideDistX < sideDistY)? sideDistXp: sideDistYp;
+          currentLineLength = (current - start).length();
+        }
+      } else {
+        // Digital Differential Analysis --  http://lodev.org/cgtutor/raycasting.html
+        float slope = (b.y-a.y)/(b.x-a.x);
+        float origin = a.y - slope*a.x;
+        //float x0 = (_y0_-origin)/slope;
+        //float y0 = slope*_x0_+origin;
+        
+        int stepX = a.x < b.x? 1: -1;
+        int stepY = a.y < b.y? 1: -1;
+        int startX = a.x < b.x? 1: 0;
+        int startY = a.y < b.y? 1: 0;
+
+        //which position and box of the grid we're in
+        vec2 start(a.x, a.y);
+        vec2 current(a.x, a.y);
+
+        vec2 sideDistXp(gridOrigin.x+(a.i+startX)*separationX, (gridOrigin.x+(a.i+startX)*separationX)*slope+origin);
+        vec2 sideDistYp(((gridOrigin.y+(a.j+startY)*separationZ)-origin)/slope, gridOrigin.y+(a.j+startY)*separationZ);
+        float sideDistX = (sideDistXp - start).length();
+        float sideDistY = (sideDistYp - start).length();
+
+        //length of ray from one x or y-side to next x or y-side
+        vec2 deltaDistXp(stepX*separationX, stepY*slope*separationX);
+        vec2 deltaDistYp(stepX*separationZ/slope, stepY*separationZ);
+        
+        float lineLength = sqrtf((b.y-a.y)*(b.y-a.y)+(b.x-a.x)*(b.x-a.x));
+        float currentLineLength = (current - start).length();
+        while (currentLineLength < lineLength) {
+          if (sideDistX < sideDistY) {
+            if (sideDistX < lineLength) {
+              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
+            }
+            if (sideDistY < lineLength) {
+              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
+            }
+          } else {
+            if (sideDistY < lineLength) {
+              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
+            }
+            if (sideDistX < lineLength) {
+              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
+            }
+          }
+          sideDistXp += deltaDistXp;
+          sideDistYp += deltaDistYp;
+          sideDistX = (sideDistXp - start).length();
+          sideDistY = (sideDistYp - start).length();
+          current = (sideDistX < sideDistY)? sideDistXp: sideDistYp;
+          currentLineLength = (current - start).length();
+        }
+      }
+      borderVertices.push_back(vec4(b.x, 0, b.y, 1.0f));
     }
   };  
 }
