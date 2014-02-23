@@ -616,16 +616,26 @@ namespace octet {
 
           
 
-          vec4 exteriorPointPavement (st->points[0].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+          vec4 exteriorPointPavement1 (st->points[0].x() + exteriorPavementDistance * cos(anglePerpendicularVector),0,
             st->points[0].z() + exteriorPavementDistance * sin(anglePerpendicularVector),1);
 
-          vec4 interiorPointPavement (st->points[1].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
-            st->points[1].z() + interiorPavementDistance * sin(anglePerpendicularVector),1);
+          vec4 interiorPointPavement1 (st->points[0].x() + interiorPavementDistance * cos(anglePerpendicularVector),0,
+            st->points[0].z() + interiorPavementDistance * sin(anglePerpendicularVector),1);
           
-          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
-          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
-          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
-          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+          vec4 exteriorPointPavement2 (st->points[1].x() + exteriorPavementDistance * cos(anglePerpendicularVector),0,
+            st->points[1].z() + exteriorPavementDistance * sin(anglePerpendicularVector),1);
+
+          vec4 interiorPointPavement2 (st->points[1].x() + interiorPavementDistance * cos(anglePerpendicularVector),0,
+            st->points[1].z() + interiorPavementDistance * sin(anglePerpendicularVector),1);
+
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement1.x(),0.04f,interiorPointPavement1.z(),interiorPointPavement1.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement1.x(),0.04f,exteriorPointPavement1.z(),exteriorPointPavement1.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement1.x(),-0.04f,exteriorPointPavement1.z(),exteriorPointPavement1.w()));
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement1.x(),-0.04f,interiorPointPavement1.z(),interiorPointPavement1.w())); 
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement2.x(),0.04f,interiorPointPavement2.z(),interiorPointPavement2.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement2.x(),0.04f,exteriorPointPavement2.z(),exteriorPointPavement2.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement2.x(),-0.04f,exteriorPointPavement2.z(),exteriorPointPavement2.w()));
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement2.x(),-0.04f,interiorPointPavement2.z(),interiorPointPavement2.w())); 
         }
       }
     }
