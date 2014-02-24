@@ -1116,9 +1116,9 @@ namespace octet {
   
   }; 
   
-  const float City::STREET_WIDTH = 0.26f;
-  const float City::ROAD_WIDTH = 0.20f;
-  const float City::PAVEMENT_WIDTH = 0.04f;
+  const float City::STREET_WIDTH = 0.36f;
+  const float City::ROAD_WIDTH = 0.30f;
+  const float City::PAVEMENT_WIDTH = 0.06f;
   const float City::ROAD_HEIGHT = 0.04f;
   const float City::PAVEMENT_HEIGHT = 0.06f;
 

@@ -76,6 +76,7 @@ namespace octet {
             int num_triangles = polygonIntersect.size()-2;
             if (num_triangles > 0) {
               for (auto k = polygonIntersect.begin(); k != polygonIntersect.end(); k++) {
+                (*k)[1] = halfSizeY;
                 resultVertices.push_back(*k);
               }
               for (int k = 0; k != num_triangles; k++) {
@@ -89,7 +90,6 @@ namespace octet {
       }
 
       // Extruding polygons in the Y-axis
-      /*
       for (int i = 0; i != polygon.size(); i++) {
         dynarray<vec4> borderVertices;
         vec4 *vecA = &polygon[i];
@@ -98,6 +98,12 @@ namespace octet {
         IntersectVertex b(vecB->x(), vecB->z(), (int)floor((vecB->x() - gridOrigin.x)/separationX), (int)floor((vecB->z() - gridOrigin.y)/separationZ));
 
         intersectLineBorderGrid(a, b, gridOrigin, separationX, separationZ, borderVertices);
+
+        printf("For polygon: [(%.2f, %.2f, %d, %d), (%.2f, %.2f, %d, %d)], resulting division: [", a.x, a.y, a.i, a.j, b.x, b.y, b.i, b.j);
+        for (auto k = borderVertices.begin(); k != borderVertices.end(); k++) {
+          printf("(%.2f, %.2f), ", k->x(), k->z());
+        }
+        printf("]\n");
 
         int num_triangles = borderVertices.size()*2-2;
 
@@ -120,7 +126,7 @@ namespace octet {
             resultIndices.push_back(cur_vertex+k*2+2);
           }
         }
-      }*/
+      }
     }
 
     // Given a polygon, intersect it with an AABB defined by bounds, outputing the
@@ -327,7 +333,7 @@ namespace octet {
 
       borderVertices.push_back(vec4(a.x, 0, a.y, 1.0f));
       
-      if (abs(a.x - b.x) < CITY_EPSILON) { //If both points are in the same x point
+      if (abs(a.x - b.x) < abs(a.y-b.y)) {
         // Digital Differential Analysis --  http://lodev.org/cgtutor/raycasting.html
         float slope = (b.x-a.x)/(b.y-a.y);
         float origin = a.x - slope*a.y;
@@ -358,27 +364,18 @@ namespace octet {
           if (sideDistX < sideDistY) {
             if (sideDistX < lineLength) {
               borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-              current = sideDistXp;
             }
-            if (sideDistY < lineLength) {
-              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-              current = sideDistYp;
-            }
+            sideDistXp += deltaDistXp;
+            sideDistX = (sideDistXp - start).length();
+            current = sideDistXp;
           } else {
             if (sideDistY < lineLength) {
               borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-              current = sideDistYp;
             }
-            if (sideDistX < lineLength) {
-              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-              current = sideDistXp;
-            }
+            sideDistYp += deltaDistYp;
+            sideDistY = (sideDistYp - start).length();
+            current = sideDistYp;
           }
-          sideDistXp += deltaDistXp;
-          sideDistYp += deltaDistYp;
-          sideDistX = (sideDistXp - start).length();
-          sideDistY = (sideDistYp - start).length();
-          current = (sideDistX < sideDistY)? sideDistXp: sideDistYp;
           currentLineLength = (current - start).length();
         }
       } else {
@@ -413,22 +410,25 @@ namespace octet {
             if (sideDistX < lineLength) {
               borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
             }
+            sideDistXp += deltaDistXp;
+            sideDistX = (sideDistXp - start).length();
+            current = sideDistXp;
+            /*
             if (sideDistY < lineLength) {
               borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-            }
+            }*/
           } else {
             if (sideDistY < lineLength) {
               borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
             }
+            sideDistYp += deltaDistYp;
+            sideDistY = (sideDistYp - start).length();
+            current = sideDistYp;
+            /*
             if (sideDistX < lineLength) {
               borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-            }
+            }*/
           }
-          sideDistXp += deltaDistXp;
-          sideDistYp += deltaDistYp;
-          sideDistX = (sideDistXp - start).length();
-          sideDistY = (sideDistYp - start).length();
-          current = (sideDistX < sideDistY)? sideDistXp: sideDistYp;
           currentLineLength = (current - start).length();
         }
       }
