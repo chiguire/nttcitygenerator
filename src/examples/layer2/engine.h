@@ -126,7 +126,7 @@ namespace octet {
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
 
-      city->calculateBuildingsAreas(0.9);
+      city->calculateBuildingsAreas(0.75);
       buildingAreaList = &city->buildingAreaList;
       vec4 dimensions;
       vec4 center;
