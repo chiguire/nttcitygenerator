@@ -134,8 +134,8 @@ namespace octet {
 		  vec4 diffuse; 
 		 
 		  if (nnormal.y > 0.2) {
-				  ambient = vec4(0.1, 0.1, 0.1, 1.0);
-				  diffuse = vec4(0.1, 0.1, 0.1, 1.0);
+				  ambient = vec4(0.2, 0.2, 0.2, 1.0);
+				  diffuse = vec4(0.2, 0.2, 0.2, 1.0);
 		  } else {
 				  ambient = texture2D(samplers[1], uv_);
 				  diffuse = texture2D(samplers[0], uv_);
