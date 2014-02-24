@@ -19,7 +19,17 @@ namespace octet {
     dynarray<unsigned short> roadMeshRightIntersectedIndices;
     dynarray<unsigned short> pavementMeshLeftIntersectedIndices;
     dynarray<unsigned short> pavementMeshRightIntersectedIndices;
+
+    unsigned short roadMeshLeftStartIndex;
+    unsigned short roadMeshRightStartIndex;
+    unsigned short pavementMeshLeftStartIndex;
+    unsigned short pavementMeshRightStartIndex;
     
+    unsigned short roadMeshLeftStartVertex;
+    unsigned short roadMeshRightStartVertex;
+    unsigned short pavementMeshLeftStartVertex;
+    unsigned short pavementMeshRightStartVertex;
+
     float angleCS[2];
     float translatedDistance[2];
 
@@ -62,7 +72,8 @@ namespace octet {
                                             centerX, centerZ, 
                                             separationX, separationZ, roadHalfSizeY,
                                             width, height, 
-                                            *polygonResultPoints, *polygonResultIndices);
+                                            *polygonResultPoints, *polygonResultIndices,
+                                            roadMeshLeftStartVertex, roadMeshLeftStartIndex);
       }
 
       // Road Mesh Right
@@ -80,7 +91,8 @@ namespace octet {
                                             centerX, centerZ, 
                                             separationX, separationZ, roadHalfSizeY,
                                             width, height,
-                                            *polygonResultPoints, *polygonResultIndices);
+                                            *polygonResultPoints, *polygonResultIndices,
+                                            roadMeshRightStartVertex, roadMeshRightStartIndex);
       }
 
       // Pavement Mesh Left
@@ -98,7 +110,8 @@ namespace octet {
                                             centerX, centerZ,
                                             separationX, separationZ, pavementHalfSizeY,
                                             width, height,
-                                            *polygonResultPoints, *polygonResultIndices);
+                                            *polygonResultPoints, *polygonResultIndices,
+                                            pavementMeshLeftStartVertex, pavementMeshLeftStartIndex);
       }
 
       // Pavement Mesh Right
@@ -116,7 +129,8 @@ namespace octet {
                                             centerX, centerZ,
                                             separationX, separationZ, pavementHalfSizeY,
                                             width, height,
-                                            *polygonResultPoints, *polygonResultIndices);
+                                            *polygonResultPoints, *polygonResultIndices,
+                                            pavementMeshRightStartVertex, pavementMeshRightStartIndex);
       }
     }
   
@@ -1111,8 +1125,8 @@ namespace octet {
   }; 
   
   const float City::STREET_WIDTH = 0.36f;
-  const float City::ROAD_WIDTH = 0.30f;
   const float City::PAVEMENT_WIDTH = 0.06f;
+  const float City::ROAD_WIDTH = City::STREET_WIDTH - 2*City::PAVEMENT_WIDTH;
   const float City::ROAD_HEIGHT = 0.04f;
   const float City::PAVEMENT_HEIGHT = 0.06f;
 

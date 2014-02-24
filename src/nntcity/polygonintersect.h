@@ -29,7 +29,8 @@ namespace octet {
                        float centerX, float centerZ, 
                        float separationX, float separationZ, float halfSizeY,
                        int width, int height, 
-                       dynarray<vec4> &resultVertices, dynarray<unsigned short> &resultIndices) {
+                       dynarray<vec4> &resultVertices, dynarray<unsigned short> &resultIndices, 
+                       unsigned short &extrudeStartVertex, unsigned short &extrudeStartIndex) {
 
       IntersectVertex gridOrigin(centerX-separationX*(width/2.0f), centerZ-separationZ*(height/2.0f));
       IntersectVertex minGrid(centerX+separationX*(width/2.0f+1), centerZ+separationZ*(height/2.0f+1));
@@ -88,6 +89,9 @@ namespace octet {
           }
         }
       }
+
+      extrudeStartVertex = resultVertices.size();
+      extrudeStartIndex = resultIndices.size();
 
       // Extruding polygons in the Y-axis
       for (int i = 0; i != polygon.size(); i++) {
