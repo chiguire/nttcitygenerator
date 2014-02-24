@@ -98,13 +98,13 @@ namespace octet {
         IntersectVertex b(vecB->x(), vecB->z(), (int)floor((vecB->x() - gridOrigin.x)/separationX), (int)floor((vecB->z() - gridOrigin.y)/separationZ));
 
         intersectLineBorderGrid(a, b, gridOrigin, separationX, separationZ, borderVertices);
-
-        printf("For polygon: [(%.2f, %.2f, %d, %d), (%.2f, %.2f, %d, %d)], resulting division: [", a.x, a.y, a.i, a.j, b.x, b.y, b.i, b.j);
+        /*
+        printf("For polygon: [(%.2f, %.2f, %d, %d), (%.2f, %.2f, %d, %d)], resulting division: [\n", a.x, a.y, a.i, a.j, b.x, b.y, b.i, b.j);
         for (auto k = borderVertices.begin(); k != borderVertices.end(); k++) {
-          printf("(%.2f, %.2f), ", k->x(), k->z());
+          printf("%.2f, %.2f),\n", k->x(), k->z());
         }
         printf("]\n");
-
+        */
         int num_triangles = borderVertices.size()*2-2;
 
         if (num_triangles > 0) {
@@ -331,9 +331,12 @@ namespace octet {
     static void intersectLineBorderGrid(const IntersectVertex &a, const IntersectVertex &b, const IntersectVertex &gridOrigin,
                                  float separationX, float separationZ, dynarray<vec4> &borderVertices) {
 
+      //printf("Intersection between (%.2f, %.2f) and (%.2f, %.2f)\n", a.x, a.y, b.x, b.y);
+      
       borderVertices.push_back(vec4(a.x, 0, a.y, 1.0f));
       
-      if (abs(a.x - b.x) < abs(a.y-b.y)) {
+      if (abs(b.x - a.x) < abs(b.y-a.y)) {
+        //printf("Y is longer than X\n");
         // Digital Differential Analysis --  http://lodev.org/cgtutor/raycasting.html
         float slope = (b.x-a.x)/(b.y-a.y);
         float origin = a.x - slope*a.y;
@@ -355,30 +358,26 @@ namespace octet {
         float sideDistY = (sideDistYp - start).length();
 
         //length of ray from one x or y-side to next x or y-side
-        vec2 deltaDistXp(stepX*separationX, stepY*separationX/slope);
-        vec2 deltaDistYp(stepX*separationZ*slope, stepY*separationZ);
+        vec2 deltaDistXp(stepX*separationX, stepX*separationX/slope);
+        vec2 deltaDistYp(stepY*separationZ*slope, stepY*separationZ);
         
         float lineLength = sqrtf((b.y-a.y)*(b.y-a.y)+(b.x-a.x)*(b.x-a.x));
-        float currentLineLength = (current - start).length();
-        while (currentLineLength < lineLength) {
+        while (sideDistX < lineLength || sideDistY < lineLength) {
+          //printf("Step: [lineLength: (%.2f), sideDistXp: (%.2f, %.2f), sideDistYp: (%.2f, %.2f), sideDistX: %.2f, sideDistY: %.2f, deltaDistXp(%.2f, %.2f), deltaDistYp(%.2f, %.2f) ",
+          //  lineLength, sideDistXp.x(), sideDistXp.y(), sideDistYp.x(), sideDistYp.y(), sideDistX, sideDistY, deltaDistXp.x(), deltaDistXp.y(), deltaDistYp.x(), deltaDistYp.y());
           if (sideDistX < sideDistY) {
-            if (sideDistX < lineLength) {
-              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-            }
+            borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
             sideDistXp += deltaDistXp;
             sideDistX = (sideDistXp - start).length();
-            current = sideDistXp;
           } else {
-            if (sideDistY < lineLength) {
-              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-            }
+            borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
             sideDistYp += deltaDistYp;
             sideDistY = (sideDistYp - start).length();
-            current = sideDistYp;
           }
-          currentLineLength = (current - start).length();
+          //printf("Last point: (%.2f, %.2f)\n", borderVertices[borderVertices.size()-1].x(), borderVertices[borderVertices.size()-1].z());
         }
       } else {
+        //printf("X is longer than Y\n");
         // Digital Differential Analysis --  http://lodev.org/cgtutor/raycasting.html
         float slope = (b.y-a.y)/(b.x-a.x);
         float origin = a.y - slope*a.x;
@@ -400,36 +399,25 @@ namespace octet {
         float sideDistY = (sideDistYp - start).length();
 
         //length of ray from one x or y-side to next x or y-side
-        vec2 deltaDistXp(stepX*separationX, stepY*slope*separationX);
-        vec2 deltaDistYp(stepX*separationZ/slope, stepY*separationZ);
+        vec2 deltaDistXp(stepX*separationX, stepX*slope*separationX);
+        vec2 deltaDistYp(stepY*separationZ/slope, stepY*separationZ);
         
         float lineLength = sqrtf((b.y-a.y)*(b.y-a.y)+(b.x-a.x)*(b.x-a.x));
-        float currentLineLength = (current - start).length();
-        while (currentLineLength < lineLength) {
+        while (sideDistX < lineLength || sideDistY < lineLength) {
+          //printf("Step: [lineLength: (%.2f), sideDistXp: (%.2f, %.2f), sideDistYp: (%.2f, %.2f), sideDistX: %.2f, sideDistY: %.2f, deltaDistXp(%.2f, %.2f), deltaDistYp(%.2f, %.2f) ",
+          //  lineLength, sideDistXp.x(), sideDistXp.y(), sideDistYp.x(), sideDistYp.y(), sideDistX, sideDistY, deltaDistXp.x(), deltaDistXp.y(), deltaDistYp.x(), deltaDistYp.y());
           if (sideDistX < sideDistY) {
-            if (sideDistX < lineLength) {
-              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-            }
+            borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
+            current = sideDistXp;
             sideDistXp += deltaDistXp;
             sideDistX = (sideDistXp - start).length();
-            current = sideDistXp;
-            /*
-            if (sideDistY < lineLength) {
-              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-            }*/
           } else {
-            if (sideDistY < lineLength) {
-              borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-            }
+            borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
+            current = sideDistYp;
             sideDistYp += deltaDistYp;
             sideDistY = (sideDistYp - start).length();
-            current = sideDistYp;
-            /*
-            if (sideDistX < lineLength) {
-              borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-            }*/
           }
-          currentLineLength = (current - start).length();
+          //printf("Last point: (%.2f, %.2f)\n", borderVertices[borderVertices.size()-1].x(), borderVertices[borderVertices.size()-1].z());
         }
       }
       borderVertices.push_back(vec4(b.x, 0, b.y, 1.0f));
