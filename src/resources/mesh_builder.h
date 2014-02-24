@@ -213,48 +213,22 @@ namespace octet {
       add_face((*vertices)[3], (*vertices)[7], (*vertices)[4], (*vertices)[0], vec4(-1, 0, 0, 0));
     }
 
-    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_,
-                      unsigned short extrudeStartVertex, unsigned short extrudeStartIndex,
+    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_, dynarray<vec4> &normals_,
                       vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY,
                       unsigned nx, unsigned ny, vec4 *normalMap, unsigned hmx, unsigned hmy, float *heightmap) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
-      dynarray <vec4> normals;
-
-      for (unsigned short i = extrudeStartIndex; i < indices_.size()-6; i += 6) {
-        vec4 a(vertices_[indices_[i+0]]);
-        vec4 b(vertices_[indices_[i+1]]);
-        vec4 c(vertices_[indices_[i+2]]);
-        vec4 d(vertices_[indices_[i+3]]);
-        vec4 e(vertices_[indices_[i+4]]);
-        vec4 f(vertices_[indices_[i+5]]);
-
-        vec4 ba = b - a;
-        vec4 ca = c - a;
-        vec4 v1 = ca.cross(ba);
-        v1 = v1.normalize();
-
-        vec4 ed = e - d;
-        vec4 fd = f - d;
-        vec4 v2 = fd.cross(ed);
-        v2 = v2.normalize();
-
-        normals.push_back(v1);
-        normals.push_back(v1);
-        normals.push_back(v2);
-        normals.push_back(v2);
-      }
 
       for (int i = 0; i != vertices_.size(); i++) {
         vec4 &vertex = vertices_[i];
 
-        if (i < extrudeStartVertex) {
+        if (normals_[i].x() == 0.0f && normals_[i].z() == 0.0f) {
           float u_ = (vertex.x()-cityCenter.x()+cityDimensions.x()*0.5f) / (cityDimensions.x());
           float v_ = (vertex.z()-cityCenter.z()+cityDimensions.z()*0.5f) / (cityDimensions.z());
           u_ = (u_*multiplier)+offsetX;
           v_ = ((1-v_)*multiplier)+offsetY;
           add_vertex(vertex, normalMap[nx*(int)floor(v_*ny)+(int)floor(u_*nx)], 0.0f, 0.0f);
         } else {
-          add_vertex(vertex, normals[i-extrudeStartVertex], 0.0f, 0.0f);
+          add_vertex(vertex, normals_[i], 0.0f, 0.0f);
         }
       }
       for (auto i = indices_.begin(); i != indices_.end(); i++) {

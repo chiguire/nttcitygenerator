@@ -20,15 +20,10 @@ namespace octet {
     dynarray<unsigned short> pavementMeshLeftIntersectedIndices;
     dynarray<unsigned short> pavementMeshRightIntersectedIndices;
 
-    unsigned short roadMeshLeftStartIndex;
-    unsigned short roadMeshRightStartIndex;
-    unsigned short pavementMeshLeftStartIndex;
-    unsigned short pavementMeshRightStartIndex;
-    
-    unsigned short roadMeshLeftStartVertex;
-    unsigned short roadMeshRightStartVertex;
-    unsigned short pavementMeshLeftStartVertex;
-    unsigned short pavementMeshRightStartVertex;
+    dynarray<vec4> roadMeshLeftIntersectedNormals;
+    dynarray<vec4> roadMeshRightIntersectedNormals;
+    dynarray<vec4> pavementMeshLeftIntersectedNormals;
+    dynarray<vec4> pavementMeshRightIntersectedNormals;
 
     float angleCS[2];
     float translatedDistance[2];
@@ -73,7 +68,7 @@ namespace octet {
                                             separationX, separationZ, roadHalfSizeY,
                                             width, height, 
                                             *polygonResultPoints, *polygonResultIndices,
-                                            roadMeshLeftStartVertex, roadMeshLeftStartIndex);
+                                            roadMeshLeftIntersectedNormals);
       }
 
       // Road Mesh Right
@@ -92,7 +87,7 @@ namespace octet {
                                             separationX, separationZ, roadHalfSizeY,
                                             width, height,
                                             *polygonResultPoints, *polygonResultIndices,
-                                            roadMeshRightStartVertex, roadMeshRightStartIndex);
+                                            roadMeshRightIntersectedNormals);
       }
 
       // Pavement Mesh Left
@@ -111,7 +106,7 @@ namespace octet {
                                             separationX, separationZ, pavementHalfSizeY,
                                             width, height,
                                             *polygonResultPoints, *polygonResultIndices,
-                                            pavementMeshLeftStartVertex, pavementMeshLeftStartIndex);
+                                            pavementMeshLeftIntersectedNormals);
       }
 
       // Pavement Mesh Right
@@ -130,7 +125,7 @@ namespace octet {
                                             separationX, separationZ, pavementHalfSizeY,
                                             width, height,
                                             *polygonResultPoints, *polygonResultIndices,
-                                            pavementMeshRightStartVertex, pavementMeshRightStartIndex);
+                                            pavementMeshRightIntersectedNormals);
       }
     }
   

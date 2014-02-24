@@ -30,7 +30,7 @@ namespace octet {
                        float separationX, float separationZ, float halfSizeY,
                        int width, int height, 
                        dynarray<vec4> &resultVertices, dynarray<unsigned short> &resultIndices, 
-                       unsigned short &extrudeStartVertex, unsigned short &extrudeStartIndex) {
+                       dynarray<vec4> &resultNormals) {
 
       IntersectVertex gridOrigin(centerX-separationX*(width/2.0f), centerZ-separationZ*(height/2.0f));
       IntersectVertex minGrid(centerX+separationX*(width/2.0f+1), centerZ+separationZ*(height/2.0f+1));
@@ -76,9 +76,11 @@ namespace octet {
             unsigned short cur_vertex = (unsigned short)resultVertices.size();
             int num_triangles = polygonIntersect.size()-2;
             if (num_triangles > 0) {
+              
               for (auto k = polygonIntersect.begin(); k != polygonIntersect.end(); k++) {
                 (*k)[1] = halfSizeY;
                 resultVertices.push_back(*k);
+                resultNormals.push_back(vec4(0, 0, 0, 0));
               }
               for (int k = 0; k != num_triangles; k++) {
                 resultIndices.push_back(cur_vertex+0);
@@ -90,9 +92,6 @@ namespace octet {
         }
       }
 
-      extrudeStartVertex = resultVertices.size();
-      extrudeStartIndex = resultIndices.size();
-
       // Extruding polygons in the Y-axis
       for (int i = 0; i != polygon.size(); i++) {
         dynarray<vec4> borderVertices;
@@ -102,6 +101,11 @@ namespace octet {
         IntersectVertex b(vecB->x(), vecB->z(), (int)floor((vecB->x() - gridOrigin.x)/separationX), (int)floor((vecB->z() - gridOrigin.y)/separationZ));
 
         intersectLineBorderGrid(a, b, gridOrigin, separationX, separationZ, borderVertices);
+
+        //Calculate line normal
+        float angleRadians = atan2f(b.y - a.y, b.x - a.x);
+        vec4 normal(cos(angleRadians-3.14159265359f/2.0f), 0.0f, sin(angleRadians-3.14159265359f/2.0f), 1.0f);
+
         /*
         printf("For polygon: [(%.2f, %.2f, %d, %d), (%.2f, %.2f, %d, %d)], resulting division: [\n", a.x, a.y, a.i, a.j, b.x, b.y, b.i, b.j);
         for (auto k = borderVertices.begin(); k != borderVertices.end(); k++) {
@@ -119,6 +123,8 @@ namespace octet {
             resultVertices.push_back(*j);
             (*j)[1] = -halfSizeY;
             resultVertices.push_back(*j);
+            resultNormals.push_back(normal);
+            resultNormals.push_back(normal);
           }
 
           for (int k = 0; k != num_triangles/2; k++) {

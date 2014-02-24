@@ -314,31 +314,27 @@ namespace octet {
         }
         
         if (street.roadMeshLeftIntersectedPoints.size() > 0) {
-          mbRoadRight.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices,
-                                   street.roadMeshLeftStartVertex, street.roadMeshLeftStartIndex,
+          mbRoadRight.add_vertices(street.roadMeshLeftIntersectedPoints, street.roadMeshLeftIntersectedIndices, street.roadMeshLeftIntersectedNormals,
                                    cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
                                    heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         }
         
         if (street.roadMeshRightIntersectedPoints.size() > 0) {
-          mbRoadLeft.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices,
-                                  street.roadMeshRightStartVertex, street.roadMeshRightStartIndex,
+          mbRoadLeft.add_vertices(street.roadMeshRightIntersectedPoints, street.roadMeshRightIntersectedIndices, street.roadMeshRightIntersectedNormals,
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
                                   heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         }
 
         // Right Pavement
         if (street.pavementMeshRightIntersectedPoints.size() > 0) {
-          mbPavement.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices,
-                                  street.pavementMeshLeftStartVertex, street.pavementMeshRightStartIndex,
+          mbPavement.add_vertices(street.pavementMeshRightIntersectedPoints, street.pavementMeshRightIntersectedIndices, street.pavementMeshRightIntersectedNormals,
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
                                   heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         }
         
         // Left Pavement
         if (street.pavementMeshLeftIntersectedPoints.size() > 0) {
-          mbPavement.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices,
-                                  street.pavementMeshLeftStartVertex, street.pavementMeshLeftStartIndex,
+          mbPavement.add_vertices(street.pavementMeshLeftIntersectedPoints, street.pavementMeshLeftIntersectedIndices, street.pavementMeshLeftIntersectedNormals,
                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
                                   heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
         }
