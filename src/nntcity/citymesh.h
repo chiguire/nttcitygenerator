@@ -354,9 +354,7 @@ namespace octet {
       roadMaterialRight = new material((*getImageArray())[2]);
       grassMaterial = new material((*getImageArray())[3], false);
 	    buldingMaterial = new material((*getImageArray())[6]);
-      // waterMaterial = new material((*getImageArray())[4]);
-      waterMaterial = new material();
-      waterMaterial->make_color(vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
+      waterMaterial = new material((*getImageArray())[5], vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
     }
 
 
@@ -444,7 +442,7 @@ namespace octet {
       cshader = cshader_;
     }
 
-    void render(vec4 *camera_position, vec3 *camera_rotation, float aspectRatio) {
+    void render(vec4 *camera_position, vec3 *camera_rotation, float aspectRatio, vec4 &light_direction) {
       mat4t modelToWorld;
       modelToWorld.loadIdentity();
 
@@ -482,6 +480,26 @@ namespace octet {
         -0.2f, 0.0f, 0.8f,
         0.0f, 0.0f, 1.0f
       };
+      
+      float light_arrow[] = {
+        0.0f, 0.0f, 0.0f,
+        light_direction.x(), light_direction.y(), light_direction.z()
+      };
+      
+      float light_arrow_proj[] = {
+        light_direction.x(), 0.0f, 0.0f,
+        light_direction.x(), 0.0f, light_direction.z(),
+        light_direction.x(), 0.0f, light_direction.z(),
+        0.0f, 0.0f, light_direction.z(),
+        light_direction.x(), 0.0f, light_direction.z(),
+        light_direction.x(), light_direction.y(), light_direction.z(),
+        light_direction.x(), 0.0f, 0.0f,
+        light_direction.x(), light_direction.y(), 0.0f,
+        light_direction.x(), light_direction.y(), 0.0f,
+        0.0f, light_direction.y(), 0.0f,
+        light_direction.x(), light_direction.y(), 0.0f,
+        light_direction.x(), light_direction.y(), light_direction.z()
+      };
 
       glDisable(GL_DEPTH_TEST);
       glEnableVertexAttribArray(attribute_pos);
@@ -497,10 +515,17 @@ namespace octet {
       cshader->render(modelToProjection, vec4(1.0f, 0.0f, 0.0f, 1.0f));
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, z_arrow);
       glDrawArrays(GL_LINES, 0, 6);
+      
+      cshader->render(modelToProjection, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+      glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, light_arrow);
+      glDrawArrays(GL_LINES, 0, 2);
 
+      cshader->render(modelToProjection, vec4(0.4f, 0.4f, 0.4f, 0.6f));
+      glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, light_arrow_proj);
+      glDrawArrays(GL_LINES, 0, 12);
+      
       glDisableVertexAttribArray(attribute_pos);
       glEnable(GL_DEPTH_TEST);
     }
   };
-
 }

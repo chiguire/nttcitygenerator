@@ -441,7 +441,8 @@ namespace octet {
       if (drawFlags & DRAW_COMPASS) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        compassCard.render(&camera_position, &camera_rotation, float(vy)/float(vx));
+
+        compassCard.render(&camera_position, &camera_rotation, float(vy)/float(vx), light_uniforms_array[2]);
       }
 
     }

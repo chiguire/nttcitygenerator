@@ -40,6 +40,20 @@ namespace octet {
       format = 0;
     }
 
+    void init(const image &other) {
+      this->url = other.url;
+      width = other.width;
+      height = other.height;
+      format = other.format;
+      mip_levels = other.mip_levels;
+      cube_faces = other.cube_faces;
+      gl_texture = other.gl_texture;
+      image &o = const_cast<image &>(other);
+      for (auto i = o.bytes.begin(); i != o.bytes.end(); i++) {
+        bytes.push_back(*i);
+      }
+    }
+
     // these are here to avoid including glext.h which may be platform dependent.
     enum {
       // format options
@@ -213,6 +227,10 @@ namespace octet {
       init(name);
     }
 
+    image(const image &other) {
+      init(other);
+    }
+    
     ~image() {
     }
 
@@ -315,6 +333,17 @@ namespace octet {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       }
       return gl_texture;
+    }
+
+    void multiplyColor(const vec4 &color) {
+      if (format == GL_RGBA) {
+        unsigned num_comps = 4;
+        unsigned current_comp = 0;
+        for (auto i = bytes.begin(); i != bytes.end(); i++) {
+           (*i) = (uint8_t)floorf(color[current_comp]*float((*i)));
+           current_comp = (current_comp+1)%num_comps;
+        }
+      }
     }
 
     /* Sample a 2D image, using nearest neighbor */
