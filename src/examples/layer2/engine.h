@@ -442,7 +442,9 @@ namespace octet {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        compassCard.render(&camera_position, &camera_rotation, float(vy)/float(vx), light_uniforms_array[2]);
+        vec4 light_dir(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 1.0f);
+
+        compassCard.render(&camera_position, &camera_rotation, float(vy)/float(vx), light_dir);
       }
 
     }

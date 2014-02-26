@@ -498,6 +498,12 @@ namespace octet {
         light_direction.x(), light_direction.y(), 0.0f,
         0.0f, light_direction.y(), 0.0f,
         light_direction.x(), light_direction.y(), 0.0f,
+        light_direction.x(), light_direction.y(), light_direction.z(),
+        0.0f, 0.0f, light_direction.z(),
+        0.0f, light_direction.y(), light_direction.z(),
+        0.0f, light_direction.y(), light_direction.z(),
+        0.0f, light_direction.y(), 0.0f,
+        0.0f, light_direction.y(), light_direction.z(),
         light_direction.x(), light_direction.y(), light_direction.z()
       };
 
