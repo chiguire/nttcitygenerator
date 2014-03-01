@@ -144,26 +144,37 @@ namespace octet {
         }
       }
 
-      printf("Vertices: %d, UV Coords: %d\n", resultVertices.size(), resultUVCoords.size());
       //Calculate UV Coordinates over all produced vertices
+      mat4t rotateLeft;
+      rotateLeft.rotateY90();
+
       vec4 origin = polygonPositions[0];
       origin[1] = 0.0f;
       vec4 a = polygonPositions[1] - origin;
-      vec4 b = polygonPositions[2] - origin;
+      vec4 b = rotateLeft * a;
+      vec4 c = polygonPositions[2] - origin;
+
       a[1] = 0.0f;
       b[1] = 0.0f;
+      c[1] = 0.0f;
+
+      b = b.normalize() * c.dot(b);
+
       float aLen = a.length();
       float bLen = b.length();
-
+      
+      printf("Init UV generation: \n");
       for (int i = 0; i != resultVertices.size(); i++) {
         vec4 pos = resultVertices[i];
         vec2 *uv = &resultUVCoords[i];
         pos[1] = 0.0f;
         pos = pos - origin;
 
-        uv[0] = pos.dot(a)/aLen;
-        uv[1] = pos.dot(b)/bLen;
+        uv[0] = pos.dot(a)/(aLen*0.1);
+        uv[1] = pos.dot(b)/(bLen);
+        printf("Vertex: (%g, %g), UV: (%g, %g)\n", pos[0], pos[2], uv[0], uv[1]);
       }
+      printf("End UV generation.\n\n");
     }
 
     // Given a polygon, intersect it with an AABB defined by bounds, outputing the

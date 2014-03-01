@@ -218,7 +218,6 @@ namespace octet {
                       unsigned nx, unsigned ny, vec4 *normalMap, unsigned hmx, unsigned hmy, float *heightmap) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
 
-      printf("Vertices_ size: %d, Indices_ size: %d, Normals_ size: %d, UVCoords_ size: %d.\n", vertices_.size(), indices_.size(), normals_.size(), uvcoords_.size());
       for (int i = 0; i != vertices_.size(); i++) {
         vec4 &vertex = vertices_[i];
 
