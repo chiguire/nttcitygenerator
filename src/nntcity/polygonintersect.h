@@ -25,12 +25,13 @@ namespace octet {
     // width, height - Dimensions, in tile, of the grid
     // resultVertices, resultIndices - Resulting polygons of the intersection, in vertex/index mode.
     // borderVertices - Resulting vertices around the polygon border. For later extrusion purposes.
-    static void intersectGrid(dynarray<vec4> &polygon, 
+    static void intersectGrid(dynarray<vec4> &polygonPositions,
+                       dynarray<vec2> &polygonUVCoords,
                        float centerX, float centerZ, 
                        float separationX, float separationZ, float halfSizeY,
                        int width, int height, 
                        dynarray<vec4> &resultVertices, dynarray<unsigned short> &resultIndices, 
-                       dynarray<vec4> &resultNormals) {
+                       dynarray<vec4> &resultNormals, dynarray<vec2> &resultUVCoords) {
 
       IntersectVertex gridOrigin(centerX-separationX*(width/2.0f), centerZ-separationZ*(height/2.0f));
       IntersectVertex minGrid(centerX+separationX*(width/2.0f+1), centerZ+separationZ*(height/2.0f+1));
@@ -38,9 +39,11 @@ namespace octet {
 
       resultVertices.reset();
       resultIndices.reset();
+      resultNormals.reset();
+      resultUVCoords.reset();
       
-      for (int i = 0; i != polygon.size(); i ++) {
-        IntersectVertex a(polygon[i].x(), polygon[i].z());
+      for (int i = 0; i != polygonPositions.size(); i ++) {
+        IntersectVertex a(polygonPositions[i].x(), polygonPositions[i].z());
 
         if (a.x < minGrid.x) {
           minGrid.x = a.x;
@@ -71,7 +74,7 @@ namespace octet {
             gridOrigin.x + (i+1)*separationX, gridOrigin.y + (j+1)*separationZ 
           };
           //printf("Comparing against square: (%.2f, %.2f), (%.2f, %.2f): ", square[0], square[1], square[2], square[3]);
-          PolygonIntersections::intersectPolygonAABB(polygon, square, polygonIntersect);
+          PolygonIntersections::intersectPolygonAABB(polygonPositions, square, polygonIntersect);
           if (polygonIntersect.size() > 0) {
             unsigned short cur_vertex = (unsigned short)resultVertices.size();
             int num_triangles = polygonIntersect.size()-2;
@@ -81,6 +84,7 @@ namespace octet {
                 (*k)[1] = halfSizeY;
                 resultVertices.push_back(*k);
                 resultNormals.push_back(vec4(0, 0, 0, 0));
+                resultUVCoords.push_back(vec2(0, 0));
               }
               for (int k = 0; k != num_triangles; k++) {
                 resultIndices.push_back(cur_vertex+0);
@@ -93,10 +97,10 @@ namespace octet {
       }
 
       // Extruding polygons in the Y-axis
-      for (int i = 0; i != polygon.size(); i++) {
+      for (int i = 0; i != polygonPositions.size(); i++) {
         dynarray<vec4> borderVertices;
-        vec4 *vecA = &polygon[i];
-        vec4 *vecB = &polygon[(i+1)%polygon.size()];
+        vec4 *vecA = &polygonPositions[i];
+        vec4 *vecB = &polygonPositions[(i+1)%polygonPositions.size()];
         IntersectVertex a(vecA->x(), vecA->z(), (int)floor((vecA->x() - gridOrigin.x)/separationX), (int)floor((vecA->z() - gridOrigin.y)/separationZ));
         IntersectVertex b(vecB->x(), vecB->z(), (int)floor((vecB->x() - gridOrigin.x)/separationX), (int)floor((vecB->z() - gridOrigin.y)/separationZ));
 
@@ -125,6 +129,8 @@ namespace octet {
             resultVertices.push_back(*j);
             resultNormals.push_back(normal);
             resultNormals.push_back(normal);
+            resultUVCoords.push_back(vec2(0, 0));
+            resultUVCoords.push_back(vec2(0, 0));
           }
 
           for (int k = 0; k != num_triangles/2; k++) {
@@ -136,6 +142,27 @@ namespace octet {
             resultIndices.push_back(cur_vertex+k*2+2);
           }
         }
+      }
+
+      printf("Vertices: %d, UV Coords: %d\n", resultVertices.size(), resultUVCoords.size());
+      //Calculate UV Coordinates over all produced vertices
+      vec4 origin = polygonPositions[0];
+      origin[1] = 0.0f;
+      vec4 a = polygonPositions[1] - origin;
+      vec4 b = polygonPositions[2] - origin;
+      a[1] = 0.0f;
+      b[1] = 0.0f;
+      float aLen = a.length();
+      float bLen = b.length();
+
+      for (int i = 0; i != resultVertices.size(); i++) {
+        vec4 pos = resultVertices[i];
+        vec2 *uv = &resultUVCoords[i];
+        pos[1] = 0.0f;
+        pos = pos - origin;
+
+        uv[0] = pos.dot(a)/aLen;
+        uv[1] = pos.dot(b)/bLen;
       }
     }
 

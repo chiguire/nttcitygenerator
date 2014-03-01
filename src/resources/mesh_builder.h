@@ -213,11 +213,12 @@ namespace octet {
       add_face((*vertices)[3], (*vertices)[7], (*vertices)[4], (*vertices)[0], vec4(-1, 0, 0, 0));
     }
 
-    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_, dynarray<vec4> &normals_,
+    void add_vertices(dynarray<vec4> &vertices_, dynarray<unsigned short> &indices_, dynarray<vec4> &normals_, dynarray<vec2> &uvcoords_,
                       vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY,
                       unsigned nx, unsigned ny, vec4 *normalMap, unsigned hmx, unsigned hmy, float *heightmap) {
       unsigned short cur_vertex = (unsigned short)vertices.size();
 
+      printf("Vertices_ size: %d, Indices_ size: %d, Normals_ size: %d, UVCoords_ size: %d.\n", vertices_.size(), indices_.size(), normals_.size(), uvcoords_.size());
       for (int i = 0; i != vertices_.size(); i++) {
         vec4 &vertex = vertices_[i];
 
@@ -226,7 +227,7 @@ namespace octet {
           float v_ = (vertex.z()-cityCenter.z()+cityDimensions.z()*0.5f) / (cityDimensions.z());
           u_ = (u_*multiplier)+offsetX;
           v_ = ((1-v_)*multiplier)+offsetY;
-          add_vertex(vertex, normalMap[nx*(int)floor(v_*ny)+(int)floor(u_*nx)], 0.0f, 0.0f);
+          add_vertex(vertex, normalMap[nx*(int)floor(v_*ny)+(int)floor(u_*nx)], uvcoords_[i].x(), uvcoords_[i].y());
         } else {
           add_vertex(vertex, normals_[i], 0.0f, 0.0f);
         }
