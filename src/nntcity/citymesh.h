@@ -528,7 +528,7 @@ namespace octet {
 
       cshader->render(modelToProjection, vec4(0.4f, 0.4f, 0.4f, 0.6f));
       glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, 0, light_arrow_proj);
-      glDrawArrays(GL_LINES, 0, 12);
+      glDrawArrays(GL_LINES, 0, 18);
       
       glDisableVertexAttribArray(attribute_pos);
       glEnable(GL_DEPTH_TEST);
