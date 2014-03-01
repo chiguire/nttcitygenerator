@@ -345,7 +345,59 @@ namespace octet {
       
       borderVertices.push_back(vec4(a.x, 0, a.y, 1.0f));
       
-      if (abs(b.x - a.x) < abs(b.y-a.y)) {
+      if (abs(b.x - a.x) < CITY_EPSILON) {
+        //slope == 0 (x == b.x)
+        float origin = a.x;
+        //float x0 = origin;
+        //float y0 = any;
+        
+        //int stepX = not valid;
+        int stepY = a.y < b.y? 1: -1;
+        //int startX = not valid;
+        int startY = a.y < b.y? 1: 0;
+
+        //which position and box of the grid we're in
+        vec2 start(a.x, a.y);
+
+        vec2 sideDistYp(origin, gridOrigin.y+(a.j+startY)*separationZ);
+        float sideDistY = (sideDistYp - start).length();
+
+        //length of ray from one x or y-side to next x or y-side
+        vec2 deltaDistYp(0.0f, stepY*separationZ);
+        
+        float lineLength = sqrtf((b.y-a.y)*(b.y-a.y)+(b.x-a.x)*(b.x-a.x));
+        while (sideDistY < lineLength) {
+          borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
+          sideDistYp += deltaDistYp;
+          sideDistY = (sideDistYp - start).length();
+        }
+      } else if (abs(b.y-a.y) < CITY_EPSILON) {
+        //slope == 0 (y == b.y)
+        float origin = a.y;
+        //float x0 = any;
+        //float y0 = origin;
+        
+        int stepX = a.x < b.x? 1: -1;
+        //int stepY = not valid;
+        int startX = a.x < b.x? 1: 0;
+        //int startY = not valid;
+
+        //which position and box of the grid we're in
+        vec2 start(a.x, a.y);
+
+        vec2 sideDistXp(gridOrigin.x+(a.i+startX)*separationX, origin);
+        float sideDistX = (sideDistXp - start).length();
+
+        //length of ray from one x or y-side to next x or y-side
+        vec2 deltaDistXp(stepX*separationX, 0.0f);
+        
+        float lineLength = sqrtf((b.y-a.y)*(b.y-a.y)+(b.x-a.x)*(b.x-a.x));
+        while (sideDistX < lineLength) {
+          borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
+          sideDistXp += deltaDistXp;
+          sideDistX = (sideDistXp - start).length();
+        }
+      } else if (abs(b.x - a.x) < abs(b.y-a.y)) {
         //printf("Y is longer than X\n");
         // Digital Differential Analysis --  http://lodev.org/cgtutor/raycasting.html
         float slope = (b.x-a.x)/(b.y-a.y);
@@ -360,7 +412,6 @@ namespace octet {
 
         //which position and box of the grid we're in
         vec2 start(a.x, a.y);
-        vec2 current(a.x, a.y);
 
         vec2 sideDistXp(gridOrigin.x+(a.i+startX)*separationX, ((gridOrigin.x+(a.i+startX)*separationX)-origin)/slope);
         vec2 sideDistYp((gridOrigin.y+(a.j+startY)*separationZ)*slope+origin, gridOrigin.y+(a.j+startY)*separationZ);
@@ -401,7 +452,6 @@ namespace octet {
 
         //which position and box of the grid we're in
         vec2 start(a.x, a.y);
-        vec2 current(a.x, a.y);
 
         vec2 sideDistXp(gridOrigin.x+(a.i+startX)*separationX, (gridOrigin.x+(a.i+startX)*separationX)*slope+origin);
         vec2 sideDistYp(((gridOrigin.y+(a.j+startY)*separationZ)-origin)/slope, gridOrigin.y+(a.j+startY)*separationZ);
@@ -418,12 +468,10 @@ namespace octet {
           //  lineLength, sideDistXp.x(), sideDistXp.y(), sideDistYp.x(), sideDistYp.y(), sideDistX, sideDistY, deltaDistXp.x(), deltaDistXp.y(), deltaDistYp.x(), deltaDistYp.y());
           if (sideDistX < sideDistY) {
             borderVertices.push_back(vec4(sideDistXp.x(), 0, sideDistXp.y(), 1.0f));
-            current = sideDistXp;
             sideDistXp += deltaDistXp;
             sideDistX = (sideDistXp - start).length();
           } else {
             borderVertices.push_back(vec4(sideDistYp.x(), 0, sideDistYp.y(), 1.0f)); 
-            current = sideDistYp;
             sideDistYp += deltaDistYp;
             sideDistY = (sideDistYp - start).length();
           }
