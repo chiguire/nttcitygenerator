@@ -373,12 +373,12 @@ namespace octet {
       glGenTextures(1, &sky_box_textureObj);
       glBindTexture(GL_TEXTURE_CUBE_MAP, sky_box_textureObj);
 
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox1.gif"));
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox2.gif"));
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox3.gif"));
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox4.gif"));
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox5.gif"));
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox6.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox11.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox22.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox33.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox44.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox55.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox66.gif"));
 
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
