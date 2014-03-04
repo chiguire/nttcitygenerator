@@ -23,6 +23,7 @@ namespace octet {
     city_buildings_bump_shader city_buildings_bump_shader_; 
     bump_shader object_shader;
     color_shader cshader;
+    skybox_shader sb_shader;
 
     vec4 light_uniforms_array[5];
     int num_light_uniforms;
@@ -87,6 +88,9 @@ namespace octet {
       city_buildings_bump_shader_.init();
   
       cshader.init();
+
+      sb_shader.init();
+
       compassCard.init(&cshader);
 
       // Light Set Up
@@ -429,7 +433,7 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
+      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 

@@ -32,6 +32,11 @@ namespace octet {
 
     static dynarray<image *> *imageArray_;
 
+    mesh skyboxMesh;
+    GLuint sky_box_textureObj;
+    dynarray<uint8_t> buffer;
+    dynarray<uint8_t> images;
+
     static dynarray<image *> *getImageArray() {
       if (!imageArray_) {
         imageArray_ = new dynarray<image *>();
@@ -355,10 +360,52 @@ namespace octet {
       grassMaterial = new material((*getImageArray())[3], false);
 	    buldingMaterial = new material((*getImageArray())[6]);
       waterMaterial = new material((*getImageArray())[5], vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
+
+
+      skyboxMesh.make_cube(100.0f);
+      sky_box_textureObj = 0;
+      createCubeMap();
     }
 
 
-    void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, const mat4t &modelToProjection, const mat4t &modelToCamera, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
+    void createCubeMap(){
+
+      glGenTextures(1, &sky_box_textureObj);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, sky_box_textureObj);
+
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox1.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox2.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox3.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox4.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox5.gif"));
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, getImage("assets/citytex/skybox6.gif"));
+
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    }
+
+    uint8_t* getImage(const char *url){
+
+      buffer.reset();
+      images.reset();
+
+      app_utils::get_url(buffer,url);
+      uint16_t format = 0;
+      uint16_t width = 0;
+      uint16_t height = 0;
+      const unsigned char *src = &buffer[0];
+      const unsigned char *src_max = src + buffer.size();
+
+      gif_decoder dec;
+      dec.get_image(images, format, width, height, src, src_max);
+
+      return &images[0];
+    }
+
+    void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
         dynarray<BuildingArea> *buildingAreaList, int drawFlags) {
 
       if (drawFlags & 0x1) {
@@ -400,6 +447,20 @@ namespace octet {
         roadRightNormalsMesh.render();
         pavementNormalsMesh.render();
       }
+
+      glActiveTexture(GL_TEXTURE7);
+      glBindTexture(GL_TEXTURE_CUBE_MAP,sky_box_textureObj);
+
+      mat4t skyToWorld = mat4t(1.0f);
+      skyToWorld.translate(cameraToWorld.row(3).x(), cameraToWorld.row(3).y(), cameraToWorld.row(3).z());
+
+      mat4t mTP = modelToProjection;
+
+      mTP = mat4t::build_projection_matrix(skyToWorld, cameraToWorld);
+
+      sb_shader.render(mTP,modelToCamera,GL_TEXTURE7);
+
+      skyboxMesh.render();
     }
 
     void set_mode(unsigned int drawFlags, dynarray<BuildingArea> *buildingAreaList) {

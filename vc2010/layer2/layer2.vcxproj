@@ -124,6 +124,7 @@
     <ClInclude Include="..\..\src\shaders\color_shader.h" />
     <ClInclude Include="..\..\src\shaders\phong_shader.h" />
     <ClInclude Include="..\..\src\shaders\shader.h" />
+    <ClInclude Include="..\..\src\shaders\skybox_shader.h" />
     <ClInclude Include="..\..\src\shaders\texture_shader.h" />
     <ClInclude Include="..\..\src\tinyxml\tinystr.h" />
     <ClInclude Include="..\..\src\tinyxml\tinyxml.h" />
