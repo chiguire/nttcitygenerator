@@ -165,18 +165,17 @@ namespace octet {
       float aLen = a.length();
       float bLen = b.length();
       
-      printf("Init UV generation: \n");
+      //printf("Init UV generation: \n");
       for (int i = 0; i != resultVertices.size(); i++) {
         vec4 pos = resultVertices[i];
-        vec2 *uv = &resultUVCoords[i];
         pos[1] = 0.0f;
         pos = pos - origin;
 
-        uv[1] = pos.dot(a)/(bLen);
-        uv[0] = pos.dot(b)/(bLen*0.1f);
-        printf("Vertex: (%g, %g), UV: (%g, %g)\n", pos[0], pos[2], uv[0], uv[1]);
+        resultUVCoords[i][0] = pos.dot(a)/(aLen*0.5f);
+        resultUVCoords[i][1] = pos.dot(b)/(bLen*0.12f);
+        //printf("Vertex: (%g, %g), UV: (%g, %g)\n", pos[0], pos[2], uv[0], uv[1]);
       }
-      printf("End UV generation.\n\n");
+      //printf("End UV generation.\n\n");
     }
 
     // Given a polygon, intersect it with an AABB defined by bounds, outputing the

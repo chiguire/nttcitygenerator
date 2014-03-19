@@ -202,11 +202,11 @@ namespace octet {
     }
 
     //Copy constructor that may be maybe modified
-      BuildingArea(BuildingArea &b) {                                                       
-    this->points[0] = b.points[0];
-    this->points[1] = b.points[1];
-    this->points[2] = b.points[2];
-    this->points[3] = b.points[3];
+    BuildingArea(BuildingArea &b) {                                                       
+      this->points[0] = b.points[0];
+      this->points[1] = b.points[1];
+      this->points[2] = b.points[2];
+      this->points[3] = b.points[3];
     } 
 
     bool equalsTo(BuildingArea *b2){
