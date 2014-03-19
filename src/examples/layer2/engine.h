@@ -6,6 +6,25 @@
 //
 
 namespace octet {
+  enum CameraMode {
+    CAMERAMODE_FREEFORM,
+    CAMERAMODE_WALKTHROUGH
+  };
+  
+  enum DrawOptions {
+    DRAW_TERRAIN = 0x1,
+    DRAW_WATER = 0x2,
+    DRAW_ROADS = 0x4,
+    DRAW_BUILDINGS = 0x8,
+    DRAW_HELP = 0x10,
+    DRAW_COMPASS = 0x20,
+    DRAW_TERRAIN_NORMALS = 0x40,
+    DRAW_ROADS_NORMALS = 0x80,
+    DRAW_TERRAIN_WIREFRAME = 0x100,
+    DRAW_ROADS_WIREFRAME = 0x200,
+    DRAW_BUILDINGS_WIREFRAME = 0x400
+  };
+
   class engine : public app {
     typedef mat4t mat4t;
     typedef vec4 vec4;
@@ -33,14 +52,9 @@ namespace octet {
 
     vec3 light_rotation;
 
-    // helper for picking objects on the screen
-    //object_picker picker;
-
     mat4t cameraToWorld;
 
     City *city;
-
-    // city mesh obj. working on
     CityMesh *city_mesh;
 
     dynarray<Street> *streetList;
@@ -52,19 +66,9 @@ namespace octet {
 
     text_overlay textOverlay;
 
-    static const int DRAW_TERRAIN = 0x1;
-    static const int DRAW_WATER = 0x2;
-    static const int DRAW_ROADS = 0x4;
-    static const int DRAW_BUILDINGS = 0x8;
-    static const int DRAW_HELP = 0x10;
-    static const int DRAW_COMPASS = 0x20;
-    static const int DRAW_TERRAIN_NORMALS = 0x40;
-    static const int DRAW_ROADS_NORMALS = 0x80;
-    static const int DRAW_TERRAIN_WIREFRAME = 0x100;
-    static const int DRAW_ROADS_WIREFRAME = 0x200;
-    static const int DRAW_BUILDINGS_WIREFRAME = 0x400;
-
     int drawFlags;
+    int cameraMode;
+    int streetSelectedCameraMode;
 
   public:
     // this is called when we construct the class
@@ -77,13 +81,13 @@ namespace octet {
     , light_rotation(45.0f, 30.0f, 0.0f) 
     , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS
      /* | DRAW_TERRAIN_NORMALS | DRAW_ROADS_NORMALS | DRAW_TERRAIN_WIREFRAME | DRAW_ROADS_WIREFRAME | DRAW_BUILDINGS_WIREFRAME*/ )
+    , cameraMode(CAMERAMODE_FREEFORM)
     {
     }
 
     // this is called once OpenGL is initialized
     void app_init() {
       // Shader Set Up
-      //city_bump_shader_.init(); // false is default
       object_shader.init(false);
       city_buildings_bump_shader_.init();
   
@@ -154,54 +158,69 @@ namespace octet {
       static bool justPressed = false;
       vec4 direction(0.0f);
       
-      if (!is_key_down(key_alt)) {
-        if (is_key_down('W')) {
-          direction[1] = -0.25f * (camera_position[2]/5.0f);
-        } else if (is_key_down('S')) {
-          direction[1] = 0.25f * (camera_position[2]/5.0f);
-        }
-
-        if (is_key_down('A')) {
-          direction[0] = -0.25f * (camera_position[2]/5.0f);
-        } else if (is_key_down('D')) {
-          direction[0] = 0.25f * (camera_position[2]/5.0f);
-        }
-
-        mat4t directionMatrix(1.0f);
-        directionMatrix.rotate(-camera_rotation[1], 0.0f, 0.0f, 1.0f);
-        direction = direction * directionMatrix;
-
-        camera_position[0] += direction[0];
-        camera_position[1] += direction[1];
+      if (is_key_down('M') && !justPressed) {
+        cameraMode = cameraMode == CAMERAMODE_FREEFORM? CAMERAMODE_WALKTHROUGH: CAMERAMODE_FREEFORM;
+        streetSelectedCameraMode = 
+        justPressed = true;
       } else {
-        if (is_key_down('A')) {
-          camera_rotation[1] += 5.0f;
-          if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
-        } else if (is_key_down('D')) {
-          camera_rotation[1] -= 5.0f;
-          if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
-        }
-
-        if (is_key_down('W')) {
-          camera_rotation[0] -= 5.0f;
-          if (camera_rotation[0] < -90.0f) camera_rotation[0] = -90.0f;
-        } else if (is_key_down('S')) {
-          camera_rotation[0] += 5.0f;
-          if (camera_rotation[0] > 90.0f) camera_rotation[0] = 90.0f;
-        }
+        justPressed = false;
       }
       
-      if (is_key_down('Q')) {
-        camera_position[2] -= 0.25f;
-        if (camera_position[2] < 0.5f) camera_position[2] = 0.5f;
-      } else if (is_key_down('E')) {
-        camera_position[2] += 0.25f;
-      }
+      if (cameraMode == CAMERAMODE_FREEFORM) {
+        if(is_key_down(key_space)){
+          this->camera_position = vec4(0.0f, 0.0f, 10.0f, 0.0f);
+          this->camera_rotation = vec3(45.0f, 0.0f, 0.0f);
+        }
 
-      if (is_key_down('R')) {
-        camera_position[3] += 0.25f * (camera_position[2]/5.0f);
-      } else if (is_key_down('Y')) {
-        camera_position[3] -= 0.25f * (camera_position[2]/5.0f);
+        if (!is_key_down(key_alt)) {
+          if (is_key_down('W')) {
+            direction[1] = -0.25f * (camera_position[2]/5.0f);
+          } else if (is_key_down('S')) {
+            direction[1] = 0.25f * (camera_position[2]/5.0f);
+          }
+
+          if (is_key_down('A')) {
+            direction[0] = -0.25f * (camera_position[2]/5.0f);
+          } else if (is_key_down('D')) {
+            direction[0] = 0.25f * (camera_position[2]/5.0f);
+          }
+
+          mat4t directionMatrix(1.0f);
+          directionMatrix.rotate(-camera_rotation[1], 0.0f, 0.0f, 1.0f);
+          direction = direction * directionMatrix;
+
+          camera_position[0] += direction[0];
+          camera_position[1] += direction[1];
+        } else {
+          if (is_key_down('A')) {
+            camera_rotation[1] += 5.0f;
+            if (camera_rotation[1] >= 360.0f) camera_rotation[1] -= 360.0f;
+          } else if (is_key_down('D')) {
+            camera_rotation[1] -= 5.0f;
+            if (camera_rotation[1] < 0.0f) camera_rotation[1] += 360.0f;
+          }
+
+          if (is_key_down('W')) {
+            camera_rotation[0] -= 5.0f;
+            if (camera_rotation[0] < -90.0f) camera_rotation[0] = -90.0f;
+          } else if (is_key_down('S')) {
+            camera_rotation[0] += 5.0f;
+            if (camera_rotation[0] > 90.0f) camera_rotation[0] = 90.0f;
+          }
+        }
+      
+        if (is_key_down('Q')) {
+          camera_position[2] -= 0.25f;
+          if (camera_position[2] < 0.5f) camera_position[2] = 0.5f;
+        } else if (is_key_down('E')) {
+          camera_position[2] += 0.25f;
+        }
+
+        if (is_key_down('R')) {
+          camera_position[3] += 0.25f * (camera_position[2]/5.0f);
+        } else if (is_key_down('Y')) {
+          camera_position[3] -= 0.25f * (camera_position[2]/5.0f);
+        }
       }
 
       if (is_key_down('J')) {
@@ -347,11 +366,6 @@ namespace octet {
         } else if (!is_key_down('N')) {
           justPressed = false;
         }
-      }
-      
-      if(is_key_down(key_space)){
-        this->camera_position = vec4(0.0f, 0.0f, 10.0f, 0.0f);
-        this->camera_rotation = vec3(45.0f, 0.0f, 0.0f);
       }
     }
     

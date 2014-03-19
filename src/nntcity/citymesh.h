@@ -1,8 +1,8 @@
 namespace octet {
 
-  const float HEIGHT_FACTOR = 2.0f/255.0f;
-  const float WATER_LEVEL = 0.5f;
-  const float BRIDGE_LEVEL = 0.8f;
+  const float HEIGHT_FACTOR = 1.0f/255.0f;
+  const float WATER_LEVEL = 0.3f;
+  const float BRIDGE_LEVEL = 0.35f;
 
   class CityMesh {
 
@@ -47,7 +47,7 @@ namespace octet {
           "assets/citytex/grass_3.gif",
           "assets/citytex/heightmap6.gif",
           "assets/citytex/water_2.gif",
-		  "assets/citytex/building_h.gif",
+		      "assets/citytex/building_h.gif",
           0
         };
 

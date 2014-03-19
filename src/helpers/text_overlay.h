@@ -36,7 +36,7 @@ namespace octet {
       ;*/
 
       aabb bb(vec3(200, -550, 0), vec3(400, 256, 0));
-      text = new mesh_text(font, "NTT City Generator\nWSAD - Move cam | QE - Zoom in/out\nAlt+WSAD - Rotate cam | RY - Up/down\nIKJL - Rotate light\nZXCVBN - Toggle terrain/water/roads/buildings/help/compass\nAlt+ZX - Toggle terrain/road normals | Alt+CVB - Toggle terrain/road/buildings wireframe", &bb);
+      text = new mesh_text(font, "NTT City Generator | M - Switch freeform/walkthrough mode\nWSAD - Move cam | QE - Zoom in/out\nAlt+WSAD - Rotate cam | RY - Up/down\nIKJL - Rotate light\nZXCVBN - Toggle terrain/water/roads/buildings/help/compass\nAlt+ZX - Toggle terrain/road normals | Alt+CVB - Toggle terrain/road/buildings wireframe", &bb);
 
       scene_node *msh_node = text_scene->add_scene_node();
       material *mat = new material(page);

@@ -145,20 +145,22 @@ namespace octet {
       }
 
       //Calculate UV Coordinates over all produced vertices
-      mat4t rotateLeft;
+      mat4t rotateLeft(1.0f);
       rotateLeft.rotateY90();
 
-      vec4 origin = polygonPositions[0];
+      vec4 origin = polygonPositions[1];
       origin[1] = 0.0f;
-      vec4 a = polygonPositions[1] - origin;
+      vec4 a = polygonPositions[2] - origin;
       vec4 b = rotateLeft * a;
-      vec4 c = polygonPositions[2] - origin;
+      vec4 c = polygonPositions[0] - origin;
 
       a[1] = 0.0f;
       b[1] = 0.0f;
       c[1] = 0.0f;
 
-      b = b.normalize() * c.dot(b);
+      //float cproj = c.dot(b);
+      b = b.normalize();
+      b = b * c.length();
 
       float aLen = a.length();
       float bLen = b.length();
@@ -170,8 +172,8 @@ namespace octet {
         pos[1] = 0.0f;
         pos = pos - origin;
 
-        uv[0] = pos.dot(a)/(aLen*0.1);
-        uv[1] = pos.dot(b)/(bLen);
+        uv[1] = pos.dot(a)/(bLen);
+        uv[0] = pos.dot(b)/(bLen*0.1f);
         printf("Vertex: (%g, %g), UV: (%g, %g)\n", pos[0], pos[2], uv[0], uv[1]);
       }
       printf("End UV generation.\n\n");
