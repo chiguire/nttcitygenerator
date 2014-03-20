@@ -45,8 +45,8 @@ namespace octet {
           "assets/citytex/road_left.gif",
           "assets/citytex/road_right.gif",
           "assets/citytex/grass_3.gif",
-          "assets/citytex/heightmap6.gif",
-          "assets/citytex/water_2.gif",
+          "assets/citytex/heightmap.gif",
+          "assets/citytex/water.gif",
 		      "assets/citytex/building_h.gif",
           0
         };

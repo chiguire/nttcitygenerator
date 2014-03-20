@@ -1259,6 +1259,6 @@ namespace octet {
   const float City::PAVEMENT_WIDTH = 0.06f;
   const float City::ROAD_WIDTH = City::STREET_WIDTH - 2*City::PAVEMENT_WIDTH;
   const float City::ROAD_HEIGHT = 0.04f;
-  const float City::PAVEMENT_HEIGHT = 0.06f;
+  const float City::PAVEMENT_HEIGHT = 0.042f;
 
 }
