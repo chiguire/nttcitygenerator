@@ -361,6 +361,9 @@
     <ClInclude Include="..\..\src\shaders\skybox_shader.h">
       <Filter>octet\shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\nntcity\citycamera.h">
+      <Filter>octet\nttcity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\resources\mesh_builder.inl">
