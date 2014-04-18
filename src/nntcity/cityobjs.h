@@ -202,13 +202,12 @@ namespace octet {
     }
 
     bool containsStreet(Street* s1){
-
       for(int i=0; i!=this->streets.size(); ++i){
         for(int j=0; j!=2; ++j){
           for(int k=0; k!=2; ++k){
 
             if(all(streets[i]->points[j] == s1->points[k]) && 
-              all(streets[i]->points[(j==1) ? 0 : j+1] == s1->points[(k==1) ? 0 : k+1])){
+              all(streets[i]->points[(j==1) ? 0 : 1] == s1->points[(k==1) ? 0 : 1])){
                 return true;
             }
 
@@ -217,7 +216,6 @@ namespace octet {
       }
 
       return false;
-
     }
   };
 
@@ -412,6 +410,20 @@ namespace octet {
         }
       }
       return -1;
+    }
+
+    void getStreetsIntersectingByExtreme(Street* s1, int pointIndex, dynarray<Street *> &streetsInIntersection) {
+      streetsInIntersection.reset();
+
+      for (int i = 0; i != streetsList.size(); ++i){
+        if (&streetsList[i] == s1) continue;
+
+        for (int j = 0; j != 2; ++j){
+          if (all(streetsList[i].points[j] == s1->points[pointIndex])){
+            streetsInIntersection.push_back(&streetsList[i]);
+          }
+        } 
+      }
     }
 
     void calculateMeshesIntersections(){
@@ -939,6 +951,17 @@ namespace octet {
       }
     }
 
+    void getIntersectionsFor(Street *s)
+    {
+      for (auto i = streetsIntersections.begin(); i != streetsIntersections.end(); i++) {
+        StreetIntersection *st = *i;
+
+        if (st->containsStreet(s)) {
+          
+        }
+      }
+    }
+
 
   private:
 
@@ -1218,11 +1241,6 @@ namespace octet {
 
 outloop:;
     }
-
-
-
-
-
   }; 
 
   const float City::STREET_WIDTH = 0.36f;

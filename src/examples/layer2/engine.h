@@ -148,6 +148,7 @@ namespace octet {
       
       if (is_key_down('M') && !justPressed) {
         cameraControls.switchToNextMode();
+        printf("Switching to camera mode: %s.\n", cameraControls.getMode() == CAMERAMODE_FREEFORM? "Freeform": "Walkthrough");
         justPressed = true;
       } else if (!is_key_down('M') && justPressed) {
         justPressed = false;
@@ -412,6 +413,9 @@ namespace octet {
     }
 
     void setCamara() {
+
+      cameraControls.updateCamera();
+
       cameraToWorld.loadIdentity();
       cameraToWorld.translate(cameraControls.getPosition().x(), cameraControls.getPosition().w(), cameraControls.getPosition().y());
       cameraToWorld.rotate(cameraControls.getRotation().y(), 0.0f, 1.0f, 0.0f);
