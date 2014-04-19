@@ -45,10 +45,55 @@ struct LinearConfig {
   int pointEnd;
   Street *street;
 
-  LinearConfig() : start(0.0f), end(0.0f), t(0.0f), pointEnd(0), street(NULL) { }
+  quat startRotation;
+  quat endRotation;
+
+  LinearConfig()
+  : start(0.0f)
+  , end(0.0f)
+  , t(0.0f)
+  , pointEnd(0)
+  , street(NULL)
+  , startRotation(0.0f)
+  , endRotation(0.0f)
+  { }
 
   vec4 at() {
     return start + (end-start)*t;
+  }
+
+  vec3 atSlerp() {
+    quat qTemp(vec4(0.0f));
+    quat qResult(vec4(0.0f));
+    float dot = startRotation.dot(endRotation);
+
+    if (dot < 0)
+    {
+      dot = -dot;
+      qTemp = -endRotation;
+    } else {
+      qTemp = endRotation;
+    }
+
+    if (dot < 0.95f) {
+      float angle = acosf(dot);
+      qResult = (startRotation*sinf(angle*(1-t)) + qTemp*sinf(angle*t))/sinf(angle);
+    } else {
+      qResult = (startRotation*(1-t) + endRotation*t).normalize();
+    }
+
+    vec3 result(0.0f);
+
+    float qx = qResult.x();
+    float qy = qResult.y();
+    float qz = qResult.z();
+    float qw = qResult.w();
+
+    result[1] = atan2(2*qy*qw-2*qx*qz, 1 - 2*qy*qy - 2*qz*qz)*180.0f/3.14159265358979323846f;
+    result[0] = asin(2*qx*qy + 2*qz*qw)*180.0f/3.14159265358979323846f;
+    result[2] = 0.0f;
+
+    return result;
   }
 };
 
@@ -91,7 +136,7 @@ class camera_controls {
     streetLerp.pointEnd = 1;
     streetLerp.street = st;
 
-    orientCameraToStreet();
+    orientCameraToStreet(true);
   }
 
   void selectNewStreet() {
@@ -115,14 +160,28 @@ class camera_controls {
     orientCameraToStreet();
   }
 
-  void orientCameraToStreet() {
+  void orientCameraToStreet(bool immediate = false) {
     if (isDragging) return;
 
-    vec4 cameraDirection(0.0f);
+    if (immediate) {
+      vec4 dir = (streetLerp.end - streetLerp.start).normalize();
+      camera_rotation[0] = 0.0f;
+      camera_rotation[1] = atan2f(-dir.x(), -dir.z())*180/3.14159265358979323846f;
+      camera_rotation[2] = 0.0f;
+    } else {
+      mat4t rotMatrixStart(1.0f);
+      rotMatrixStart.rotate(-camera_position.y(), 0.0f, 1.0f, 0.0f);
+      rotMatrixStart.rotate(camera_position.x(), 1.0f, 0.0f, 0.0f);
 
-    cameraDirection = (streetLerp.end - streetLerp.start).normalize();
-    camera_rotation[0] = 0.0f;
-    camera_rotation[1] = atan2f(-cameraDirection.x(), -cameraDirection.z())*180.0f/3.14159265358979323846f;
+      vec4 dir = (streetLerp.end - streetLerp.start).normalize();
+      mat4t rotMatrixEnd(1.0f);
+      rotMatrixEnd.rotate(atan2f(-dir.x(), -dir.z())*180.0f/3.14159265358979323846f, 0.0f, 1.0f, 0.0f);
+      rotMatrixEnd.rotate(0.0f, 1.0f, 0.0f, 0.0f);
+
+      streetLerp.startRotation = rotMatrixStart.toQuaternion();
+      streetLerp.endRotation = rotMatrixEnd.toQuaternion();
+      streetLerp.t = 0.0f;
+    }
   }
 
 public:
@@ -269,7 +328,8 @@ public:
     if (isInFreeform()) return;
 
     if (walkthroughMode == WALKTHROUGHMODE_SELECT) {
-      selectNewStreet();
+      //selectNewStreet();
+      streetLerp.t = 0.0f;
       walkthroughMode = WALKTHROUGHMODE_ADVANCE;
     } else if (walkthroughMode == WALKTHROUGHMODE_ADVANCE) {
       vec4 interpolatedPoint = streetLerp.at();
@@ -282,9 +342,19 @@ public:
         walkthroughMode = WALKTHROUGHMODE_ADVANCED;
       }
     } else if (walkthroughMode == WALKTHROUGHMODE_ADVANCED) {
+      selectNewStreet();
       walkthroughMode = WALKTHROUGHMODE_ROTATE;
     } else if (walkthroughMode == WALKTHROUGHMODE_ROTATE) {
-      walkthroughMode = WALKTHROUGHMODE_ROTATED;
+      vec3 interpolatedRotation = streetLerp.atSlerp();
+
+      camera_rotation[0] = interpolatedRotation.x();
+      camera_rotation[1] = interpolatedRotation.y();
+
+      streetLerp.t += 1.0f/(30.0f);
+
+      if (streetLerp.t >= 1.0f) {
+        walkthroughMode = WALKTHROUGHMODE_ROTATED;
+      }
     } else if (walkthroughMode == WALKTHROUGHMODE_ROTATED) {
       walkthroughMode = WALKTHROUGHMODE_SELECT;
     }

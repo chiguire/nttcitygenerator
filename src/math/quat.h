@@ -18,6 +18,7 @@ namespace octet {
     quat &operator*=(const quat &r) { *(vec4*)this = qmul(r); return *this; }
     quat conjugate() const { return qconj(); }
     vec4 rotate(const vec4 &r) const { return (*this * r) * conjugate(); }
+    quat invert() { return conjugate()/squared(); }
   };
 
 }
