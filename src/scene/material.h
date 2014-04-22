@@ -68,6 +68,15 @@ namespace octet {
       init(p, p, new param(vec4(0.0f)), shiny? p:new param(vec4(0.0f)), new param(vec4(0.0f)), new param(vec4(shininess_, 0.0f, 0.0f, 0.0f)));
     }
 
+    material(image *img, image *bumpImg, bool shiny=true, float shininess_=30.0f/255) {
+      param *p = new param(img);
+      emission = new param(vec4(0));
+      specular = shiny? new param(vec4(1, 1, 1, 0)): new param(vec4(0));
+      bump = new param(bumpImg);
+      shininess = new param(vec4(shininess_, 0.0f, 0.0f, 0.0f));
+      init(p, p, emission, specular, bump, shininess);
+    }
+/*
     material(image *img, const vec4 &color, bool bumpy, bool shiny) {
       img->multiplyColor(color);
       param *p = new param(img);
@@ -77,7 +86,7 @@ namespace octet {
       shininess = new param(vec4(30.0f/255, 0, 0, 0));
       init(p, p, emission, specular, bump, shininess);
     }
-
+*/
     void visit(visitor &v) {
       v.visit(diffuse, atom_diffuse);
       v.visit(ambient, atom_ambient);
