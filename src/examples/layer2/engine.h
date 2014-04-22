@@ -420,8 +420,8 @@ namespace octet {
 
       cameraToWorld.loadIdentity();
       cameraToWorld.translate(cameraControls.getPosition().x(), cameraControls.getPosition().w(), cameraControls.getPosition().y());
-      cameraToWorld.rotate(-cameraControls.getRotation().x(), 1.0f, 0.0f, 0.0f);
       cameraToWorld.rotate(cameraControls.getRotation().y(), 0.0f, 1.0f, 0.0f);
+      cameraToWorld.rotate(-cameraControls.getRotation().x(), 1.0f, 0.0f, 0.0f);
       cameraToWorld.translate(0.0f, 0.0f, cameraControls.getPosition().z());
     }
 
