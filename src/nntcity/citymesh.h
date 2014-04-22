@@ -1,9 +1,5 @@
 namespace octet {
 
-  const float HEIGHT_FACTOR = 1.0f/255.0f;
-  const float WATER_LEVEL = 0.3f;
-  const float BRIDGE_LEVEL = 0.35f;
-
   class CityMesh {
 
     mesh roadLeftMesh;
@@ -22,7 +18,7 @@ namespace octet {
     material *pavementMaterial;
     material *grassMaterial;
     material *waterMaterial;
-	  material *buldingMaterial;
+    material *buldingMaterial;
 
     dynarray<float> heightmap;
     dynarray<vec4> normalmapXY;
@@ -37,6 +33,21 @@ namespace octet {
     dynarray<uint8_t> buffer;
     dynarray<uint8_t> images;
 
+    enum TextureAsset {
+      TEXTUREASSET_PAVEMENT,
+      TEXTUREASSET_ROADLEFT,
+      TEXTUREASSET_ROADRIGHT,
+      TEXTUREASSET_HEIGHTMAP,
+      TEXTUREASSET_BUILDING,
+      TEXTUREASSET_GRASS_DIFFUSE,
+      TEXTUREASSET_GRASS_DISP,
+      TEXTUREASSET_GRASS_NORMAL,
+      TEXTUREASSET_GRASS_DETAIL,
+      TEXTUREASSET_WATER_DIFFUSE,
+      TEXTUREASSET_WATER_DISP,
+      TEXTUREASSET_WATER_NORMAL,
+    };
+
     static dynarray<image *> *getImageArray() {
       if (!imageArray_) {
         imageArray_ = new dynarray<image *>();
@@ -44,10 +55,15 @@ namespace octet {
           "assets/citytex/pavement.gif",
           "assets/citytex/road_left.gif",
           "assets/citytex/road_right.gif",
-          "assets/citytex/grass_3.gif",
           "assets/citytex/heightmap6.gif",
-          "assets/citytex/water.gif",
-		      "assets/citytex/building_h.gif",
+          "assets/citytex/building_h.gif",
+          "assets/citytex/grass/06_DIFFUSE.jpg",
+          "assets/citytex/grass/06_DISP.jpg",
+          "assets/citytex/grass/06_NORMAL.jpg",
+          "assets/citytex/grass/detail.gif",
+          "assets/citytex/water/12_DIFFUSE.jpg",
+          "assets/citytex/water/12_DISP.jpg",
+          "assets/citytex/water/12_NORMAL.jpg",
           0
         };
 
@@ -63,13 +79,23 @@ namespace octet {
 
 
   public:
+
+    static const float HEIGHT_FACTOR;
+    static const float WATER_LEVEL;
+    static const float BRIDGE_LEVEL;
+    static const float MULTIPLIER;
+    static const float OFFSET_X;
+    static const float OFFSET_Y;
+    static const float ROAD_RAISE;
+    static const float PAVEMENT_RAISE;
+
     CityMesh() {
 
     }
 
     void generateHeightmap() {
       heightmap.reset();
-      image *heightmapImage = ((*getImageArray())[4]);
+      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
       heightmap_width = heightmapImage->get_width()+2;
       heightmap_height = heightmapImage->get_height()+2;
       heightmap.resize(heightmap_width*heightmap_height);
@@ -90,7 +116,7 @@ namespace octet {
     }
 
     void generateNormalMap() {
-      image *heightmapImage = ((*getImageArray())[4]);
+      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
       unsigned int nx = heightmapImage->get_width();
       unsigned int ny = heightmapImage->get_height();
       unsigned int hmx = nx + 2;
@@ -186,7 +212,7 @@ namespace octet {
     void get_road_heights(dynarray<float> &result, vec4 &v1, vec4 &v2, int points, vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY) {
       result.reset();
 
-      image *heightmapImage = ((*getImageArray())[4]);
+      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
 
       vec4 vDiff = v2 - v1;
 
@@ -214,7 +240,7 @@ namespace octet {
     }
 
     float sample_heightmap(vec4 &vertex, vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY) {
-      image *heightmapImage = ((*getImageArray())[4]);
+      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
       vec4 color;
 
       float u_ = (vertex.x()-cityCenter.x()+cityDimensions.x()*0.5f) / (cityDimensions.x());
@@ -234,8 +260,8 @@ namespace octet {
 
 
     void init(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, vec4 &cityDimensions, vec4 &cityCenter) {
-		// temp
-		dynarray<BuildingArea> buildingAreaList2; 
+    // temp
+    dynarray<BuildingArea> buildingAreaList2; 
 
       mesh_builder mb;
       mesh_builder mbRoadLeft;
@@ -255,7 +281,7 @@ namespace octet {
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, normalmapXY.data(), heightmap_width, heightmap_height, heightmap.data());
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, normalmapXY.data(), heightmap_width, heightmap_height, heightmap.data(), 0.0f, 0.0f, 10, 13);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
   
@@ -275,12 +301,6 @@ namespace octet {
       mbRoadLeft.init(0, 0);
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
-
-      const float MULTIPLIER = 0.5f;
-      const float OFFSET_X = 0.25f;
-      const float OFFSET_Y = 0.25f;
-      const float ROAD_RAISE = City::ROAD_HEIGHT;
-      const float PAVEMENT_RAISE = City::PAVEMENT_HEIGHT;
 
       for (int i = 0; i < streetsList->size(); i++) {
         Street &street = (*streetsList)[i];
@@ -356,36 +376,36 @@ namespace octet {
       pavementNormalsMesh.make_normal_visualizer(pavementMesh, 0.3f, attribute_normal);
       surfaceNormalsMesh.make_normal_visualizer(surfaceMesh, 0.3f, attribute_normal);
 
-	  
-	  /**** new bulding area creation ****/
-	  
+    
+    /**** new bulding area creation ****/
+    
 /*
-	  for (int i = 0; i < streetsList->size(); i++) {
+    for (int i = 0; i < streetsList->size(); i++) {
         Street &street = (*streetsList)[i];
-		int k = 0; 
-		for (auto j = street.streetIntersectedPoints.pavementLeft.begin(); j != street.streetIntersectedPoints.pavementLeft.end(); j++) {
-			BuildingArea bA; 
-			// bA.points = j; 
-			//buildingAreaList2.push_back(bA);  
-		  
-		  ++k; 
-		}
+    int k = 0; 
+    for (auto j = street.streetIntersectedPoints.pavementLeft.begin(); j != street.streetIntersectedPoints.pavementLeft.end(); j++) {
+      BuildingArea bA; 
+      // bA.points = j; 
+      //buildingAreaList2.push_back(bA);  
+      
+      ++k; 
+    }
 
-		
-	  }
-	  */
+    
+    }
+    */
 
-	  /**** end - new building area creation ****/
+    /**** end - new building area creation ****/
 
 
-	  // creating buildings meshes 
+    // creating buildings meshes 
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
-		float random_height = std::rand()%5 + 1;
+    float random_height = std::rand()%5 + 1;
 
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
-		(*buildingAreaList)[i].height = random_height; 
+    (*buildingAreaList)[i].height = random_height; 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
@@ -393,12 +413,13 @@ namespace octet {
         (*buildingAreaList)[i].areaMesh = (*m);
       }
 
-      pavementMaterial = new material((*getImageArray())[0]);
-      roadMaterialLeft = new material((*getImageArray())[1]);
-      roadMaterialRight = new material((*getImageArray())[2]);
-      grassMaterial = new material((*getImageArray())[3], false);
-	  buldingMaterial = new material((*getImageArray())[6]);
-      waterMaterial = new material((*getImageArray())[5], vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
+      pavementMaterial = new material((*getImageArray())[TEXTUREASSET_PAVEMENT]);
+      roadMaterialLeft = new material((*getImageArray())[TEXTUREASSET_ROADLEFT]);
+      roadMaterialRight = new material((*getImageArray())[TEXTUREASSET_ROADRIGHT]);
+      grassMaterial = new material((*getImageArray())[TEXTUREASSET_GRASS_DIFFUSE], (*getImageArray())[TEXTUREASSET_GRASS_NORMAL]);
+      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING]);
+      (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
+      waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
 
 
       skyboxMesh.make_cube(100.0f);
@@ -466,7 +487,7 @@ namespace octet {
       if (drawFlags & 0x8) {
        
         for (int i = 0; i != buildingAreaList->size(); ++i) {
-		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height);
+      buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height);
           (*buildingAreaList)[i].areaMesh.render();
         }
       }
@@ -539,6 +560,7 @@ namespace octet {
     color_shader *cshader;
 
   public:
+
     void init(color_shader *cshader_) {
       cshader = cshader_;
     }
@@ -635,4 +657,13 @@ namespace octet {
       glEnable(GL_DEPTH_TEST);
     }
   };
+
+  const float CityMesh::HEIGHT_FACTOR = 1.0f/255.0f;
+  const float CityMesh::WATER_LEVEL = 0.3f;
+  const float CityMesh::BRIDGE_LEVEL = 0.35f;
+  const float CityMesh::MULTIPLIER = 0.5f;
+  const float CityMesh::OFFSET_X = 0.25f;
+  const float CityMesh::OFFSET_Y = 0.25f;
+  const float CityMesh::ROAD_RAISE = City::ROAD_HEIGHT;
+  const float CityMesh::PAVEMENT_RAISE = City::PAVEMENT_HEIGHT;
 }
