@@ -944,8 +944,17 @@ namespace octet {
     }
 
 	void calculateBuildingsAreas_fromStreet() {
-		for (int i=0; i<streetsIntersections.size(); ++i) {
-		}
+		//for(int i=0; i!= streetsList.size(); ++i){
+			//for(int j=0; j!= streetsList[i].streetIntersectedPoints.roadRight.size(); ++j){
+				BSPNode node;
+				node.vertices[0] = streetsList[0].streetIntersectedPoints.pavementLeft[0];
+				node.vertices[1] = streetsList[1].streetIntersectedPoints.pavementLeft[5];
+				node.vertices[2] = streetsList[2].streetIntersectedPoints.pavementLeft[0];
+				node.vertices[3] = streetsList[3].streetIntersectedPoints.pavementLeft[0];
+			//}
+				stop_iteration = true;
+				calculateBuildingsAreas_(&node, 1.0f); 
+		//}
 	}
 
     void calculateBuildingsAreas(float scale) {
