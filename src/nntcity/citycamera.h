@@ -166,12 +166,12 @@ class camera_controls {
     if (immediate) {
       vec4 dir = (streetLerp.end - streetLerp.start).normalize();
       camera_rotation[0] = 0.0f;
-      camera_rotation[1] = atan2f(-dir.x(), -dir.z())*180/3.14159265358979323846f;
+      camera_rotation[1] = atan2f(-dir.x(), -dir.z())*180.0f/3.14159265358979323846f;
       camera_rotation[2] = 0.0f;
     } else {
       mat4t rotMatrixStart(1.0f);
-      rotMatrixStart.rotate(-camera_position.y(), 0.0f, 1.0f, 0.0f);
-      rotMatrixStart.rotate(camera_position.x(), 1.0f, 0.0f, 0.0f);
+      rotMatrixStart.rotate(camera_rotation.y(), 0.0f, 1.0f, 0.0f);
+      rotMatrixStart.rotate(-camera_rotation.x(), 1.0f, 0.0f, 0.0f);
 
       vec4 dir = (streetLerp.end - streetLerp.start).normalize();
       mat4t rotMatrixEnd(1.0f);
@@ -343,7 +343,11 @@ public:
       }
     } else if (walkthroughMode == WALKTHROUGHMODE_ADVANCED) {
       selectNewStreet();
-      walkthroughMode = WALKTHROUGHMODE_ROTATE;
+      if (isDragging) {
+        walkthroughMode = WALKTHROUGHMODE_SELECT;
+      } else {
+        walkthroughMode = WALKTHROUGHMODE_ROTATE;
+      }
     } else if (walkthroughMode == WALKTHROUGHMODE_ROTATE) {
       vec3 interpolatedRotation = streetLerp.atSlerp();
 

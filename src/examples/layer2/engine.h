@@ -397,7 +397,9 @@ namespace octet {
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
       if (drawFlags & DRAW_HELP) {
+        glDisable(GL_DEPTH_TEST);
         textOverlay.render(object_shader, object_shader, vx, vy, 0);
+        glEnable(GL_DEPTH_TEST);
       }
 
       //Unbind vertex buffers so normal vertex arrays can work
@@ -418,8 +420,8 @@ namespace octet {
 
       cameraToWorld.loadIdentity();
       cameraToWorld.translate(cameraControls.getPosition().x(), cameraControls.getPosition().w(), cameraControls.getPosition().y());
-      cameraToWorld.rotate(cameraControls.getRotation().y(), 0.0f, 1.0f, 0.0f);
       cameraToWorld.rotate(-cameraControls.getRotation().x(), 1.0f, 0.0f, 0.0f);
+      cameraToWorld.rotate(cameraControls.getRotation().y(), 0.0f, 1.0f, 0.0f);
       cameraToWorld.translate(0.0f, 0.0f, cameraControls.getPosition().z());
     }
 
