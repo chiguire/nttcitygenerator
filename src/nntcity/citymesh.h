@@ -234,6 +234,9 @@ namespace octet {
 
 
     void init(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, vec4 &cityDimensions, vec4 &cityCenter) {
+		// temp
+		dynarray<BuildingArea> buildingAreaList2; 
+
       mesh_builder mb;
       mesh_builder mbRoadLeft;
       mesh_builder mbRoadRight;
@@ -272,8 +275,6 @@ namespace octet {
       mbRoadLeft.init(0, 0);
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
-
-
 
       const float MULTIPLIER = 0.5f;
       const float OFFSET_X = 0.25f;
@@ -354,6 +355,28 @@ namespace octet {
       roadRightNormalsMesh.make_normal_visualizer(roadRightMesh, 0.3f, attribute_normal);
       pavementNormalsMesh.make_normal_visualizer(pavementMesh, 0.3f, attribute_normal);
       surfaceNormalsMesh.make_normal_visualizer(surfaceMesh, 0.3f, attribute_normal);
+
+	  
+	  /**** new bulding area creation ****/
+	  
+/*
+	  for (int i = 0; i < streetsList->size(); i++) {
+        Street &street = (*streetsList)[i];
+		int k = 0; 
+		for (auto j = street.streetIntersectedPoints.pavementLeft.begin(); j != street.streetIntersectedPoints.pavementLeft.end(); j++) {
+			BuildingArea bA; 
+			// bA.points = j; 
+			//buildingAreaList2.push_back(bA);  
+		  
+		  ++k; 
+		}
+
+		
+	  }
+	  */
+
+	  /**** end - new building area creation ****/
+
 
 	  // creating buildings meshes 
       for (int i = 0; i < buildingAreaList->size(); i++) {

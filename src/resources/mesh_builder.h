@@ -330,7 +330,7 @@ namespace octet {
 
     // add a subdivided size*size plane with nx*ny squares, z value is
     // given by an image
-    void add_plane_heightmap(float xSize, float ySize, unsigned nx, unsigned ny, vec4 *normalmap, unsigned hmx, unsigned hmy, float *heightmap) {
+    void add_plane_heightmap(float xSize, float ySize, unsigned nx, unsigned ny, vec4 *normalmap, unsigned hmx, unsigned hmy, float *heightmap, float textureUOffset = 0.0f, float textureVOffset = 0.0f, unsigned int textureURepetition = 1, unsigned int textureVRepetition = 1) {
       float xsize = xSize / nx;
       float ysize = ySize / ny;
       float xSizeBy2 = xSize * 0.5f;
@@ -340,7 +340,7 @@ namespace octet {
 
       for (unsigned j = 0; j != ny; ++j) {
         for (unsigned i = 0; i != nx; ++i) {
-          add_vertex(vec4( i*xsize-xSizeBy2, j*ysize-ySizeBy2, heightmap[hmx*(j+1)+(i+1)], 1), normalmap[nx*j+i], ((float)i)/nx, ((float)j)/ny);
+          add_vertex(vec4( i*xsize-xSizeBy2, j*ysize-ySizeBy2, heightmap[hmx*(j+1)+(i+1)], 1), normalmap[nx*j+i], ((((float)i)/nx)*textureURepetition)+textureUOffset, ((((float)j)/ny)*textureVRepetition)+textureVOffset );
         }
       }
 

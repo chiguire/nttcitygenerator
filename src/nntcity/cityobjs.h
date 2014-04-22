@@ -944,6 +944,7 @@ namespace octet {
     }
 
 	void calculateBuildingsAreas_fromStreet() {
+
 		//for(int i=0; i!= streetsList.size(); ++i){
 			//for(int j=0; j!= streetsList[i].streetIntersectedPoints.roadRight.size(); ++j){
 				BSPNode node;
@@ -957,6 +958,7 @@ namespace octet {
 		//}
 	}
 
+	
     void calculateBuildingsAreas(float scale) {
       stop_iteration = false;
       calculateBuildingsAreas_(&root, scale);
@@ -1077,6 +1079,7 @@ namespace octet {
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+		  
 		  
         }
       }
