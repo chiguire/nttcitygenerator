@@ -273,12 +273,16 @@ namespace octet {
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
 
-	  // creating buildings
+	  // creating buildings meshes 
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
-		float random_height = std::rand()%5 +1;
+		float random_height = std::rand()%5 + 1;
+		if ( i%5 == 1) {
+			printf(" %f \n", random_height); 
+		}
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
+		(*buildingAreaList)[i].height = random_height; 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
@@ -437,8 +441,9 @@ namespace octet {
       }
 
       if (drawFlags & 0x8) {
-        buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+       
         for (int i = 0; i != buildingAreaList->size(); ++i) {
+		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height);
           (*buildingAreaList)[i].areaMesh.render();
         }
       }

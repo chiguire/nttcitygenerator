@@ -159,6 +159,7 @@ namespace octet {
   public:
     vec4 points[4];
     mesh areaMesh;
+	float height; 
 
     BuildingArea() {
       memset(points, 0, sizeof(vec4)*4);
@@ -1054,12 +1055,14 @@ namespace octet {
           buildingAreaList.push_back(BuildingArea(buildingArea));
 
 
+		  /*
           printf("-------------------- \n");
           printf("Building Big Areas points \n");
           printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+		  */ 
         }
       }
 
