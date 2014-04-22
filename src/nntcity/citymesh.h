@@ -301,19 +301,8 @@ namespace octet {
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
 
-    // creating buildings
-      for (int i = 0; i < buildingAreaList->size(); i++) {
-        mb.init(0, 0);
         
-        float random_height = std::rand()%5 +1;
-        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
         
-        mesh * m = new mesh();
-        mb.get_mesh(*m);
-        m->set_mode(GL_TRIANGLES);
-        (*buildingAreaList)[i].areaMesh = (*m);
-      }
-
       for (int i = 0; i < streetsList->size(); i++) {
         Street &street = (*streetsList)[i];
         dynarray<float> road_heights;
@@ -388,14 +377,26 @@ namespace octet {
       pavementNormalsMesh.make_normal_visualizer(pavementMesh, 0.3f, attribute_normal);
       surfaceNormalsMesh.make_normal_visualizer(surfaceMesh, 0.3f, attribute_normal);
 
-      pavementMaterial = new material((*getImageArray())[TEXTUREASSET_PAVEMENT]);
+pavementMaterial = new material((*getImageArray())[TEXTUREASSET_PAVEMENT]);
       roadMaterialLeft = new material((*getImageArray())[TEXTUREASSET_ROADLEFT]);
       roadMaterialRight = new material((*getImageArray())[TEXTUREASSET_ROADRIGHT]);
       grassMaterial = new material((*getImageArray())[TEXTUREASSET_GRASS_DIFFUSE], (*getImageArray())[TEXTUREASSET_GRASS_NORMAL]);
       buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING]);
       (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
-      waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
+      waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);// creating buildings meshes 
+      for (int i = 0; i < buildingAreaList->size(); i++) {
+        mb.init(0, 0);
+        
+		float random_height = std::rand()%5 + 1;
 
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
+		(*buildingAreaList)[i].height = random_height; 
+        
+        mesh * m = new mesh();
+        mb.get_mesh(*m);
+        m->set_mode(GL_TRIANGLES);
+        (*buildingAreaList)[i].areaMesh = (*m);
+      }
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -460,8 +461,9 @@ namespace octet {
       }
 
       if (drawFlags & 0x8) {
-        buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+       
         for (int i = 0; i != buildingAreaList->size(); ++i) {
+		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height);
           (*buildingAreaList)[i].areaMesh.render();
         }
       }

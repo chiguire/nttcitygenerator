@@ -159,6 +159,7 @@ namespace octet {
   public:
     vec4 points[4];
     mesh areaMesh;
+	float height; 
 
     BuildingArea() {
       memset(points, 0, sizeof(vec4)*4);
@@ -243,6 +244,7 @@ namespace octet {
     dynarray<BSPNode> subAreaNodes;
     dynarray<Street> streetsList;
     dynarray<BuildingArea> buildingAreaList;
+	dynarray<BuildingArea> buildingAreaList_streets; 
 
     dynarray <StreetIntersection*> streetsIntersections;
 
@@ -941,6 +943,11 @@ namespace octet {
       }
     }
 
+	void calculateBuildingsAreas_fromStreet() {
+		for (int i=0; i<streetsIntersections.size(); ++i) {
+		}
+	}
+
     void calculateBuildingsAreas(float scale) {
       stop_iteration = false;
       calculateBuildingsAreas_(&root, scale);
@@ -1054,12 +1061,14 @@ namespace octet {
           buildingAreaList.push_back(BuildingArea(buildingArea));
 
 
+		  
           printf("-------------------- \n");
           printf("Building Big Areas points \n");
           printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+		  
         }
       }
 
