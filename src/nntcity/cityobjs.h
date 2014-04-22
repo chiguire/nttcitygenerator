@@ -944,10 +944,34 @@ namespace octet {
     }
 
 	void calculateBuildingsAreas_fromStreet() {
-		for (int i=0; i<streetsIntersections.size(); ++i) {
+		 dynarray<BSPNode> areasNodes;
+		for(int i=0; i!= streetsList.size()-4; ++i){
+
+			BSPNode node;
+			node.vertices[0] = streetsList[i+0].streetIntersectedPoints.pavementLeft[0];
+			node.vertices[1] = streetsList[i+1].streetIntersectedPoints.pavementLeft[0];
+			node.vertices[2] = streetsList[i+2].streetIntersectedPoints.pavementLeft[0];
+			node.vertices[3] = streetsList[i+3].streetIntersectedPoints.pavementLeft[0];
+
+			areasNodes.push_back(node); 
+			/*
+				BuildingArea bA(
+					streetsList[i+0].streetIntersectedPoints.pavementLeft[0], 
+					streetsList[i+1].streetIntersectedPoints.pavementLeft[0], 
+					streetsList[i+2].streetIntersectedPoints.pavementLeft[0],
+					streetsList[i+3].streetIntersectedPoints.pavementLeft[0]
+					); 
+
+				buildingAreaList_streets.push_back(bA); 
+			*/
+		}
+
+		stop_iteration = true; 
+		for (int i=0; i!=areasNodes.size(); ++i) {
+			calculateBuildingsAreas_(&areasNodes[i], 1.0);
 		}
 	}
-
+	
     void calculateBuildingsAreas(float scale) {
       stop_iteration = false;
       calculateBuildingsAreas_(&root, scale);
@@ -1068,6 +1092,7 @@ namespace octet {
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
+		  
 		  
         }
       }
