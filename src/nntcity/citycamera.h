@@ -112,6 +112,9 @@ class camera_controls {
   LinearConfig streetLerp;
 
   City *city;
+  vec4 cityCenter;
+  vec4 cityDimensions;
+  CityMesh *cityMesh;
 
   vec4 mouseCoordinates; //x,y for start position, z,w for difference between current and start
   vec3 startingCameraRotation;
@@ -196,12 +199,18 @@ public:
   , streetSelected(NULL)
   , streetLerp()
   , city(NULL)
+  , cityCenter()
+  , cityDimensions()
+  , cityMesh(NULL)
   , mouseCoordinates()
   , isDragging(false)
   { }
   
-  void init(City *c) {
+  void init(City *c, CityMesh *cm) {
     city = c;
+    city->getDimensions(cityDimensions);
+    city->getCenter(cityCenter);
+    cityMesh = cm;
 
     if (city && city->streetsList.size() > 0) {
       streetSelected = 0;
@@ -209,7 +218,11 @@ public:
       streetLerp.end = vec4(0.0f, 0.0f, 0.0f, 1.0f);
       streetLerp.t = 1.0f;
     } else {
-      printf("ERROR: Initing cameras: Either city is null or streetsList is size 0.\n");
+      printf("ERROR: Initing cameras: Either city is NULL or streetsList is size 0.\n");
+    }
+
+    if (!cm) {
+      printf("ERROR: Initing cameras: cityMesh is NULL.\n");
     }
   }
 
@@ -328,7 +341,6 @@ public:
     if (isInFreeform()) return;
 
     if (walkthroughMode == WALKTHROUGHMODE_SELECT) {
-      //selectNewStreet();
       streetLerp.t = 0.0f;
       walkthroughMode = WALKTHROUGHMODE_ADVANCE;
     } else if (walkthroughMode == WALKTHROUGHMODE_ADVANCE) {
@@ -336,7 +348,7 @@ public:
       camera_position[0] = interpolatedPoint.x();
       camera_position[1] = interpolatedPoint.z();
       camera_position[2] = 0.0f;
-      camera_position[3] = 3*WATER_LEVEL;
+      camera_position[3] = 0.25f+max(cityMesh->sample_heightmap(vec4(interpolatedPoint.x(), 0, interpolatedPoint.z(), 0.0f), cityDimensions, cityCenter, CityMesh::MULTIPLIER, CityMesh::OFFSET_X, CityMesh::OFFSET_Y), CityMesh::BRIDGE_LEVEL);
       streetLerp.t += 1.0f/(60.0f*1);
       if (streetLerp.t >= 1.0f) {
         walkthroughMode = WALKTHROUGHMODE_ADVANCED;

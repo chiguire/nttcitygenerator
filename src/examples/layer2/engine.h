@@ -133,7 +133,7 @@ namespace octet {
 
       city_mesh->init(streetList, buildingAreaList, dimensions, center);
 
-      cameraControls.init(city);
+      cameraControls.init(city, city_mesh);
 
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
