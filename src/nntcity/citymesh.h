@@ -273,22 +273,7 @@ namespace octet {
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
 
-	  // creating buildings meshes 
-      for (int i = 0; i < buildingAreaList->size(); i++) {
-        mb.init(0, 0);
-        
-		float random_height = std::rand()%5 + 1;
-		if ( i%5 == 1) {
-			printf(" %f \n", random_height); 
-		}
-        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
-		(*buildingAreaList)[i].height = random_height; 
-        
-        mesh * m = new mesh();
-        mb.get_mesh(*m);
-        m->set_mode(GL_TRIANGLES);
-        (*buildingAreaList)[i].areaMesh = (*m);
-      }
+
 
       const float MULTIPLIER = 0.5f;
       const float OFFSET_X = 0.25f;
@@ -370,11 +355,26 @@ namespace octet {
       pavementNormalsMesh.make_normal_visualizer(pavementMesh, 0.3f, attribute_normal);
       surfaceNormalsMesh.make_normal_visualizer(surfaceMesh, 0.3f, attribute_normal);
 
+	  // creating buildings meshes 
+      for (int i = 0; i < buildingAreaList->size(); i++) {
+        mb.init(0, 0);
+        
+		float random_height = std::rand()%5 + 1;
+
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
+		(*buildingAreaList)[i].height = random_height; 
+        
+        mesh * m = new mesh();
+        mb.get_mesh(*m);
+        m->set_mode(GL_TRIANGLES);
+        (*buildingAreaList)[i].areaMesh = (*m);
+      }
+
       pavementMaterial = new material((*getImageArray())[0]);
       roadMaterialLeft = new material((*getImageArray())[1]);
       roadMaterialRight = new material((*getImageArray())[2]);
       grassMaterial = new material((*getImageArray())[3], false);
-	    buldingMaterial = new material((*getImageArray())[6]);
+	  buldingMaterial = new material((*getImageArray())[6]);
       waterMaterial = new material((*getImageArray())[5], vec4(0.1f, 0.2f, 0.8f, 0.5f), true, true);
 
 
