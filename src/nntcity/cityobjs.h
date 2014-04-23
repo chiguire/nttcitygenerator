@@ -945,17 +945,78 @@ namespace octet {
 
 	void calculateBuildingsAreas_fromStreet() {
 
-		//for(int i=0; i!= streetsList.size(); ++i){
-			//for(int j=0; j!= streetsList[i].streetIntersectedPoints.roadRight.size(); ++j){
+		vec4 additional_vec1, additional_vec2, additional_vec3, additional_vec4, additional_vec5, additional_vec6;
+
+		// for(int j=0; j!= streetsList.size()-4; j+=4){
+		int j = 0; 
+			
 				BSPNode node;
-				node.vertices[0] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
-				node.vertices[1] = streetsList[0].streetIntersectedPoints.pavementLeft[5];
-				node.vertices[2] = streetsList[1].streetIntersectedPoints.pavementLeft[3];
-				node.vertices[3] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
+				node.vertices[0] = streetsList[j].streetIntersectedPoints.pavementLeft[1];
+				node.vertices[1] = streetsList[j].streetIntersectedPoints.pavementLeft[5];
+				
+				additional_vec1 = streetsList[j].streetIntersectedPoints.pavementLeft[1];
+				additional_vec2 = streetsList[j].streetIntersectedPoints.pavementLeft[5];
+
+
+				
+				vec4 vec;
+				for (int i=0; i != streetsList.size(); ++i) {
+					
+					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[5] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
+					printf(" resoult %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
+						node.vertices[2] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						
+						//node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						additional_vec3 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
+						additional_vec4 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						/*
+						for (int k=0; k!=streetsList.size(); ++k) {
+							vec4 resoult2 = streetsList[i].streetIntersectedPoints.pavementLeft[5] - streetsList[k].streetIntersectedPoints.pavementRight[1];
+							if (k!=i && resoult2.x() == 0 && resoult2.z() == 0) {
+								additional_vec1 = streetsList[k].streetIntersectedPoints.pavementRight[1];
+								additional_vec2 = streetsList[k].streetIntersectedPoints.pavementRight[5];
+								break;					
+							}
+						}
+						*/
+						break;
+					}
+				 }
+
+
+				for (int i=0; i != streetsList.size(); ++i) {
+					
+					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[1] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
+					printf(" resoult2 %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
+						node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						
+						additional_vec5 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						additional_vec6 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
+						break;
+					}
+				}
+
+				//BuildingArea buildingArea0 = BuildingArea(additional_vec1, additional_vec2, additional_vec1, additional_vec2);
+				//BuildingArea buildingArea1 = BuildingArea(additional_vec3, additional_vec4, additional_vec3, additional_vec4); 
+
+				//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec6); 
+
+
+				BuildingArea buildingArea0 = BuildingArea(node.vertices[0], node.vertices[1], node.vertices[2], node.vertices[3]);
+				//BuildingArea buildingArea1 = BuildingArea(node.vertices[1], node.vertices[2], node.vertices[1], node.vertices[2]);
+				//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec2);
+
+
+			    buildingAreaList.push_back(buildingArea0);
+				//buildingAreaList.push_back(buildingArea1);
+				//buildingAreaList.push_back(buildingArea2); 
+				
 			//}
-				printf(" %i \n", streetsList[0].streetIntersectedPoints.pavementLeft.size()); 
+
 				stop_iteration = true;
-				calculateBuildingsAreas_(&node, 1.0f); 
+				// calculateBuildingsAreas_(&node, 1.0f); 
 		//}
 	}
 
