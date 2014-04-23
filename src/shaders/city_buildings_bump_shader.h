@@ -110,15 +110,17 @@ namespace octet {
 
         uniform vec4 light_uniforms[1+max_lights*4];
         uniform int num_lights;
-        uniform sampler2D samplers[6];
+        uniform sampler2D samplers[9];
 		uniform float b_height; 
 
-
+		/*
 		vec4 texture_selector(float h) {
 			vec4 color; 
 			 if (h > 4) {
 					color = vec4(1.0, 0.2, 0.2, 1.0);
+					
 			 } else if (h > 3) {
+					// color = texture2D(samplers[1], uv_)
 					color = vec4(0.2, 1.0, 0.2, 1.0);
 			 } else if (h > 1) {
 					color = vec4(0.2, 0.2, 1.0, 1.0);
@@ -128,6 +130,7 @@ namespace octet {
 
 			 return color; 
 		}
+		*/
       
 
         void main() {
@@ -158,8 +161,28 @@ namespace octet {
 				  diffuse = vec4(0.2, 0.2, 0.2, 1.0);
 		  } else {
 
-			  ambient = texture_selector(b_height); 
-			  diffuse = texture_selector(b_height); 
+			 vec4 color; 
+			 if (b_height > 4) {
+				 color = texture2D(samplers[7], uv_);
+					 //color = vec4(1.0, 0.2, 0.2, 1.0);
+					
+			 } else if (b_height > 3) {
+				color = texture2D(samplers[7], uv_);
+					// color = vec4(0.2, 1.0, 0.2, 1.0);
+			 } else if (b_height > 1) {
+				 color = texture2D(samplers[7], uv_);
+					// color = vec4(0.2, 0.2, 1.0, 1.0);
+			 } else {
+				color = texture2D(samplers[7], uv_);
+				 // color = vec4(1.0, 1.0, 0.2, 1.0); 					
+			 }
+
+
+
+			  ambient = diffuse = color; 
+			  // ambient = diffuse = texture2D(samplers[0], uv_)
+			  // ambient = diffuse = texture_selector(b_height); 
+			  // diffuse = texture_selector(b_height); 
 		  }
 		 
           
@@ -168,13 +191,15 @@ namespace octet {
 
           vec3 ambient_light = light_uniforms[0].xyz;
 
-          gl_FragColor.xyz = 
+          gl_FragColor = ambient;
+		  /*
             ambient_light * ambient.xyz +
             diffuse_light * diffuse.xyz +
             emission.xyz +
             specular_light * specular.xyz
           ;
-          gl_FragColor.w = diffuse.w;
+		  */
+          //gl_FragColor.w = diffuse.w;
 
         }
       );
@@ -198,8 +223,8 @@ namespace octet {
 	  glUniform1f(bulding_height_index, bulding_height); 
 
       // we use textures 0-3 for material properties.
-      static const GLint samplers[] = { 0, 1, 2, 3, 4, 5 };
-      glUniform1iv(samplers_index, 6, samplers);
+      static const GLint samplers[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+      glUniform1iv(samplers_index, 9, samplers);
     }
 
     void render_skinned(const mat4t &cameraToProjection, const mat4t *modelToCamera, int num_matrices, const vec4 *light_uniforms, int num_light_uniforms, int num_lights) {

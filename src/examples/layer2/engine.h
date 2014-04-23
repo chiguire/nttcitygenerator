@@ -106,7 +106,7 @@ namespace octet {
 
       city->init(vertices);
       city->stepPartition(depth);
-      city->printStreets();
+      // city->printStreets();
 
       city->calculateIntersections();
       //city->printIntersections();
@@ -121,8 +121,8 @@ namespace octet {
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
 
-     // city->calculateBuildingsAreas(0.75);
-	  city->calculateBuildingsAreas_fromStreet(); 
+      city->calculateBuildingsAreas(0.75);
+	  //city->calculateBuildingsAreas_fromStreet(); 
       buildingAreaList = &city->buildingAreaList;
 
       vec4 dimensions;
