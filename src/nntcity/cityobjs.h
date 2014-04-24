@@ -1185,8 +1185,8 @@ namespace octet {
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
-		  */
 		  
+		  */
 		  
         }
       }

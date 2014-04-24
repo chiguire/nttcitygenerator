@@ -304,6 +304,7 @@ namespace octet {
       int gridHeight = heightmap_height-2;
 
       // Creating road meshes
+	  printf("Creating road meshes.\n");
       mbRoadLeft.init(0, 0);
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
@@ -387,6 +388,7 @@ namespace octet {
 
 
     // creating buildings meshes 
+	  printf("Creating buildings.\n");
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
@@ -405,7 +407,7 @@ namespace octet {
       roadMaterialLeft = new material((*getImageArray())[TEXTUREASSET_ROADLEFT]);
       roadMaterialRight = new material((*getImageArray())[TEXTUREASSET_ROADRIGHT]);
       grassMaterial = new material((*getImageArray())[TEXTUREASSET_GRASS_DIFFUSE], (*getImageArray())[TEXTUREASSET_GRASS_NORMAL]);
-      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING], (*getImageArray())[TEXTUREASSET_BUILDING_RES_1], (*getImageArray())[TEXTUREASSET_BUILDING_RES_2], (*getImageArray())[TEXTUREASSET_BUILDING_RES_3]);
+      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING], (*getImageArray())[TEXTUREASSET_BUILDING_RES_1], (*getImageArray())[TEXTUREASSET_BUILDING_RES_2], (*getImageArray())[TEXTUREASSET_BUILDING]);
       (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
       waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
 

@@ -113,6 +113,9 @@ namespace octet {
       //city->calculateIntersectionsSpace();
       city->calculateMeshesIntersections();
       //city->printMeshesPoints();
+      city->calculateBuildingsAreas(0.75);
+	  //city->calculateBuildingsAreas_fromStreet(); 
+     
 
       //
       // city_mesh declaration
@@ -120,10 +123,8 @@ namespace octet {
       //
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
-
-      city->calculateBuildingsAreas(0.75);
-	  //city->calculateBuildingsAreas_fromStreet(); 
-      buildingAreaList = &city->buildingAreaList;
+	  
+	  buildingAreaList = &city->buildingAreaList;
 
       vec4 dimensions;
       vec4 center;

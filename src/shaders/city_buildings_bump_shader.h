@@ -163,17 +163,17 @@ namespace octet {
 
 			 vec4 color; 
 			 if (b_height > 4) {
-				 color = texture2D(samplers[7], uv_);
+				 color = texture2D(samplers[8], uv_);
 					 //color = vec4(1.0, 0.2, 0.2, 1.0);
 					
 			 } else if (b_height > 3) {
-				color = texture2D(samplers[7], uv_);
+				color = texture2D(samplers[8], uv_);
 					// color = vec4(0.2, 1.0, 0.2, 1.0);
 			 } else if (b_height > 1) {
-				 color = texture2D(samplers[7], uv_);
+				 color = texture2D(samplers[8], uv_);
 					// color = vec4(0.2, 0.2, 1.0, 1.0);
 			 } else {
-				color = texture2D(samplers[7], uv_);
+				color = texture2D(samplers[8], uv_);
 				 // color = vec4(1.0, 1.0, 0.2, 1.0); 					
 			 }
 
