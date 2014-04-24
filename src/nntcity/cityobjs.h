@@ -1,5 +1,7 @@
 namespace octet {
   
+  class BSPNode;
+
   template <class T>
   class StreetArrayCollection {
   public:
@@ -9,10 +11,10 @@ namespace octet {
     dynarray<T> pavementRight;
 
     StreetArrayCollection()
-    : roadLeft()
-    , roadRight()
-    , pavementLeft()
-    , pavementRight()
+      : roadLeft()
+      , roadRight()
+      , pavementLeft()
+      , pavementRight()
     { }
   };
 
@@ -22,15 +24,17 @@ namespace octet {
     //These points are obtained from the space partition in City
     vec4 points[2];
 
-    //This is an array of the approximation of road heights for
-    //the extension of the road, from point[0] to point[1]
-    dynarray<float> roadHeights;
+    //Which points do the street intersect with other street
+    vec4 roadLeftIntersections[2]; 
+    vec4 roadRightIntersections[2];
+
+    //Which nodes are at left and right of the road, easily determining direction in BSP tree.
+    BSPNode *leftNode;
+    BSPNode *rightNode;
 
     //These points are generated from the previous points. Unintersected roads.
-    //dynarray<vec4> roadGeneratedLeftPoints;
-    //dynarray<vec4> roadGeneratedRightPoints;
-    //dynarray<vec4> pavementGeneratedLeftPoints;
-    //dynarray<vec4> pavementGeneratedRightPoints;
+    StreetArrayCollection<vec4> originalStreetPoints;
+    StreetArrayCollection<vec2> originalStreetUVCoords;
 
     //Store meshes after intersection between roads
     StreetArrayCollection<vec4> streetIntersectedPoints;
@@ -46,13 +50,17 @@ namespace octet {
     float translatedDistance[2];
 
     Street()
-    : roadHeights()
-    , streetIntersectedPoints()
-    , streetIntersectedUVCoords()
-    , terrainIntersectedPoints()
-    , terrainIntersectedIndices()
-    , terrainIntersectedNormals()
-    , terrainIntersectedUVCoords()
+      : points()
+      , roadLeftIntersections()
+      , roadRightIntersections()
+      , leftNode(NULL)
+      , rightNode(NULL)
+      , streetIntersectedPoints()
+      , streetIntersectedUVCoords()
+      , terrainIntersectedPoints()
+      , terrainIntersectedIndices()
+      , terrainIntersectedNormals()
+      , terrainIntersectedUVCoords()
     {
       memset(points, 0, sizeof(vec4)*2);
       memset(angleCS, 0, sizeof(float)*2);
@@ -78,79 +86,79 @@ namespace octet {
       float separationX, float separationZ, 
       float roadHalfSizeY, float pavementHalfSizeY,
       int width, int height) {
-        
+
         // Road Mesh Left
         intersectMesh(&streetIntersectedPoints.roadLeft,
-                      &streetIntersectedUVCoords.roadLeft,
-                      &terrainIntersectedPoints.roadLeft, 
-                      &terrainIntersectedIndices.roadLeft,
-                      &terrainIntersectedNormals.roadLeft,
-                      &terrainIntersectedUVCoords.roadLeft,
-                      centerX, centerZ, 
-                      separationX, separationZ, roadHalfSizeY,
-                      width, height);
+          &streetIntersectedUVCoords.roadLeft,
+          &terrainIntersectedPoints.roadLeft, 
+          &terrainIntersectedIndices.roadLeft,
+          &terrainIntersectedNormals.roadLeft,
+          &terrainIntersectedUVCoords.roadLeft,
+          centerX, centerZ, 
+          separationX, separationZ, roadHalfSizeY,
+          width, height);
 
         // Road Mesh Right
         intersectMesh(&streetIntersectedPoints.roadRight,
-                      &streetIntersectedUVCoords.roadRight,
-                      &terrainIntersectedPoints.roadRight, 
-                      &terrainIntersectedIndices.roadRight,
-                      &terrainIntersectedNormals.roadRight,
-                      &terrainIntersectedUVCoords.roadRight,
-                      centerX, centerZ, 
-                      separationX, separationZ, roadHalfSizeY,
-                      width, height);
+          &streetIntersectedUVCoords.roadRight,
+          &terrainIntersectedPoints.roadRight, 
+          &terrainIntersectedIndices.roadRight,
+          &terrainIntersectedNormals.roadRight,
+          &terrainIntersectedUVCoords.roadRight,
+          centerX, centerZ, 
+          separationX, separationZ, roadHalfSizeY,
+          width, height);
 
         // Pavement Mesh Left
         intersectMesh(&streetIntersectedPoints.pavementLeft,
-                      &streetIntersectedUVCoords.pavementLeft,
-                      &terrainIntersectedPoints.pavementLeft, 
-                      &terrainIntersectedIndices.pavementLeft,
-                      &terrainIntersectedNormals.pavementLeft,
-                      &terrainIntersectedUVCoords.pavementLeft,
-                      centerX, centerZ, 
-                      separationX, separationZ, roadHalfSizeY,
-                      width, height);
+          &streetIntersectedUVCoords.pavementLeft,
+          &terrainIntersectedPoints.pavementLeft, 
+          &terrainIntersectedIndices.pavementLeft,
+          &terrainIntersectedNormals.pavementLeft,
+          &terrainIntersectedUVCoords.pavementLeft,
+          centerX, centerZ, 
+          separationX, separationZ, roadHalfSizeY,
+          width, height);
 
         // Pavement Mesh Right
         intersectMesh(&streetIntersectedPoints.pavementRight,
-                      &streetIntersectedUVCoords.pavementRight,
-                      &terrainIntersectedPoints.pavementRight, 
-                      &terrainIntersectedIndices.pavementRight,
-                      &terrainIntersectedNormals.pavementRight,
-                      &terrainIntersectedUVCoords.pavementRight,
-                      centerX, centerZ, 
-                      separationX, separationZ, roadHalfSizeY,
-                      width, height);
+          &streetIntersectedUVCoords.pavementRight,
+          &terrainIntersectedPoints.pavementRight, 
+          &terrainIntersectedIndices.pavementRight,
+          &terrainIntersectedNormals.pavementRight,
+          &terrainIntersectedUVCoords.pavementRight,
+          centerX, centerZ, 
+          separationX, separationZ, roadHalfSizeY,
+          width, height);
     }
 
     void intersectMesh(const dynarray<vec4> *polygonVec4, const dynarray<vec2> *polygonUVCoords,
-                       dynarray<vec4> *polygonResultPoints, dynarray<unsigned short> *polygonResultIndices,
-                       dynarray<vec4> *polygonResultNormals, dynarray<vec2> *polygonResultUVCoords,
-                       float centerX, float centerZ, float separationX, float separationZ, float roadHalfSizeY,
-                       int width, int height) {
-      dynarray<vec4> polygonInputPosition;
-      dynarray<vec2> polygonInputUVCoords;
+      dynarray<vec4> *polygonResultPoints, dynarray<unsigned short> *polygonResultIndices,
+      dynarray<vec4> *polygonResultNormals, dynarray<vec2> *polygonResultUVCoords,
+      float centerX, float centerZ, float separationX, float separationZ, float roadHalfSizeY,
+      int width, int height) {
+        dynarray<vec4> polygonInputPosition;
+        dynarray<vec2> polygonInputUVCoords;
 
-      if (polygonVec4->size() > 0) {
-        polygonInputPosition.reset();
-        polygonInputPosition.push_back((*polygonVec4)[0]);
-        polygonInputPosition.push_back((*polygonVec4)[1]);
-        polygonInputPosition.push_back((*polygonVec4)[5]);
-        polygonInputPosition.push_back((*polygonVec4)[4]);
-        polygonInputUVCoords.reset();
-        polygonInputUVCoords.push_back((*polygonUVCoords)[0]);
-        polygonInputUVCoords.push_back((*polygonUVCoords)[1]);
-        polygonInputUVCoords.push_back((*polygonUVCoords)[5]);
-        polygonInputUVCoords.push_back((*polygonUVCoords)[4]);
-        PolygonIntersections::intersectGrid(polygonInputPosition,
-          polygonInputUVCoords,
-          centerX, centerZ, 
-          separationX, separationZ, roadHalfSizeY,
-          width, height, 
-          *polygonResultPoints, *polygonResultIndices,
-          *polygonResultNormals, *polygonResultUVCoords);
-      }
+        if (polygonVec4->size() > 0) {
+          polygonInputPosition.reset();
+          polygonInputPosition.push_back((*polygonVec4)[0]);
+          polygonInputPosition.push_back((*polygonVec4)[1]);
+          polygonInputPosition.push_back((*polygonVec4)[5]);
+          polygonInputPosition.push_back((*polygonVec4)[4]);
+          polygonInputUVCoords.reset();
+          polygonInputUVCoords.push_back((*polygonUVCoords)[0]);
+          polygonInputUVCoords.push_back((*polygonUVCoords)[1]);
+          polygonInputUVCoords.push_back((*polygonUVCoords)[5]);
+          polygonInputUVCoords.push_back((*polygonUVCoords)[4]);
+          PolygonIntersections::intersectGrid(polygonInputPosition,
+            polygonInputUVCoords,
+            centerX, centerZ, 
+            separationX, separationZ, roadHalfSizeY,
+            width, height, 
+            *polygonResultPoints, *polygonResultIndices,
+            *polygonResultNormals, *polygonResultUVCoords);
+        }
     }
 
   };
@@ -159,7 +167,7 @@ namespace octet {
   public:
     vec4 points[4];
     mesh areaMesh;
-	float height; 
+    float height; 
 
     BuildingArea() {
       memset(points, 0, sizeof(vec4)*4);
@@ -237,6 +245,12 @@ namespace octet {
 
   class City {
   public:
+    static const float STREET_WIDTH;
+    static const float ROAD_WIDTH;
+    static const float PAVEMENT_WIDTH;
+    static const float ROAD_HEIGHT;
+    static const float PAVEMENT_HEIGHT;
+
     BSPNode root;
 
     mat4t modelToWorld;
@@ -244,7 +258,7 @@ namespace octet {
     dynarray<BSPNode> subAreaNodes;
     dynarray<Street> streetsList;
     dynarray<BuildingArea> buildingAreaList;
-	dynarray<BuildingArea> buildingAreaList_streets; 
+    dynarray<BuildingArea> buildingAreaList_streets; 
 
     dynarray <StreetIntersection*> streetsIntersections;
 
@@ -252,17 +266,11 @@ namespace octet {
 
     vec4 * debugColors;
 
-    static const float STREET_WIDTH;
-    static const float ROAD_WIDTH;
-    static const float PAVEMENT_WIDTH;
-    static const float ROAD_HEIGHT;
-    static const float PAVEMENT_HEIGHT;
-
     bool stop_iteration;
 
 
     City ()
-    : randomizer(time(NULL))
+      : randomizer(time(NULL))
     {}
 
     static City *createFromRectangle(float width, float height) {
@@ -291,9 +299,13 @@ namespace octet {
       for(int i=0; i!=4; ++i){
         if(i !=3){
           Street s1(root.vertices[i],root.vertices[i+1]);
+          s1.rightNode = NULL;
+          s1.leftNode = &root;
           streetsList.push_back(s1);
         }else{
           Street s1(root.vertices[i],root.vertices[0]);
+          s1.rightNode = NULL;
+          s1.leftNode = &root;
           streetsList.push_back(s1);
         }
       }
@@ -943,23 +955,23 @@ namespace octet {
       }
     }
 
-	void calculateBuildingsAreas_fromStreet() {
+    void calculateBuildingsAreas_fromStreet() {
 
-		//for(int i=0; i!= streetsList.size(); ++i){
-			//for(int j=0; j!= streetsList[i].streetIntersectedPoints.roadRight.size(); ++j){
-				BSPNode node;
-				node.vertices[0] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
-				node.vertices[1] = streetsList[0].streetIntersectedPoints.pavementLeft[5];
-				node.vertices[2] = streetsList[1].streetIntersectedPoints.pavementLeft[3];
-				node.vertices[3] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
-			//}
-				printf(" %i \n", streetsList[0].streetIntersectedPoints.pavementLeft.size()); 
-				stop_iteration = true;
-				calculateBuildingsAreas_(&node, 1.0f); 
-		//}
-	}
+      //for(int i=0; i!= streetsList.size(); ++i){
+      //for(int j=0; j!= streetsList[i].streetIntersectedPoints.roadRight.size(); ++j){
+      BSPNode node;
+      node.vertices[0] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
+      node.vertices[1] = streetsList[0].streetIntersectedPoints.pavementLeft[5];
+      node.vertices[2] = streetsList[1].streetIntersectedPoints.pavementLeft[3];
+      node.vertices[3] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
+      //}
+      printf(" %i \n", streetsList[0].streetIntersectedPoints.pavementLeft.size()); 
+      stop_iteration = true;
+      calculateBuildingsAreas_(&node, 1.0f); 
+      //}
+    }
 
-	
+
     void calculateBuildingsAreas(float scale) {
       stop_iteration = false;
       calculateBuildingsAreas_(&root, scale);
@@ -976,7 +988,7 @@ namespace octet {
         StreetIntersection *st = *i;
 
         if (st->containsStreet(s)) {
-          
+
         }
       }
     }
@@ -1073,15 +1085,15 @@ namespace octet {
           buildingAreaList.push_back(BuildingArea(buildingArea));
 
 
-		  
+
           printf("-------------------- \n");
           printf("Building Big Areas points \n");
           printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
-		  
-		  
+
+
         }
       }
 
@@ -1094,9 +1106,7 @@ namespace octet {
 
       if (!b->right || !b->left) { // It was a leaf node, expand it
 
-
         int side_index = getSideToMakePartition(b);
-
 
         //Opposite side
         int opposite_side_index = (side_index+2)%4;
@@ -1131,8 +1141,8 @@ namespace octet {
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
 
-        generateStreets(b->left, noStreet);
-        generateStreets(b->right, noStreet);
+        generateStreets(b->left, b, noStreet);
+        generateStreets(b->right, b, noStreet);
 
       }
 
@@ -1143,7 +1153,7 @@ namespace octet {
       // TODO Heuristic: choose sides intersected by frustrum
 
 
-      float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+      float r = ((float)rand()) / ((float)RAND_MAX);
 
       if (r >= 0.5f) {
         stepPartition_(depth - 1, b->left, noStreet);
@@ -1154,17 +1164,24 @@ namespace octet {
 
     }
 
-    void generateStreets( BSPNode * node, bool noStreet) {
+    void generateStreets( BSPNode * node, BSPNode *parentNode, bool noStreet) {
 
       dynarray<Street> localList;
 
-      for(int i=0; i!=4; ++i){
+      for (int i = 0; i != 4; ++i) {
+ 
+        if (!streetAlreadyExists(node->vertices[i],node->vertices[(i==3) ? 0 : i+1])) {
+          BSPNode *right = NULL;
+          int indexToDelete = solveConflictbetweenStreets(node->vertices[i], node->vertices[(i==3) ? 0 : i+1]);
 
-        if(!streetAlreadyExists(node->vertices[i],node->vertices[(i==3) ? 0 : i+1])){
-
-          solveConflictbetweenStreets(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
+          if (indexToDelete != -1) {
+            right = streetsList[indexToDelete].rightNode;
+            streetsList.erase(indexToDelete);
+          }
 
           Street s1(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
+          s1.leftNode = node;
+          s1.rightNode = right;
           localList.push_back(s1);
 
         }
@@ -1201,19 +1218,19 @@ namespace octet {
 
     }
 
-    void solveConflictbetweenStreets(vec4 sp1Son, vec4 sp2Son) {
+    int solveConflictbetweenStreets(vec4 sp1Son, vec4 sp2Son) {
 
       vec4 streenSonPoints[2];
       streenSonPoints[0] = sp1Son;
       streenSonPoints[1] = sp2Son;
 
-      int indexToDelete=-1;
+      int indexToDelete = -1;
 
-      for(int i=0; i!=streetsList.size(); ++i){
-        for(int j=0; j!=2; ++j){
-          for(int k=0; k!=2; ++k){
+      for (int i = 0; i!=streetsList.size(); ++i){
+        for (int j = 0; j != 2; ++j){
+          for (int k = 0; k != 2; ++k){
 
-            if(all(streetsList[i].points[j] == streenSonPoints[k])){
+            if (all(streetsList[i].points[j] == streenSonPoints[k])) {
 
               vec4 midpoint(streetsList[i].points[j].x() + (streetsList[i].points[(j==1) ? 0 : j+1].x() - streetsList[i].points[j].x())*0.5f,
                 streetsList[i].points[j].y() + (streetsList[i].points[(j==1) ? 0 : j+1].y() - streetsList[i].points[j].y())*0.5f,
@@ -1228,9 +1245,7 @@ namespace octet {
         }
       } 
 
-      if(indexToDelete!=-1){
-        streetsList.erase(indexToDelete);
-      }
+      return indexToDelete;
     }
 
 
