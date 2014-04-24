@@ -1397,8 +1397,11 @@ outloop:;
     }
   }; 
 
-  const float City::STREET_WIDTH = 0.36f;
-  const float City::PAVEMENT_WIDTH = 0.06f;
+  //Another nice measure
+  //pavement 16 / 56
+
+  const float City::STREET_WIDTH = 0.98f;
+  const float City::PAVEMENT_WIDTH = 0.25f;
   const float City::ROAD_WIDTH = City::STREET_WIDTH - 2*City::PAVEMENT_WIDTH;
   const float City::ROAD_HEIGHT = 0.04f;
   const float City::PAVEMENT_HEIGHT = 0.042f;
