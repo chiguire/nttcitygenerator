@@ -201,15 +201,14 @@ namespace octet {
 
           vec3 ambient_light = light_uniforms[0].xyz;
 
-          gl_FragColor = ambient;
-		  /*
+          gl_FragColor.xyz = 
             ambient_light * ambient.xyz +
             diffuse_light * diffuse.xyz +
             emission.xyz +
             specular_light * specular.xyz
           ;
-		  */
-          //gl_FragColor.w = diffuse.w;
+		  
+          gl_FragColor.w = diffuse.w;
 
         }
       );

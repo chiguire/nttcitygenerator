@@ -1169,13 +1169,24 @@ namespace octet {
 			} else {
 				scale_final = 1-sqrt(scale_z*scale_x);
 			}
+
+			scale_x = 1-sqrt(scale_x*scale_x);
+			scale_z = 1-sqrt(scale_z*scale_z); 
  
 		}
 
+		/*
+		vec4 v0t = vec4(v0.x()*scale_x, v0.y(), v0.z()*scale_z, 1.0f);
+		vec4 v1t = vec4(v1.x()*scale_x, v1.y(), v1.z()*scale_z, 1.0f); 
+		vec4 v2t = vec4(v2.x()*scale_x, v2.y(), v2.z()*scale_z, 1.0f);
+		vec4 v3t = vec4(v3.x()*scale_x, v3.y(), v3.z()*scale_z, 1.0f); 
+		*/
+		
         vec4 v0t = b->vertices[0]*scale_final;
         vec4 v1t = b->vertices[1]*scale_final;
         vec4 v2t = b->vertices[2]*scale_final;
         vec4 v3t = b->vertices[3]*scale_final;
+		
 
         // find the center point of quadrangle 
         float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;
