@@ -62,7 +62,7 @@ namespace octet {
           "assets/citytex/building_h.gif",
 		  "assets/citytex/buildings/building_office_glass.gif",
 		  "assets/citytex/buildings/building_office_highglass.gif",
-		  "assets/citytex/buildings/building_residential_luxury.gif",
+		  "assets/citytex/buildings/building_office_highglass.gif",
           "assets/citytex/grass/06_DIFFUSE.jpg",
           "assets/citytex/grass/06_DISP.jpg",
           "assets/citytex/grass/06_NORMAL.jpg",
@@ -396,6 +396,7 @@ namespace octet {
 
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
 		(*buildingAreaList)[i].height = random_height; 
+		(*buildingAreaList)[i].calculate_area();
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
@@ -407,7 +408,7 @@ namespace octet {
       roadMaterialLeft = new material((*getImageArray())[TEXTUREASSET_ROADLEFT]);
       roadMaterialRight = new material((*getImageArray())[TEXTUREASSET_ROADRIGHT]);
       grassMaterial = new material((*getImageArray())[TEXTUREASSET_GRASS_DIFFUSE], (*getImageArray())[TEXTUREASSET_GRASS_NORMAL]);
-      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING], (*getImageArray())[TEXTUREASSET_BUILDING_RES_1], (*getImageArray())[TEXTUREASSET_BUILDING_RES_2], (*getImageArray())[TEXTUREASSET_BUILDING]);
+      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING], (*getImageArray())[TEXTUREASSET_BUILDING_RES_1], (*getImageArray())[TEXTUREASSET_BUILDING_RES_2], (*getImageArray())[TEXTUREASSET_BUILDING_RES_3]);
       (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
       waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
 
@@ -477,9 +478,9 @@ namespace octet {
 
       if (drawFlags & 0x8) {
        
-        for (int i = 0; i != buildingAreaList->size(); ++i) {
-      buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height);
-          (*buildingAreaList)[i].areaMesh.render();
+      for (int i = 0; i != buildingAreaList->size(); ++i) {
+		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area);
+        (*buildingAreaList)[i].areaMesh.render();
         }
       }
 

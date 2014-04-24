@@ -160,6 +160,7 @@ namespace octet {
     vec4 points[4];
     mesh areaMesh;
 	float height; 
+	float area; 
 
     BuildingArea() {
       memset(points, 0, sizeof(vec4)*4);
@@ -172,7 +173,7 @@ namespace octet {
       points[3] = p3;
     }
 
-    //Copy constructor that may be maybe modified
+    //Copy constructor - maybe to be modified 
     BuildingArea(BuildingArea &b) {                                                       
       this->points[0] = b.points[0];
       this->points[1] = b.points[1];
@@ -186,6 +187,14 @@ namespace octet {
         all(this->points[2] == b2->points[2]) &&
         all(this->points[3] == b2->points[3]);
     }
+
+	void calculate_area() {
+		float side_a, side_b; 
+		side_a = vec4(points[1]-points[0]).length(); 
+		side_b = vec4(points[2]-points[1]).length(); 
+
+		area = side_a * side_b;
+	}
   };
 
 
@@ -1067,11 +1076,11 @@ namespace octet {
 	
     void calculateBuildingsAreas(float scale) {
       stop_iteration = false;
-      calculateBuildingsAreas_(&root, scale);
+      calculateBuildingsAreas_(&root, true);
 
       stop_iteration = true;
       for (int i=0; i!=subAreaNodes.size(); ++i) {
-        calculateBuildingsAreas_(&subAreaNodes[i], 1.0);
+        calculateBuildingsAreas_(&subAreaNodes[i], false);
       }
     }
 
@@ -1132,7 +1141,7 @@ namespace octet {
 
     }
 
-    void calculateBuildingsAreas_(BSPNode *b, float scale) {
+    void calculateBuildingsAreas_(BSPNode *b, bool scale) {
 
       if (b->right ) {
         calculateBuildingsAreas_(b->right, scale);
@@ -1141,15 +1150,32 @@ namespace octet {
       if (b->left) {
         calculateBuildingsAreas_(b->left, scale);
       } else {
+
+		
         vec4 v0 = b->vertices[0];
         vec4 v1 = b->vertices[1];
         vec4 v2 = b->vertices[2];
         vec4 v3 = b->vertices[3];
 
-        vec4 v0t = b->vertices[0]*scale;
-        vec4 v1t = b->vertices[1]*scale;
-        vec4 v2t = b->vertices[2]*scale;
-        vec4 v3t = b->vertices[3]*scale;
+		float scale_x, scale_z, scale_final;
+		scale_final =scale_x = scale_z = 1.0f;
+
+		if (scale) {
+			scale_x = (STREET_WIDTH + PAVEMENT_WIDTH) / vec4(v1-v0).length(); 
+			scale_z = (STREET_WIDTH + PAVEMENT_WIDTH) / vec4(v2-v1).length();
+
+			if (scale_x > scale_z) {
+				scale_final = 1-sqrt(scale_x*scale_x);
+			} else {
+				scale_final = 1-sqrt(scale_z*scale_x);
+			}
+ 
+		}
+
+        vec4 v0t = b->vertices[0]*scale_final;
+        vec4 v1t = b->vertices[1]*scale_final;
+        vec4 v2t = b->vertices[2]*scale_final;
+        vec4 v3t = b->vertices[3]*scale_final;
 
         // find the center point of quadrangle 
         float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;

@@ -11,6 +11,7 @@ namespace octet {
     GLuint num_lights_index;        // how many lights?
     GLuint samplers_index;          // index for texture samplers
 	GLuint bulding_height_index;		// index for building height 
+	GLuint building_area_index;			// index for building area
 
     void init_uniforms(const char *vertex_shader, const char *fragment_shader) {
       // use the common shader code to compile and link the shaders
@@ -18,13 +19,14 @@ namespace octet {
       shader::init(vertex_shader, fragment_shader);
 
       // extract the indices of the uniforms to use later
-      modelToProjection_index = glGetUniformLocation(program(), "modelToProjection");
-      cameraToProjection_index = glGetUniformLocation(program(), "cameraToProjection");
-      modelToCamera_index = glGetUniformLocation(program(), "modelToCamera");
-      light_uniforms_index = glGetUniformLocation(program(), "light_uniforms");
-      num_lights_index = glGetUniformLocation(program(), "num_lights");
-      samplers_index = glGetUniformLocation(program(), "samplers");
-	  bulding_height_index = glGetUniformLocation(program(), "b_height"); 
+      modelToProjection_index	= glGetUniformLocation(program(), "modelToProjection");
+      cameraToProjection_index	= glGetUniformLocation(program(), "cameraToProjection");
+      modelToCamera_index		= glGetUniformLocation(program(), "modelToCamera");
+      light_uniforms_index		= glGetUniformLocation(program(), "light_uniforms");
+      num_lights_index			= glGetUniformLocation(program(), "num_lights");
+      samplers_index			= glGetUniformLocation(program(), "samplers");
+	  bulding_height_index		= glGetUniformLocation(program(), "b_height"); 
+	  building_area_index		= glGetUniformLocation(program(), "b_area"); 
     }
 
   public:
@@ -109,9 +111,12 @@ namespace octet {
         varying vec3 bitangent_;
 
         uniform vec4 light_uniforms[1+max_lights*4];
-        uniform int num_lights;
-        uniform sampler2D samplers[9];
+		uniform int num_lights;
+
+		uniform sampler2D samplers[9];
+        
 		uniform float b_height; 
+		uniform float b_area;
 
 		/*
 		vec4 texture_selector(float h) {
@@ -155,26 +160,31 @@ namespace octet {
 
 		  vec4 ambient;
 		  vec4 diffuse; 
+
+		  vec4 color; 
 		 
 		  if (nnormal.y > 0.2) {
 				  ambient = vec4(0.2, 0.2, 0.2, 1.0);
 				  diffuse = vec4(0.2, 0.2, 0.2, 1.0);
 		  } else {
 
-			 vec4 color; 
-			 if (b_height > 4) {
-				 color = texture2D(samplers[8], uv_);
-					 //color = vec4(1.0, 0.2, 0.2, 1.0);
-					
-			 } else if (b_height > 3) {
-				color = texture2D(samplers[8], uv_);
-					// color = vec4(0.2, 1.0, 0.2, 1.0);
-			 } else if (b_height > 1) {
-				 color = texture2D(samplers[8], uv_);
-					// color = vec4(0.2, 0.2, 1.0, 1.0);
+			 if (b_area < 0.4) {
+				 color = vec4(1.0, 0.2, 0.2, 1.0); 
 			 } else {
-				color = texture2D(samplers[8], uv_);
-				 // color = vec4(1.0, 1.0, 0.2, 1.0); 					
+				 if (b_height > 4) {
+					 color = texture2D(samplers[8], uv_);
+						 //color = vec4(1.0, 0.2, 0.2, 1.0);
+					
+				 } else if (b_height > 3) {
+					color = texture2D(samplers[8], uv_);
+						// color = vec4(0.2, 1.0, 0.2, 1.0);
+				 } else if (b_height > 1) {
+					 color = texture2D(samplers[8], uv_);
+						// color = vec4(0.2, 0.2, 1.0, 1.0);
+				 } else {
+					color = texture2D(samplers[8], uv_);
+					 // color = vec4(1.0, 1.0, 0.2, 1.0); 					
+				 }
 			 }
 
 
@@ -209,7 +219,7 @@ namespace octet {
       init_uniforms(is_skinned ? skinned_vertex_shader : vertex_shader, fragment_shader);
     }
 
-    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float bulding_height) {
+    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float bulding_height, float building_area) {
       // tell openGL to use the program
       shader::render();
 
@@ -221,6 +231,7 @@ namespace octet {
       glUniform1i(num_lights_index, num_lights);
 	  
 	  glUniform1f(bulding_height_index, bulding_height); 
+	  glUniform1f(building_area_index, building_area); 
 
       // we use textures 0-3 for material properties.
       static const GLint samplers[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
