@@ -387,10 +387,10 @@ namespace octet {
 
 	add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
 	add_face(mv0, mv1, mv2, mv3, vec4(0,  1, 0, 0));
-	add_face(nv0, nv1, mv1, mv0, norm_n0n1);
-	add_face(nv1, nv2, mv2, mv1, norm_n1n2); // r 
-	add_face(nv2, nv3, mv3, mv2, norm_n2n3); // b
-	add_face(nv3, nv0, mv0, mv3, norm_n3n0); // l
+	add_face(nv0, nv1, mv1, mv0, vec4(norm_n0n1.x(), 0.0f, norm_n0n1.z(), 0));
+	add_face(nv1, nv2, mv2, mv1, vec4(norm_n1n2.x(), 0.0f, norm_n1n2.z(), 0)); // r 
+	add_face(nv2, nv3, mv3, mv2, vec4(norm_n2n3.x(), 0.0f, norm_n2n3.z(), 0)); // b
+	add_face(nv3, nv0, mv0, mv3, vec4(norm_n3n0.x(), 0.0f, norm_n3n0.z(), 0)); // l
 	
    
   }

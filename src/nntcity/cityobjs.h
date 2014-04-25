@@ -1161,8 +1161,8 @@ namespace octet {
 		scale_final =scale_x = scale_z = 1.0f;
 
 		if (scale) {
-			scale_x = (STREET_WIDTH + PAVEMENT_WIDTH) / vec4(v1-v0).length(); 
-			scale_z = (STREET_WIDTH + PAVEMENT_WIDTH) / vec4(v2-v1).length();
+			scale_x = (STREET_WIDTH/2 + PAVEMENT_WIDTH) / vec4(v1-v0).length(); 
+			scale_z = (STREET_WIDTH/2 + PAVEMENT_WIDTH) / vec4(v2-v1).length();
 
 			if (scale_x > scale_z) {
 				scale_final = 1-sqrt(scale_x*scale_x);

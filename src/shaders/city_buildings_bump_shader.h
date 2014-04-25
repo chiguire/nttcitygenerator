@@ -41,6 +41,7 @@ namespace octet {
         varying vec3 normal_;
         varying vec3 tangent_;
         varying vec3 bitangent_;
+		varying vec3 normal_t_;
       
         attribute vec4 pos;
         attribute vec3 normal;
@@ -54,6 +55,7 @@ namespace octet {
         void main() {
           uv_ = uv;
           normal_ = (modelToCamera * vec4(normal,0)).xyz;
+		  normal_t_ = normal;
           tangent_ = (modelToCamera * vec4(tangent,0)).xyz;
           bitangent_ = (modelToCamera * vec4(bitangent,0)).xyz;
           gl_Position = modelToProjection * pos;
@@ -107,6 +109,7 @@ namespace octet {
         const int max_lights = 4;
         varying vec2 uv_;
         varying vec3 normal_;
+		varying vec3 normal_t_;
         varying vec3 tangent_;
         varying vec3 bitangent_;
 
@@ -163,23 +166,24 @@ namespace octet {
 
 		  vec4 color; 
 		 
-		  if (nnormal.y > 0.2) {
-				  ambient = vec4(0.2, 0.2, 0.2, 1.0);
-				  diffuse = vec4(0.2, 0.2, 0.2, 1.0);
+		  if ( normal_t_.y == 1.0 /*1-nnormal.y < 0.9*/ ) {
+				  // ambient = diffuse = texture2D(samplers[0], uv_);
+				  ambient = diffuse = vec4(0.2, 0.2, 0.2, 1.0);
 		  } else {
 
 			 if (b_area < 0.4) {
-				 color = vec4(1.0, 0.2, 0.2, 1.0); 
+				 color = texture2D(samplers[8], uv_);
+				 // color = vec4(1.0, 0.2, 0.2, 1.0); 
 			 } else {
-				 if (b_height > 4) {
+				 if (b_height > 4.0) {
 					 color = texture2D(samplers[8], uv_);
 						 //color = vec4(1.0, 0.2, 0.2, 1.0);
 					
-				 } else if (b_height > 3) {
-					color = texture2D(samplers[8], uv_);
+				 } else if (b_height > 3.0) {
+					color = texture2D(samplers[7], uv_);
 						// color = vec4(0.2, 1.0, 0.2, 1.0);
-				 } else if (b_height > 1) {
-					 color = texture2D(samplers[8], uv_);
+				 } else if (b_height > 1.0) {
+					 color = texture2D(samplers[6], uv_);
 						// color = vec4(0.2, 0.2, 1.0, 1.0);
 				 } else {
 					color = texture2D(samplers[8], uv_);
