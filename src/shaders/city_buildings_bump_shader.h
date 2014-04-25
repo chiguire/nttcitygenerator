@@ -127,7 +127,7 @@ namespace octet {
 		
 		vec4 texture_selector() {
 			vec4 color; 
-		  if (switcher == 0x800) {
+		  if (switcher == 0) {
 			  if ( normal_t_.y == 1.0 /*1-nnormal.y < 0.9*/ ) {
 					  color = vec4(0.2, 0.2, 0.2, 1.0);
 			  } else {

@@ -18,7 +18,6 @@ namespace octet {
     DRAW_TERRAIN_WIREFRAME = 0x100,
     DRAW_ROADS_WIREFRAME = 0x200,
     DRAW_BUILDINGS_WIREFRAME = 0x400,
-	DRAW_TEXTURES = 0x800
   };
 
   class engine : public app {
@@ -58,6 +57,7 @@ namespace octet {
     text_overlay textOverlay;
 
     int drawFlags;
+	int draw_texture_mode; 
 
   public:
     // this is called when we construct the class
@@ -67,7 +67,7 @@ namespace octet {
     , cameraControls()
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
-    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS | DRAW_TEXTURES
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS
      /* | DRAW_TERRAIN_NORMALS | DRAW_ROADS_NORMALS | DRAW_TERRAIN_WIREFRAME | DRAW_ROADS_WIREFRAME | DRAW_BUILDINGS_WIREFRAME*/ )
     {
     }
@@ -83,6 +83,8 @@ namespace octet {
       sb_shader.init();
 
       compassCard.init(&cshader);
+
+	  draw_texture_mode = 0; 
 
       // Light Set Up
       memset(light_uniforms_array, 0, sizeof(light_uniforms_array));
@@ -349,10 +351,10 @@ namespace octet {
 
 
 		if (is_key_down('T') && !justPressed) {
-          if (drawFlags & DRAW_COMPASS) {
-            drawFlags = drawFlags & ~DRAW_TEXTURES;
+          if (draw_texture_mode == 0) {
+			draw_texture_mode = 1;
           } else {
-            drawFlags = drawFlags | DRAW_TEXTURES;
+            draw_texture_mode = 0; 
           }
           justPressed = true;
         } else if (!is_key_down('T') && !justPressed) {
@@ -409,7 +411,7 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
+      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags, draw_texture_mode);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 

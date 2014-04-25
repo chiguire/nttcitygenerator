@@ -458,7 +458,7 @@ namespace octet {
     }
 
     void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
-        dynarray<BuildingArea> *buildingAreaList, int drawFlags) {
+        dynarray<BuildingArea> *buildingAreaList, int drawFlags, int draw_texture_mode) {
 
       if (drawFlags & 0x1) {
         grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -479,7 +479,7 @@ namespace octet {
       if (drawFlags & 0x8) {
        
       for (int i = 0; i != buildingAreaList->size(); ++i) {
-		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, drawFlags);
+		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode);
         (*buildingAreaList)[i].areaMesh.render();
         }
       }
