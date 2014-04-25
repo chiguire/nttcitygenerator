@@ -29,6 +29,11 @@ namespace octet {
       texture = resources::get_texture_handle(GL_RGBA, texturePath);
     }
 
+    ~model(){
+      for(int i = 0; i < meshes.size(); ++i)
+        delete meshes[i];
+    }
+
     void render(){
       for(int i=0;i!=meshes.size();++i){
         meshes[i]->render();
