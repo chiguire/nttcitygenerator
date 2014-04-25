@@ -61,8 +61,8 @@ namespace octet {
           "assets/citytex/heightmap6.gif",
           "assets/citytex/building_h.gif",
 		  "assets/citytex/buildings/building_residential_low.gif",
+		  "assets/citytex/buildings/building_office_glass.gif",
 		  "assets/citytex/buildings/building_office_highglass.gif",
-		  "assets/citytex/buildings/building_residential_luxury.gif",
           "assets/citytex/grass/06_DIFFUSE.jpg",
           "assets/citytex/grass/06_DISP.jpg",
           "assets/citytex/grass/06_NORMAL.jpg",
@@ -392,7 +392,7 @@ namespace octet {
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
-        float random_height = std::rand()%5 + 1;
+        float random_height = std::rand()%4 + 2;
 
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
 		(*buildingAreaList)[i].height = random_height; 
@@ -479,7 +479,7 @@ namespace octet {
       if (drawFlags & 0x8) {
        
       for (int i = 0; i != buildingAreaList->size(); ++i) {
-		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area);
+		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, drawFlags);
         (*buildingAreaList)[i].areaMesh.render();
         }
       }

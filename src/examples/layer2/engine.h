@@ -17,7 +17,8 @@ namespace octet {
     DRAW_ROADS_NORMALS = 0x80,
     DRAW_TERRAIN_WIREFRAME = 0x100,
     DRAW_ROADS_WIREFRAME = 0x200,
-    DRAW_BUILDINGS_WIREFRAME = 0x400
+    DRAW_BUILDINGS_WIREFRAME = 0x400,
+	DRAW_TEXTURES = 0x800
   };
 
   class engine : public app {
@@ -66,7 +67,7 @@ namespace octet {
     , cameraControls()
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
-    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS
+    , drawFlags(DRAW_TERRAIN | DRAW_WATER | DRAW_ROADS | DRAW_BUILDINGS | DRAW_HELP | DRAW_COMPASS | DRAW_TEXTURES
      /* | DRAW_TERRAIN_NORMALS | DRAW_ROADS_NORMALS | DRAW_TERRAIN_WIREFRAME | DRAW_ROADS_WIREFRAME | DRAW_BUILDINGS_WIREFRAME*/ )
     {
     }
@@ -343,6 +344,18 @@ namespace octet {
           }
           justPressed = true;
         } else if (!is_key_down('N') && !justPressed) {
+          justPressed = false;
+        }
+
+
+		if (is_key_down('T') && !justPressed) {
+          if (drawFlags & DRAW_COMPASS) {
+            drawFlags = drawFlags & ~DRAW_TEXTURES;
+          } else {
+            drawFlags = drawFlags | DRAW_TEXTURES;
+          }
+          justPressed = true;
+        } else if (!is_key_down('T') && !justPressed) {
           justPressed = false;
         }
       }
