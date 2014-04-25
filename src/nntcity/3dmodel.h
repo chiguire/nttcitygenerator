@@ -13,13 +13,10 @@ namespace octet {
     resources dict;
 
   public:
-    model(std::string name){      
-      
-      std::string s("assets/citytex/models/");
-      s.append(name);
-      s.append(".dae");
+    model(char* modelPath, char* texturePath){      
+     
 
-      builder.load_xml(s.c_str());
+      builder.load_xml(modelPath);
 
       std::vector<std::string> geometries = builder.get_geometries();
 
@@ -28,6 +25,8 @@ namespace octet {
         meshes.push_back(mesh1);
         builder.get_mesh(*(meshes[i]), geometries[i].c_str(), dict);
       }
+
+      texture = resources::get_texture_handle(GL_RGBA, texturePath);
     }
 
     void render(){
