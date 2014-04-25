@@ -3,6 +3,8 @@ namespace octet {
   class model{
     mat4t modelToWorld;
 
+    GLuint texture;
+
     std::vector<mesh*> meshes;  
 
     collada_builder builder;
