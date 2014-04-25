@@ -72,6 +72,7 @@
     <ClInclude Include="..\..\src\math\vec2.h" />
     <ClInclude Include="..\..\src\math\vec3.h" />
     <ClInclude Include="..\..\src\math\vec4.h" />
+    <ClInclude Include="..\..\src\nntcity\3dmodel.h" />
     <ClInclude Include="..\..\src\nntcity\citycamera.h" />
     <ClInclude Include="..\..\src\nntcity\citymesh.h" />
     <ClInclude Include="..\..\src\nntcity\cityobjs.h" />
@@ -133,6 +134,13 @@
   <ItemGroup>
     <None Include="..\..\src\resources\mesh_builder.inl" />
     <None Include="..\..\src\resources\resources.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BE3BA980-6FCB-4097-8714-32DEC6D03BF4}</ProjectGuid>
@@ -210,6 +218,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -226,6 +235,7 @@
       <PreprocessorDefinitions>OCTET_OBB;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -242,6 +252,7 @@
       <PreprocessorDefinitions>__GENERIC__;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

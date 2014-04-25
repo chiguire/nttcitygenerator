@@ -15,7 +15,7 @@ namespace octet {
 
     material *roadMaterialLeft;
     material *roadMaterialRight;
-    material *pavementMaterial;
+    material *pavementMaterial;  
     material *grassMaterial;
     material *waterMaterial;
     material *buldingMaterial;

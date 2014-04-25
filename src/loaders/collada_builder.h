@@ -17,6 +17,11 @@
 // there are very few direct exporters as yet.
 
 // mesh builder class for standard meshes.
+
+#include<vector>
+#include<string>
+
+
 namespace octet {
   class collada_builder {
   public:
@@ -26,6 +31,8 @@ namespace octet {
     string doc_path;
     dictionary<TiXmlElement *, allocator> ids;
     dynarray<float> temp_floats;
+
+    std::vector<std::string> geometries;
 
     // find all the ids in an xml file
     void find_ids(TiXmlElement *parent) {
@@ -38,6 +45,19 @@ namespace octet {
         find_ids(elem);
       }
     }
+
+    void find_geometries(TiXmlElement *parent){
+      for (TiXmlElement *elem = parent->FirstChildElement(); elem; elem = elem->NextSiblingElement()) {
+        const char *name = elem->Value();
+
+        if (strcmp(name,"geometry") == 0) {
+          const char *attrib = elem->Attribute("id");
+          geometries.push_back(attrib);
+        }
+        find_geometries(elem);
+      }
+    }
+
 
     TiXmlElement *find_id(const char *source) {
       if (source) {
@@ -1231,8 +1251,14 @@ namespace octet {
         return false;
       }
       find_ids(top);
+      find_geometries(top);
       return true;
     }
+
+    std::vector<std::string> get_geometries(){
+      return this->geometries;
+    }
+
 
     // once loaded, use this to access the first component in the mesh
     void get_mesh(mesh &s, const char *id, resources &dict) {
