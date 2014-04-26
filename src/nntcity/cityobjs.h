@@ -1028,7 +1028,7 @@ namespace octet {
 				for (int i=0; i != streetsList.size(); ++i) {
 					
 					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[5] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
-					printf(" resoult %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+					// printf(" resoult %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
 					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
 						node.vertices[2] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
 						

@@ -133,17 +133,20 @@ namespace octet {
 			  } else {
 
 				 if (b_area < 0.4) {
-					 color = texture2D(samplers[8], vec2(uv_.x, uv_.y*3));
+					 color = texture2D(samplers[8], vec2(uv_.x, uv_.y*3.0));
 					 // color = vec4(0.2, 0.2, 0.8, 1.0); 
-				 } else {
-					 if (b_height > 4.0) {
+				 } else if (b_area > 50.0) {
+					  color = texture2D(samplers[6], vec2(uv_.x*3.0, uv_.y*5.0));
+
+				 } else  {
+					 if (b_height > 4.5) {
 						 color = texture2D(samplers[8], uv_);
 							 //color = vec4(1.0, 0.2, 0.2, 1.0);
 					 } else if (b_height > 3.0) {
 						color = texture2D(samplers[7], uv_);
 							// color = vec4(0.2, 1.0, 0.2, 1.0);
 					 } else if (b_height > 1.0) {
-						 color = texture2D(samplers[6], uv_);
+						 color = texture2D(samplers[6], uv_*2.0);
 							// color = vec4(0.2, 0.2, 1.0, 1.0);
 					 } else {
 						// color = texture2D(samplers[0], uv_);

@@ -397,6 +397,8 @@ namespace octet {
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
 		(*buildingAreaList)[i].height = random_height; 
 		(*buildingAreaList)[i].calculate_area();
+
+		printf(" area %f \n", (*buildingAreaList)[i].area); 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
