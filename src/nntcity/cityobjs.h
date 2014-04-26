@@ -168,6 +168,7 @@ namespace octet {
     vec4 points[4];
     mesh areaMesh;
 	mesh roofMesh; 
+	mesh basementMesh;
     float height; 
 	float area; 
 

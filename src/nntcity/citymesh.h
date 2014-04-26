@@ -94,6 +94,9 @@ namespace octet {
     static const float OFFSET_Y;
     static const float ROAD_RAISE;
     static const float PAVEMENT_RAISE;
+	static const float BUILDING_ROOF_HEIGHT;
+	static const float BUILDING_BASEMENT_HEIGHT;
+
 
     CityMesh() {
 
@@ -394,19 +397,27 @@ namespace octet {
         
         float random_height = std::rand()%4 + 2;
 
-        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
+		// central mesh of the building
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height, BUILDING_BASEMENT_HEIGHT); 
 		(*buildingAreaList)[i].height = random_height; 
 		(*buildingAreaList)[i].calculate_area();
-
-		// printf(" area %f \n", (*buildingAreaList)[i].area); 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
         m->set_mode(GL_TRIANGLES);
         (*buildingAreaList)[i].areaMesh = (*m);
 
+		// basement mesh of the building
 		mb.init(0,0); 
-		mb.add_roof((*buildingAreaList)[i].points, random_height);
+		mb.add_basement((*buildingAreaList)[i].points, BUILDING_BASEMENT_HEIGHT);
+		m->init();
+		mb.get_mesh(*m);
+		m->set_mode(GL_TRIANGLES);
+		(*buildingAreaList)[i].basementMesh = (*m);
+
+		// roof mesh of the building
+		mb.init(0,0); 
+		mb.add_roof((*buildingAreaList)[i].points, random_height+BUILDING_BASEMENT_HEIGHT);
 		m->init();
 		mb.get_mesh(*m);
 		m->set_mode(GL_TRIANGLES);
@@ -492,6 +503,8 @@ namespace octet {
 			(*buildingAreaList)[i].areaMesh.render();
 		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 1);
 			(*buildingAreaList)[i].roofMesh.render();
+		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 2);
+			(*buildingAreaList)[i].basementMesh.render();
         }
       }
 
@@ -669,4 +682,7 @@ namespace octet {
   const float CityMesh::OFFSET_Y = 0.25f;
   const float CityMesh::ROAD_RAISE = City::ROAD_HEIGHT;
   const float CityMesh::PAVEMENT_RAISE = City::PAVEMENT_HEIGHT;
+  const float CityMesh::BUILDING_ROOF_HEIGHT = 0.05f;
+  const float CityMesh::BUILDING_BASEMENT_HEIGHT = 0.5f;
+
 }
