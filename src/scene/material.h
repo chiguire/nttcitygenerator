@@ -46,7 +46,7 @@ namespace octet {
 	  building_a->render(6, GL_TEXTURE_2D);
 	  building_b->render(7, GL_TEXTURE_2D);
 	  building_c->render(8, GL_TEXTURE_2D);
-	  glActiveTexture(GL_TEXTURE0); 
+	 //  glActiveTexture(GL_TEXTURE0); 
 	  
 	}
 

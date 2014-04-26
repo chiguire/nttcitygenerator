@@ -128,9 +128,9 @@ namespace octet {
 		vec4 texture_selector() {
 			vec4 color; 
 		  if (switcher == 0) {
-			  if ( normal_t_.y == 1.0 /*1-nnormal.y < 0.9*/ ) {
-				  color = texture2D(samplers[0], uv_);
-				  //color = vec4(0.2, 0.2, 0.2, 1.0);
+			  if ( 1-normal_.y < 0.9 ) {
+				  //color = texture2D(samplers[0], uv_);
+				  color = vec4(0.2, 0.2, 0.2, 1.0);
 			  } else {
 
 				 if (b_area < 0.4) {
@@ -161,7 +161,7 @@ namespace octet {
 				 }
 			  }
 		  } else {
-			  if ( normal_t_.y == 1.0 /*1-nnormal.y < 0.9*/ ) {
+			  if ( 1-normal_.y < 0.9) {
 					  color = vec4(0.2, 0.2, 0.2, 1.0);
 			  } else {
 
