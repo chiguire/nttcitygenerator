@@ -417,7 +417,7 @@ namespace octet {
 
 		// roof mesh of the building
 		mb.init(0,0); 
-		mb.add_roof((*buildingAreaList)[i].points, random_height+BUILDING_BASEMENT_HEIGHT);
+		mb.add_roof((*buildingAreaList)[i].points, BUILDING_BASEMENT_HEIGHT + random_height);
 		m->init();
 		mb.get_mesh(*m);
 		m->set_mode(GL_TRIANGLES);
@@ -683,6 +683,6 @@ namespace octet {
   const float CityMesh::ROAD_RAISE = City::ROAD_HEIGHT;
   const float CityMesh::PAVEMENT_RAISE = City::PAVEMENT_HEIGHT;
   const float CityMesh::BUILDING_ROOF_HEIGHT = 0.05f;
-  const float CityMesh::BUILDING_BASEMENT_HEIGHT = 0.5f;
+  const float CityMesh::BUILDING_BASEMENT_HEIGHT = 1.0f;
 
 }
