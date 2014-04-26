@@ -146,8 +146,8 @@ namespace octet {
 						 color = texture2D(samplers[6], uv_);
 							// color = vec4(0.2, 0.2, 1.0, 1.0);
 					 } else {
-						color = texture2D(samplers[0], uv_);
-						 // color = vec4(1.0, 1.0, 0.2, 1.0); 					
+						// color = texture2D(samplers[0], uv_);
+						color = vec4(0.2, 0.2, 0.2, 1.0); 					
 					 }
 				 }
 			  }
@@ -204,14 +204,8 @@ namespace octet {
 
 		  vec4 ambient;
 		  vec4 diffuse; 
-
 		  
-			  ambient = diffuse = texture_selector(); 
-			  // ambient = diffuse = texture2D(samplers[0], uv_)
-			  // ambient = diffuse = texture_selector(b_height); 
-			  // diffuse = texture_selector(b_height); 
-
-		 
+		  ambient = diffuse = texture_selector(); 
           
           vec4 emission = texture2D(samplers[2], uv_);
           vec4 specular = texture2D(samplers[3], uv_);
