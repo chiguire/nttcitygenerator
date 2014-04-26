@@ -59,7 +59,7 @@ namespace octet {
           "assets/citytex/road_left.gif",
           "assets/citytex/road_right.gif",
           "assets/citytex/heightmap6.gif",
-          "assets/citytex/building_h.gif",
+          "assets/citytex/grass/detail.gif",
 		  "assets/citytex/buildings/building_residential_low.gif",
 		  "assets/citytex/buildings/building_office_glass.gif",
 		  "assets/citytex/buildings/building_office_highglass.gif",
@@ -398,7 +398,7 @@ namespace octet {
 		(*buildingAreaList)[i].height = random_height; 
 		(*buildingAreaList)[i].calculate_area();
 
-		printf(" area %f \n", (*buildingAreaList)[i].area); 
+		// printf(" area %f \n", (*buildingAreaList)[i].area); 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
