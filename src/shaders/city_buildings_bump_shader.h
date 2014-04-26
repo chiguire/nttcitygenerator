@@ -13,6 +13,7 @@ namespace octet {
 	GLuint bulding_height_index;		// index for building height 
 	GLuint building_area_index;			// index for building area
 	GLuint texture_switcher_index; 
+	GLuint is_roof_index;
 
     void init_uniforms(const char *vertex_shader, const char *fragment_shader) {
       // use the common shader code to compile and link the shaders
@@ -29,6 +30,7 @@ namespace octet {
 	  bulding_height_index		= glGetUniformLocation(program(), "b_height"); 
 	  building_area_index		= glGetUniformLocation(program(), "b_area"); 
 	  texture_switcher_index	= glGetUniformLocation(program(), "switcher"); 
+	  is_roof_index				= glGetUniformLocation(program(), "is_roof"); 
     }
 
   public:
@@ -123,12 +125,13 @@ namespace octet {
 		uniform float b_height; 
 		uniform float b_area;
 		uniform int switcher;
+		uniform int is_roof;
 
 		
 		vec4 texture_selector() {
 			vec4 color; 
 		  if (switcher == 0) {
-			  if ( 1-normal_.y < 0.9 ) {
+			  if ( is_roof == 1 ) {
 				  //color = texture2D(samplers[0], uv_);
 				  color = vec4(0.2, 0.2, 0.2, 1.0);
 			  } else {
@@ -161,7 +164,7 @@ namespace octet {
 				 }
 			  }
 		  } else {
-			  if ( 1-normal_.y < 0.9) {
+			  if (is_roof == 1) {
 					  color = vec4(0.2, 0.2, 0.2, 1.0);
 			  } else {
 
@@ -238,7 +241,7 @@ namespace octet {
       init_uniforms(is_skinned ? skinned_vertex_shader : vertex_shader, fragment_shader);
     }
 
-    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float bulding_height, float building_area, int texture_switcher) {
+    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float bulding_height, float building_area, int texture_switcher, int is_roof) {
       // tell openGL to use the program
       shader::render();
 
@@ -252,6 +255,7 @@ namespace octet {
 	  glUniform1f(bulding_height_index, bulding_height); 
 	  glUniform1f(building_area_index, building_area); 
 	  glUniform1i(texture_switcher_index, texture_switcher); 
+	  glUniform1i(is_roof_index, is_roof); 
 
       // we use textures 0-3 for material properties.
       static const GLint samplers[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };

@@ -167,6 +167,7 @@ namespace octet {
   public:
     vec4 points[4];
     mesh areaMesh;
+	mesh roofMesh; 
     float height; 
 	float area; 
 

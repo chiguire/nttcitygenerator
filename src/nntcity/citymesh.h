@@ -404,6 +404,13 @@ namespace octet {
         mb.get_mesh(*m);
         m->set_mode(GL_TRIANGLES);
         (*buildingAreaList)[i].areaMesh = (*m);
+
+		mb.init(0,0); 
+		mb.add_roof((*buildingAreaList)[i].points, random_height);
+		m->init();
+		mb.get_mesh(*m);
+		m->set_mode(GL_TRIANGLES);
+		(*buildingAreaList)[i].roofMesh = (*m);
       }
 
       pavementMaterial = new material((*getImageArray())[TEXTUREASSET_PAVEMENT]);
@@ -481,8 +488,10 @@ namespace octet {
       if (drawFlags & 0x8) {
        
       for (int i = 0; i != buildingAreaList->size(); ++i) {
-		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode);
-        (*buildingAreaList)[i].areaMesh.render();
+		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 0);
+			(*buildingAreaList)[i].areaMesh.render();
+		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 1);
+			(*buildingAreaList)[i].roofMesh.render();
         }
       }
 
