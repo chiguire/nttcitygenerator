@@ -15,7 +15,7 @@ namespace octet {
 
     material *roadMaterialLeft;
     material *roadMaterialRight;
-    material *pavementMaterial;
+    material *pavementMaterial;  
     material *grassMaterial;
     material *waterMaterial;
     material *buldingMaterial;
@@ -39,6 +39,9 @@ namespace octet {
       TEXTUREASSET_ROADRIGHT,
       TEXTUREASSET_HEIGHTMAP,
       TEXTUREASSET_BUILDING,
+	  TEXTUREASSET_BUILDING_RES_1,
+	  TEXTUREASSET_BUILDING_RES_2,
+	  TEXTUREASSET_BUILDING_RES_3,
       TEXTUREASSET_GRASS_DIFFUSE,
       TEXTUREASSET_GRASS_DISP,
       TEXTUREASSET_GRASS_NORMAL,
@@ -57,6 +60,9 @@ namespace octet {
           "assets/citytex/road_right.gif",
           "assets/citytex/heightmap6.gif",
           "assets/citytex/building_h.gif",
+		  "assets/citytex/buildings/building_residential_low.gif",
+		  "assets/citytex/buildings/building_office_glass.gif",
+		  "assets/citytex/buildings/building_office_highglass.gif",
           "assets/citytex/grass/06_DIFFUSE.jpg",
           "assets/citytex/grass/06_DISP.jpg",
           "assets/citytex/grass/06_NORMAL.jpg",
@@ -298,6 +304,7 @@ namespace octet {
       int gridHeight = heightmap_height-2;
 
       // Creating road meshes
+	  printf("Creating road meshes.\n");
       mbRoadLeft.init(0, 0);
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
@@ -377,35 +384,19 @@ namespace octet {
       surfaceNormalsMesh.make_normal_visualizer(surfaceMesh, 0.3f, attribute_normal);
 
     
-    /**** new bulding area creation ****/
-    
-/*
-    for (int i = 0; i < streetsList->size(); i++) {
-        Street &street = (*streetsList)[i];
-    int k = 0; 
-    for (auto j = street.streetIntersectedPoints.pavementLeft.begin(); j != street.streetIntersectedPoints.pavementLeft.end(); j++) {
-      BuildingArea bA; 
-      // bA.points = j; 
-      //buildingAreaList2.push_back(bA);  
-      
-      ++k; 
-    }
-
-    
-    }
-    */
-
-    /**** end - new building area creation ****/
+  
 
 
     // creating buildings meshes 
+	  printf("Creating buildings.\n");
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
-    float random_height = std::rand()%5 + 1;
+        float random_height = std::rand()%4 + 2;
 
         mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
-    (*buildingAreaList)[i].height = random_height; 
+		(*buildingAreaList)[i].height = random_height; 
+		(*buildingAreaList)[i].calculate_area();
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
@@ -417,9 +408,10 @@ namespace octet {
       roadMaterialLeft = new material((*getImageArray())[TEXTUREASSET_ROADLEFT]);
       roadMaterialRight = new material((*getImageArray())[TEXTUREASSET_ROADRIGHT]);
       grassMaterial = new material((*getImageArray())[TEXTUREASSET_GRASS_DIFFUSE], (*getImageArray())[TEXTUREASSET_GRASS_NORMAL]);
-      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING]);
+      buldingMaterial = new material((*getImageArray())[TEXTUREASSET_BUILDING], (*getImageArray())[TEXTUREASSET_BUILDING_RES_1], (*getImageArray())[TEXTUREASSET_BUILDING_RES_2], (*getImageArray())[TEXTUREASSET_BUILDING_RES_3]);
       (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
       waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
+
 
 
       skyboxMesh.make_cube(100.0f);
@@ -466,7 +458,7 @@ namespace octet {
     }
 
     void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
-        dynarray<BuildingArea> *buildingAreaList, int drawFlags) {
+        dynarray<BuildingArea> *buildingAreaList, int drawFlags, int draw_texture_mode) {
 
       if (drawFlags & 0x1) {
         grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -486,9 +478,9 @@ namespace octet {
 
       if (drawFlags & 0x8) {
        
-        for (int i = 0; i != buildingAreaList->size(); ++i) {
-      buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height);
-          (*buildingAreaList)[i].areaMesh.render();
+      for (int i = 0; i != buildingAreaList->size(); ++i) {
+		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode);
+        (*buildingAreaList)[i].areaMesh.render();
         }
       }
 

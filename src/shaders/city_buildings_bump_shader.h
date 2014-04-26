@@ -11,6 +11,8 @@ namespace octet {
     GLuint num_lights_index;        // how many lights?
     GLuint samplers_index;          // index for texture samplers
 	GLuint bulding_height_index;		// index for building height 
+	GLuint building_area_index;			// index for building area
+	GLuint texture_switcher_index; 
 
     void init_uniforms(const char *vertex_shader, const char *fragment_shader) {
       // use the common shader code to compile and link the shaders
@@ -18,13 +20,15 @@ namespace octet {
       shader::init(vertex_shader, fragment_shader);
 
       // extract the indices of the uniforms to use later
-      modelToProjection_index = glGetUniformLocation(program(), "modelToProjection");
-      cameraToProjection_index = glGetUniformLocation(program(), "cameraToProjection");
-      modelToCamera_index = glGetUniformLocation(program(), "modelToCamera");
-      light_uniforms_index = glGetUniformLocation(program(), "light_uniforms");
-      num_lights_index = glGetUniformLocation(program(), "num_lights");
-      samplers_index = glGetUniformLocation(program(), "samplers");
-	  bulding_height_index = glGetUniformLocation(program(), "b_height"); 
+      modelToProjection_index	= glGetUniformLocation(program(), "modelToProjection");
+      cameraToProjection_index	= glGetUniformLocation(program(), "cameraToProjection");
+      modelToCamera_index		= glGetUniformLocation(program(), "modelToCamera");
+      light_uniforms_index		= glGetUniformLocation(program(), "light_uniforms");
+      num_lights_index			= glGetUniformLocation(program(), "num_lights");
+      samplers_index			= glGetUniformLocation(program(), "samplers");
+	  bulding_height_index		= glGetUniformLocation(program(), "b_height"); 
+	  building_area_index		= glGetUniformLocation(program(), "b_area"); 
+	  texture_switcher_index	= glGetUniformLocation(program(), "switcher"); 
     }
 
   public:
@@ -39,6 +43,7 @@ namespace octet {
         varying vec3 normal_;
         varying vec3 tangent_;
         varying vec3 bitangent_;
+		varying vec3 normal_t_;
       
         attribute vec4 pos;
         attribute vec3 normal;
@@ -52,6 +57,7 @@ namespace octet {
         void main() {
           uv_ = uv;
           normal_ = (modelToCamera * vec4(normal,0)).xyz;
+		  normal_t_ = normal;
           tangent_ = (modelToCamera * vec4(tangent,0)).xyz;
           bitangent_ = (modelToCamera * vec4(bitangent,0)).xyz;
           gl_Position = modelToProjection * pos;
@@ -105,29 +111,75 @@ namespace octet {
         const int max_lights = 4;
         varying vec2 uv_;
         varying vec3 normal_;
+		varying vec3 normal_t_;
         varying vec3 tangent_;
         varying vec3 bitangent_;
 
         uniform vec4 light_uniforms[1+max_lights*4];
-        uniform int num_lights;
-        uniform sampler2D samplers[6];
+		uniform int num_lights;
+
+		uniform sampler2D samplers[9];
+        
 		uniform float b_height; 
+		uniform float b_area;
+		uniform int switcher;
 
-
-		vec4 texture_selector(float h) {
+		
+		vec4 texture_selector() {
 			vec4 color; 
-			 if (h > 4) {
-					color = vec4(1.0, 0.2, 0.2, 1.0);
-			 } else if (h > 3) {
-					color = vec4(0.2, 1.0, 0.2, 1.0);
-			 } else if (h > 1) {
-					color = vec4(0.2, 0.2, 1.0, 1.0);
-			 } else {
-					color = vec4(1.0, 1.0, 0.2, 1.0); 					
-			 }
+		  if (switcher == 0) {
+			  if ( normal_t_.y == 1.0 /*1-nnormal.y < 0.9*/ ) {
+					  color = vec4(0.2, 0.2, 0.2, 1.0);
+			  } else {
 
-			 return color; 
+				 if (b_area < 0.4) {
+					 color = texture2D(samplers[8], vec2(uv_.x, uv_.y*3));
+					 // color = vec4(0.2, 0.2, 0.8, 1.0); 
+				 } else {
+					 if (b_height > 4.0) {
+						 color = texture2D(samplers[8], uv_);
+							 //color = vec4(1.0, 0.2, 0.2, 1.0);
+					 } else if (b_height > 3.0) {
+						color = texture2D(samplers[7], uv_);
+							// color = vec4(0.2, 1.0, 0.2, 1.0);
+					 } else if (b_height > 1.0) {
+						 color = texture2D(samplers[6], uv_);
+							// color = vec4(0.2, 0.2, 1.0, 1.0);
+					 } else {
+						color = texture2D(samplers[0], uv_);
+						 // color = vec4(1.0, 1.0, 0.2, 1.0); 					
+					 }
+				 }
+			  }
+		  } else {
+			  if ( normal_t_.y == 1.0 /*1-nnormal.y < 0.9*/ ) {
+					  color = vec4(0.2, 0.2, 0.2, 1.0);
+			  } else {
+
+				 if (b_area < 0.4) {
+					 
+					 color = vec4(0.2, 0.2, 0.8, 1.0); 
+				 } else {
+					 if (b_height > 4.0) {
+						
+						color = vec4(1.0, 0.2, 0.2, 1.0);
+					 } else if (b_height > 3.0) {
+						
+							color = vec4(0.2, 1.0, 0.2, 1.0);
+					 } else if (b_height > 1.0) {
+						 
+							color = vec4(0.2, 0.2, 1.0, 1.0);
+					 } else {
+						
+						  color = vec4(1.0, 1.0, 0.2, 1.0); 					
+					 }
+				 }
+			  }
+		  }
+
+			  return color; 
 		}
+
       
 
         void main() {
@@ -152,15 +204,13 @@ namespace octet {
 
 		  vec4 ambient;
 		  vec4 diffuse; 
-		 
-		  if (nnormal.y > 0.2) {
-				  ambient = vec4(0.2, 0.2, 0.2, 1.0);
-				  diffuse = vec4(0.2, 0.2, 0.2, 1.0);
-		  } else {
 
-			  ambient = texture_selector(b_height); 
-			  diffuse = texture_selector(b_height); 
-		  }
+		  
+			  ambient = diffuse = texture_selector(); 
+			  // ambient = diffuse = texture2D(samplers[0], uv_)
+			  // ambient = diffuse = texture_selector(b_height); 
+			  // diffuse = texture_selector(b_height); 
+
 		 
           
           vec4 emission = texture2D(samplers[2], uv_);
@@ -174,6 +224,7 @@ namespace octet {
             emission.xyz +
             specular_light * specular.xyz
           ;
+		  
           gl_FragColor.w = diffuse.w;
 
         }
@@ -184,7 +235,7 @@ namespace octet {
       init_uniforms(is_skinned ? skinned_vertex_shader : vertex_shader, fragment_shader);
     }
 
-    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float bulding_height) {
+    void render(const mat4t &modelToProjection, const mat4t &modelToCamera, const vec4 *light_uniforms, int num_light_uniforms, int num_lights, float bulding_height, float building_area, int texture_switcher) {
       // tell openGL to use the program
       shader::render();
 
@@ -196,10 +247,12 @@ namespace octet {
       glUniform1i(num_lights_index, num_lights);
 	  
 	  glUniform1f(bulding_height_index, bulding_height); 
+	  glUniform1f(building_area_index, building_area); 
+	  glUniform1i(texture_switcher_index, texture_switcher); 
 
       // we use textures 0-3 for material properties.
-      static const GLint samplers[] = { 0, 1, 2, 3, 4, 5 };
-      glUniform1iv(samplers_index, 6, samplers);
+      static const GLint samplers[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+      glUniform1iv(samplers_index, 9, samplers);
     }
 
     void render_skinned(const mat4t &cameraToProjection, const mat4t *modelToCamera, int num_matrices, const vec4 *light_uniforms, int num_light_uniforms, int num_lights) {

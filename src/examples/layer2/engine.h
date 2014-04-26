@@ -17,7 +17,7 @@ namespace octet {
     DRAW_ROADS_NORMALS = 0x80,
     DRAW_TERRAIN_WIREFRAME = 0x100,
     DRAW_ROADS_WIREFRAME = 0x200,
-    DRAW_BUILDINGS_WIREFRAME = 0x400
+    DRAW_BUILDINGS_WIREFRAME = 0x400,
   };
 
   class engine : public app {
@@ -57,6 +57,7 @@ namespace octet {
     text_overlay textOverlay;
 
     int drawFlags;
+	int draw_texture_mode; 
 
   public:
     // this is called when we construct the class
@@ -83,6 +84,8 @@ namespace octet {
 
       compassCard.init(&cshader);
 
+	  draw_texture_mode = 0; 
+
       // Light Set Up
       memset(light_uniforms_array, 0, sizeof(light_uniforms_array));
       light_uniforms_array[0] = vec4(0.1f, 0.1f, 0.1f, 50.0f);
@@ -98,21 +101,24 @@ namespace octet {
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
       vec4 vertices[] = {
-        vec4(-5.0f, 0.0f, -8.0f, 1.0f),
-        vec4(-6.5f, 0.0f, 9.0f, 1.0f),
-        vec4(4.5f, 0.0f, 8.0f, 1.0f),
-        vec4(4.0f, 0.0f, -5.0f, 1.0f)
+        vec4(-10.0f, 0.0f, -16.0f, 1.0f),
+        vec4(-13.0f, 0.0f, 18.0f, 1.0f),
+        vec4(9.0f, 0.0f, 16.0f, 1.0f),
+        vec4(8.0f, 0.0f, -10.0f, 1.0f)
       }; 
 
       city->init(vertices);
       city->stepPartition(depth);
-      city->printStreets();
+      // city->printStreets();
 
       city->calculateIntersections();
       //city->printIntersections();
       //city->calculateIntersectionsSpace();
       city->calculateMeshesIntersections();
       //city->printMeshesPoints();
+      city->calculateBuildingsAreas(0.75);
+	  //city->calculateBuildingsAreas_fromStreet(); 
+     
 
       //
       // city_mesh declaration
@@ -120,8 +126,10 @@ namespace octet {
       //
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
+	  
+	  buildingAreaList = &city->buildingAreaList;
 
-      // city->calculateBuildingsAreas(0.75);
+      //city->calculateBuildingsAreas(0.75);
       city->calculateBuildingsAreas_fromStreet(); 
       buildingAreaList = &city->buildingAreaList;
 
@@ -344,6 +352,18 @@ namespace octet {
         } else if (!is_key_down('N') && !justPressed) {
           justPressed = false;
         }
+
+
+		if (is_key_down('T') && !justPressed) {
+          if (draw_texture_mode == 0) {
+			draw_texture_mode = 1;
+          } else {
+            draw_texture_mode = 0; 
+          }
+          justPressed = true;
+        } else if (!is_key_down('T') && !justPressed) {
+          justPressed = false;
+        }
       }
     }
     
@@ -395,7 +415,7 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags);
+      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags, draw_texture_mode);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 

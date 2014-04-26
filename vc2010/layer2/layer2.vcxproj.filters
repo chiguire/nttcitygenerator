@@ -364,6 +364,9 @@
     <ClInclude Include="..\..\src\nntcity\citycamera.h">
       <Filter>octet\nttcity</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\nntcity\3dmodel.h">
+      <Filter>octet\nttcity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\resources\mesh_builder.inl">

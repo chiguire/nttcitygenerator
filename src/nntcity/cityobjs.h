@@ -168,6 +168,7 @@ namespace octet {
     vec4 points[4];
     mesh areaMesh;
     float height; 
+	float area; 
 
     BuildingArea() {
       memset(points, 0, sizeof(vec4)*4);
@@ -180,7 +181,7 @@ namespace octet {
       points[3] = p3;
     }
 
-    //Copy constructor that may be maybe modified
+    //Copy constructor - maybe to be modified 
     BuildingArea(BuildingArea &b) {                                                       
       this->points[0] = b.points[0];
       this->points[1] = b.points[1];
@@ -194,6 +195,14 @@ namespace octet {
         all(this->points[2] == b2->points[2]) &&
         all(this->points[3] == b2->points[3]);
     }
+
+	void calculate_area() {
+		float side_a, side_b; 
+		side_a = vec4(points[1]-points[0]).length(); 
+		side_b = vec4(points[2]-points[1]).length(); 
+
+		area = side_a * side_b;
+	}
   };
 
 
@@ -455,6 +464,7 @@ namespace octet {
         StreetIntersection *streetInt = streetsIntersections[i];
         int numStreets = streetInt->streets.size();
 
+
         for(int j = 0; j != numStreets; ++j){
           Street *street1 = streetInt->streets[j];
 
@@ -591,49 +601,46 @@ namespace octet {
 
                       if (crossProductResult < 0 && !checkIntersections[getStreetsIndex(streetToModify1)+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize]) {
 
-                        streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(streetInt->point.x(),0.02f,streetInt->point.z(),streetInt->point.w()));
-                        streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
-                        streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),-0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
-                        streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(streetInt->point.x(),-0.02f,streetInt->point.z(),streetInt->point.w()));
+                        pushBackRightSide(streetToModify1, streetInt, exteriorPointRoad, interiorPointPavement, exteriorPointPavement, exteriorUVCoordRoad, exteriorUVCoordPavement);
 
-                        streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
-                        streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
-                        streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
-                        streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
 
-                        streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
-                        streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
-                        streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
-                        streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
+                        if(numStreets == 2){
 
-                        streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
-                        streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
-                        streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
-                        streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
+                          vec4 exteriorPointPavement (point[0] - exteriorPavementDistance * cos(resultingAngle),0,
+                            point[2] - exteriorPavementDistance * sin(resultingAngle),1);
+
+                          vec4 interiorPointPavement (streetToModify1->points[w][0] - interiorPavementDistance * cos(resultingAngle),0,
+                            point[2] - interiorPavementDistance * sin(resultingAngle),1);
+
+                          vec4 exteriorPointRoad (streetToModify1->points[w][0] - exteriorRoadDistance * cos(resultingAngle),0,
+                            point[2] - exteriorRoadDistance * sin(resultingAngle),1);
+
+                          pushBackLeftSide(streetToModify1, i, exteriorPointRoad, interiorPointPavement, exteriorPointPavement, interiorUVCoordRoad, interiorUVCoordPavement);
+                        }
 
                         checkIntersections[getStreetsIndex(streetToModify1)+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize] = true;
 
                       } else if(crossProductResult > 0 && !checkIntersections[getStreetsIndex(streetToModify1)+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize]){
 
-                        streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(streetsIntersections[i]->point.x(),0.02f,streetsIntersections[i]->point.z(),streetsIntersections[i]->point.w()));
-                        streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
-                        streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),-0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
-                        streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(streetsIntersections[i]->point.x(),-0.02f,streetsIntersections[i]->point.z(),streetsIntersections[i]->point.w()));
+                        pushBackLeftSide(streetToModify1, i, exteriorPointRoad, interiorPointPavement, exteriorPointPavement, interiorUVCoordRoad, interiorUVCoordPavement);
 
-                        streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
-                        streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
-                        streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
-                        streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
 
-                        streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
-                        streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
-                        streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
-                        streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
+                        //We close the corners of the 2 intersection street
+                        if(numStreets == 2){
 
-                        streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
-                        streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
-                        streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
-                        streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
+
+                          vec4 exteriorPointPavement (point[0] - exteriorPavementDistance * cos(resultingAngle),0,
+                            point[2] - exteriorPavementDistance * sin(resultingAngle),1);
+
+                          vec4 interiorPointPavement (streetToModify1->points[w][0] - interiorPavementDistance * cos(resultingAngle),0,
+                            point[2] - interiorPavementDistance * sin(resultingAngle),1);
+
+                          vec4 exteriorPointRoad (streetToModify1->points[w][0] - exteriorRoadDistance * cos(resultingAngle),0,
+                            point[2] - exteriorRoadDistance * sin(resultingAngle),1);
+
+                          pushBackRightSide(streetToModify1, streetInt, exteriorPointRoad, interiorPointPavement, exteriorPointPavement, exteriorUVCoordRoad, exteriorUVCoordPavement);
+
+                        }
 
                         checkIntersections[getStreetsIndex(streetToModify1)+getStreetsIndex(streetsToModify[(z==1) ? 0 : z+1])*streetsListSize] = true;
                       }
@@ -647,8 +654,54 @@ namespace octet {
       }
       generatePointsEmptyRoadMeshes();
       generatePointsIncompleteMeshes();
-      printMeshesPoints();
+      // printMeshesPoints();
     } 
+
+    void pushBackLeftSide( Street * streetToModify1, int i, vec4 &exteriorPointRoad, vec4 &interiorPointPavement, vec4 &exteriorPointPavement, vec2 interiorUVCoordRoad, vec2 interiorUVCoordPavement ) 
+    {
+      streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(streetsIntersections[i]->point.x(),0.02f,streetsIntersections[i]->point.z(),streetsIntersections[i]->point.w()));
+      streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
+      streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),-0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
+      streetToModify1->streetIntersectedPoints.roadLeft.push_back(vec4(streetsIntersections[i]->point.x(),-0.02f,streetsIntersections[i]->point.z(),streetsIntersections[i]->point.w()));
+
+      streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+      streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+      streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+      streetToModify1->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+
+      streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
+      streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
+      streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
+      streetToModify1->streetIntersectedUVCoords.roadLeft.push_back(interiorUVCoordRoad);
+
+      streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
+      streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
+      streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
+      streetToModify1->streetIntersectedUVCoords.pavementLeft.push_back(interiorUVCoordPavement);
+    }
+
+    void pushBackRightSide( Street * streetToModify1, StreetIntersection * streetInt, vec4 &exteriorPointRoad, vec4 &interiorPointPavement, vec4 &exteriorPointPavement, vec2 exteriorUVCoordRoad, vec2 exteriorUVCoordPavement ) 
+    {
+      streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(streetInt->point.x(),0.02f,streetInt->point.z(),streetInt->point.w()));
+      streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
+      streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),-0.02f,exteriorPointRoad.z(),exteriorPointRoad.w()));
+      streetToModify1->streetIntersectedPoints.roadRight.push_back(vec4(streetInt->point.x(),-0.02f,streetInt->point.z(),streetInt->point.w()));
+
+      streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),0.04f,interiorPointPavement.z(),interiorPointPavement.w()));
+      streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+      streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),-0.04f,exteriorPointPavement.z(),exteriorPointPavement.w()));
+      streetToModify1->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),-0.04f,interiorPointPavement.z(),interiorPointPavement.w())); 
+
+      streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
+      streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
+      streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
+      streetToModify1->streetIntersectedUVCoords.roadRight.push_back(exteriorUVCoordRoad);
+
+      streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
+      streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
+      streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
+      streetToModify1->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVCoordPavement);
+    }
 
     //generates 4 or 8 additional points for the Road Meshes that just have 4 points
     void generatePointsEmptyRoadMeshes(){
@@ -957,28 +1010,89 @@ namespace octet {
 
     void calculateBuildingsAreas_fromStreet() {
 
-      //for(int i=0; i!= streetsList.size(); ++i){
-      //for(int j=0; j!= streetsList[i].streetIntersectedPoints.roadRight.size(); ++j){
-      BSPNode node;
-      node.vertices[0] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
-      node.vertices[1] = streetsList[0].streetIntersectedPoints.pavementLeft[5];
-      node.vertices[2] = streetsList[1].streetIntersectedPoints.pavementLeft[3];
-      node.vertices[3] = streetsList[0].streetIntersectedPoints.pavementLeft[1];
-      //}
-      printf(" %i \n", streetsList[0].streetIntersectedPoints.pavementLeft.size()); 
-      stop_iteration = true;
-      calculateBuildingsAreas_(&node, 1.0f); 
-      //}
-    }
+		vec4 additional_vec1, additional_vec2, additional_vec3, additional_vec4, additional_vec5, additional_vec6;
+
+		// for(int j=0; j!= streetsList.size()-4; j+=4){
+		int j = 0; 
+			
+				BSPNode node;
+				node.vertices[0] = streetsList[j].streetIntersectedPoints.pavementLeft[1];
+				node.vertices[1] = streetsList[j].streetIntersectedPoints.pavementLeft[5];
+				
+				additional_vec1 = streetsList[j].streetIntersectedPoints.pavementLeft[1];
+				additional_vec2 = streetsList[j].streetIntersectedPoints.pavementLeft[5];
+
+
+				
+				vec4 vec;
+				for (int i=0; i != streetsList.size(); ++i) {
+					
+					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[5] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
+					printf(" resoult %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
+						node.vertices[2] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						
+						//node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						additional_vec3 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
+						additional_vec4 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						/*
+						for (int k=0; k!=streetsList.size(); ++k) {
+							vec4 resoult2 = streetsList[i].streetIntersectedPoints.pavementLeft[5] - streetsList[k].streetIntersectedPoints.pavementRight[1];
+							if (k!=i && resoult2.x() == 0 && resoult2.z() == 0) {
+								additional_vec1 = streetsList[k].streetIntersectedPoints.pavementRight[1];
+								additional_vec2 = streetsList[k].streetIntersectedPoints.pavementRight[5];
+								break;					
+							}
+						}
+						*/
+						break;
+					}
+				 }
+
+
+				for (int i=0; i != streetsList.size(); ++i) {
+					
+					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[1] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
+					printf(" resoult2 %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
+						node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						
+						additional_vec5 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+						additional_vec6 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
+						break;
+					}
+				}
+
+				//BuildingArea buildingArea0 = BuildingArea(additional_vec1, additional_vec2, additional_vec1, additional_vec2);
+				//BuildingArea buildingArea1 = BuildingArea(additional_vec3, additional_vec4, additional_vec3, additional_vec4); 
+
+				//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec6); 
+
+
+				BuildingArea buildingArea0 = BuildingArea(node.vertices[0], node.vertices[1], node.vertices[2], node.vertices[3]);
+				//BuildingArea buildingArea1 = BuildingArea(node.vertices[1], node.vertices[2], node.vertices[1], node.vertices[2]);
+				//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec2);
+
+
+			    buildingAreaList.push_back(buildingArea0);
+				//buildingAreaList.push_back(buildingArea1);
+				//buildingAreaList.push_back(buildingArea2); 
+				
+			//}
+
+				stop_iteration = true;
+				// calculateBuildingsAreas_(&node, 1.0f); 
+		//}
+	}
 
 
     void calculateBuildingsAreas(float scale) {
       stop_iteration = false;
-      calculateBuildingsAreas_(&root, scale);
+      calculateBuildingsAreas_(&root, true);
 
       stop_iteration = true;
       for (int i=0; i!=subAreaNodes.size(); ++i) {
-        calculateBuildingsAreas_(&subAreaNodes[i], 1.0);
+        calculateBuildingsAreas_(&subAreaNodes[i], false);
       }
     }
 
@@ -1039,7 +1153,7 @@ namespace octet {
 
     }
 
-    void calculateBuildingsAreas_(BSPNode *b, float scale) {
+    void calculateBuildingsAreas_(BSPNode *b, bool scale) {
 
       if (b->right ) {
         calculateBuildingsAreas_(b->right, scale);
@@ -1048,15 +1162,43 @@ namespace octet {
       if (b->left) {
         calculateBuildingsAreas_(b->left, scale);
       } else {
+
+		
         vec4 v0 = b->vertices[0];
         vec4 v1 = b->vertices[1];
         vec4 v2 = b->vertices[2];
         vec4 v3 = b->vertices[3];
 
-        vec4 v0t = b->vertices[0]*scale;
-        vec4 v1t = b->vertices[1]*scale;
-        vec4 v2t = b->vertices[2]*scale;
-        vec4 v3t = b->vertices[3]*scale;
+		float scale_x, scale_z, scale_final;
+		scale_final =scale_x = scale_z = 1.0f;
+
+		if (scale) {
+			scale_x = (STREET_WIDTH/2 + PAVEMENT_WIDTH) / vec4(v1-v0).length(); 
+			scale_z = (STREET_WIDTH/2 + PAVEMENT_WIDTH) / vec4(v2-v1).length();
+
+			if (scale_x > scale_z) {
+				scale_final = 1-sqrt(scale_x*scale_x);
+			} else {
+				scale_final = 1-sqrt(scale_z*scale_x);
+			}
+
+			scale_x = 1-sqrt(scale_x*scale_x);
+			scale_z = 1-sqrt(scale_z*scale_z); 
+ 
+		}
+
+		/*
+		vec4 v0t = vec4(v0.x()*scale_x, v0.y(), v0.z()*scale_z, 1.0f);
+		vec4 v1t = vec4(v1.x()*scale_x, v1.y(), v1.z()*scale_z, 1.0f); 
+		vec4 v2t = vec4(v2.x()*scale_x, v2.y(), v2.z()*scale_z, 1.0f);
+		vec4 v3t = vec4(v3.x()*scale_x, v3.y(), v3.z()*scale_z, 1.0f); 
+		*/
+		
+        vec4 v0t = b->vertices[0]*scale_final;
+        vec4 v1t = b->vertices[1]*scale_final;
+        vec4 v2t = b->vertices[2]*scale_final;
+        vec4 v3t = b->vertices[3]*scale_final;
+		
 
         // find the center point of quadrangle 
         float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;
@@ -1085,15 +1227,16 @@ namespace octet {
           buildingAreaList.push_back(BuildingArea(buildingArea));
 
 
-
+		  /*
           printf("-------------------- \n");
           printf("Building Big Areas points \n");
           printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
           printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
           printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
           printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
-
-
+		  
+		  */
+		  
         }
       }
 
@@ -1280,8 +1423,11 @@ outloop:;
     }
   }; 
 
-  const float City::STREET_WIDTH = 0.36f;
-  const float City::PAVEMENT_WIDTH = 0.06f;
+  //Another nice measure
+  //pavement 16 / 56
+
+  const float City::STREET_WIDTH = 0.98f;
+  const float City::PAVEMENT_WIDTH = 0.25f;
   const float City::ROAD_WIDTH = City::STREET_WIDTH - 2*City::PAVEMENT_WIDTH;
   const float City::ROAD_HEIGHT = 0.04f;
   const float City::PAVEMENT_HEIGHT = 0.042f;

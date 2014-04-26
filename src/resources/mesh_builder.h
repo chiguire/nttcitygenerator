@@ -368,13 +368,30 @@ namespace octet {
     vec4 mv2 = vec4(nv2.x(), nv2.y()+height , nv2.z(), nv2.w());
     vec4 mv3 = vec4(nv3.x(), nv3.y()+height , nv3.z(), nv3.w());
 
+	vec4 n0n1 = nv1-nv0; // nv0-nv1;
+	vec4 n1n2 = nv2-nv1;
+	vec4 n2n3 = nv3-nv2;
+	vec4 n3n0 = nv0-nv3; 
 
-    add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
-    add_face(mv0, mv1, mv2, mv3, vec4(0, 1, 0, 0));
-    add_face(nv0, nv1, mv1, mv0, vec4(1, 0, 0, 0));
-    add_face(nv1, nv2, mv2, mv1, vec4(1, 0, 0, 0));
-    add_face(nv2, nv3, mv3, mv2, vec4(1, 0, 0, 0));
-    add_face(nv3, nv0, mv0, mv3, vec4(1, 0, 0, 0));
+	vec4 n0m0 = mv0-nv0;
+	vec4 n1m1 = mv1-nv1;
+	vec4 n2m2 = mv2-nv2;
+	vec4 n3m3 = mv3-nv3;
+
+	vec4 norm_n0n1 = n0n1.cross(n0m0).normalize();
+	vec4 norm_n1n2 = n1n2.cross(n1m1).normalize(); 
+	vec4 norm_n2n3 = n2n3.cross(n2m2).normalize(); 
+	vec4 norm_n3n0 = n3n0.cross(n3m3).normalize(); 
+
+	// printf(" - norm %f, %f, %f, %f \n", norm_n0n1.x(), norm_n0n1.y(), norm_n0n1.z(), norm_n0n1.w()); 
+
+	add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
+	add_face(mv0, mv1, mv2, mv3, vec4(0,  1, 0, 0));
+	add_face(nv0, nv1, mv1, mv0, vec4(norm_n0n1.x(), 0.0f, norm_n0n1.z(), 0));
+	add_face(nv1, nv2, mv2, mv1, vec4(norm_n1n2.x(), 0.0f, norm_n1n2.z(), 0)); // r 
+	add_face(nv2, nv3, mv3, mv2, vec4(norm_n2n3.x(), 0.0f, norm_n2n3.z(), 0)); // b
+	add_face(nv3, nv0, mv0, mv3, vec4(norm_n3n0.x(), 0.0f, norm_n3n0.z(), 0)); // l
+	
    
   }
 
