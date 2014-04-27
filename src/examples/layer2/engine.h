@@ -84,7 +84,7 @@ namespace octet {
 
       compassCard.init(&cshader);
 
-	  draw_texture_mode = 0; 
+    draw_texture_mode = 0; 
 
       // Light Set Up
       memset(light_uniforms_array, 0, sizeof(light_uniforms_array));
@@ -96,7 +96,7 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 8;
+      depth = 2;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
@@ -116,8 +116,7 @@ namespace octet {
       //city->calculateIntersectionsSpace();
       city->calculateMeshesIntersections();
       //city->printMeshesPoints();
-      city->calculateBuildingsAreas(0.75);
-	  //city->calculateBuildingsAreas_fromStreet(); 
+      city->calculateBuildingsAreas();
      
 
       //
@@ -126,11 +125,7 @@ namespace octet {
       //
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
-	  
-	  buildingAreaList = &city->buildingAreaList;
-
-      //city->calculateBuildingsAreas(0.75);
-      city->calculateBuildingsAreas_fromStreet(); 
+    
       buildingAreaList = &city->buildingAreaList;
 
       vec4 dimensions;

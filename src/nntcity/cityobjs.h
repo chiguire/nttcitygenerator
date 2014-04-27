@@ -24,10 +24,6 @@ namespace octet {
     //These points are obtained from the space partition in City
     vec4 points[2];
 
-    //Which points do the street intersect with other street
-    vec4 roadLeftIntersections[2]; 
-    vec4 roadRightIntersections[2];
-
     //Which nodes are at left and right of the road, easily determining direction in BSP tree.
     BSPNode *leftNode;
     BSPNode *rightNode;
@@ -51,8 +47,6 @@ namespace octet {
 
     Street()
       : points()
-      , roadLeftIntersections()
-      , roadRightIntersections()
       , leftNode(NULL)
       , rightNode(NULL)
       , streetIntersectedPoints()
@@ -71,6 +65,8 @@ namespace octet {
     Street(Street &s) {                                                       
       this->points[0] = s.points[0];
       this->points[1] = s.points[1];
+      this->leftNode = s.leftNode;
+      this->rightNode = s.rightNode;
     } 
 
     Street(vec4 p1, vec4 p2){
@@ -80,6 +76,19 @@ namespace octet {
 
     bool equalsTo(Street *s2){
       return all(this->points[0] == s2->points[0]) && all(this->points[1] == s2->points[1]);
+    }
+
+    const dynarray<vec4> *getPavementSideFromNode(BSPNode *node) {
+      if (leftNode == node) {
+        return &streetIntersectedPoints.pavementLeft;
+      } else if (rightNode == node) {
+        return &streetIntersectedPoints.pavementRight;
+      }
+      return NULL;
+    }
+
+    bool isLeftNode(BSPNode *node) {
+      return leftNode == node;
     }
 
     void intersectGridStreet(float centerX, float centerZ,
@@ -241,15 +250,93 @@ namespace octet {
   class BSPNode {
   public:
     vec4 vertices[4];
+    BSPNode *nodesOutside[4];
+    dynarray <Street *> *streetsList;
+
+    BSPNode *parent;
     BSPNode *left;
     BSPNode *right;
 
-    BSPNode()
-      : left(NULL)
+    BSPNode(BSPNode *parent_ = NULL)
+      : vertices()
+      , nodesOutside()
+      , streetsList(NULL)
+      , parent(parent_)
+      , left(NULL)
       , right(NULL)
     {
-
+      streetsList = new dynarray<Street *>();
     }
+
+    ~BSPNode()
+    {
+      if (streetsList) {
+        delete streetsList;
+      }
+    }
+
+    void getBuildAreaBase(dynarray <vec4> &points) {
+      points.reset();
+
+      printf("Building area base for %p\n", this);
+      for (auto i = streetsList->begin(); i != streetsList->end(); i++) {
+        Street &st = **i;
+        const dynarray<vec4> &pavement = *st.getPavementSideFromNode(this);
+
+        printf(">> Street from (%g, %g, %g) to (%g, %g, %g)\n", pavement[1].x(), pavement[1].y(), pavement[1].z(), pavement[4].x(), pavement[4].y(), pavement[4].z());
+
+        addPointAsASet(points, pavement[1]);
+        addPointAsASet(points, pavement[5]);
+      }
+
+      //Remove 
+      orderPoints(points);
+    }
+  private:
+
+    void addPointAsASet(dynarray <vec4> &points, vec4 p) {
+      const float DELTA = 0.05f; //Also does not add points that are too near
+      for (int i = 0; i != points.size(); i++) {
+        if (all(points[i] == p)) return;
+        if ((points[i]-p).length() < DELTA) return;
+      }
+      printf(">> >> Adding point (%g, %g, %g)\n", p.x(), p.y(), p.z());
+      points.push_back(p);
+    }
+
+    void orderPoints(dynarray <vec4> &points) {
+      //Find center
+      vec4 center;
+
+      for (unsigned int i = 0; i != points.size(); i++) {
+        center += points[i];
+      }
+      center *= 1.0f/points.size();
+      
+      //Bubble sort points counter-clockwise
+      for (unsigned int j = 0; j != points.size()-1; j++) {
+        for (unsigned int i = 0; i != points.size()-j-1; i++) {
+          if (pointcmp(points[i], points[i+1], center)) {
+            vec4 temp = points[i];
+            points[i] = points[i+1];
+            points[i+1] = temp;
+            printf("Swapping...\n");
+          }
+        }
+      }
+    }
+
+    int pointcmp(vec4 &a, vec4 &b, vec4 &center) {
+      float det = (a.x() - center.x()) * (b.y() - center.y()) - (b.x() - center.x()) * (a.y() - center.y());
+      if (det < 0) {
+        return -10;
+      } else if (det > 0) {
+        return 10;
+      } else {
+        return 0;
+      }
+    }
+
   };
 
   class City {
@@ -275,7 +362,7 @@ namespace octet {
 
     vec4 * debugColors;
 
-    bool stop_iteration;
+    //bool stop_iteration;
 
 
     City ()
@@ -301,28 +388,31 @@ namespace octet {
       root.vertices[1] = *(vertices_+1);
       root.vertices[2] = *(vertices_+2);
       root.vertices[3] = *(vertices_+3);
+      
       root.left = NULL;
       root.right = NULL;
+      
+      root.nodesOutside[0] = NULL;
+      root.nodesOutside[1] = NULL;
+      root.nodesOutside[2] = NULL;
+      root.nodesOutside[3] = NULL;
+
       modelToWorld.loadIdentity();
 
       for(int i=0; i!=4; ++i){
-        if(i !=3){
-          Street s1(root.vertices[i],root.vertices[i+1]);
-          s1.rightNode = NULL;
-          s1.leftNode = &root;
-          streetsList.push_back(s1);
-        }else{
-          Street s1(root.vertices[i],root.vertices[0]);
-          s1.rightNode = NULL;
-          s1.leftNode = &root;
-          streetsList.push_back(s1);
-        }
+        Street s1(root.vertices[i],root.vertices[(i+1)%4]);
+        s1.leftNode = &root;
+        s1.rightNode = root.nodesOutside[i];
+        streetsList.push_back(s1);
+        root.streetsList->push_back(&streetsList[streetsList.size()-1]);
       }
 
       srand (static_cast <unsigned> (time(0)));
     }
 
     void stepPartition(unsigned int depth/* camera frustrum */) {
+      
+      printf("Root node in %p\n", &root);
 
       setDebugColors(depth);
       stepPartition_(depth, &root, false);
@@ -1008,105 +1098,87 @@ namespace octet {
       }
     }
 
-    void calculateBuildingsAreas_fromStreet() {
+ //   void calculateBuildingsAreas_fromStreet() {
 
-		vec4 additional_vec1, additional_vec2, additional_vec3, additional_vec4, additional_vec5, additional_vec6;
+	//	vec4 additional_vec1, additional_vec2, additional_vec3, additional_vec4, additional_vec5, additional_vec6;
 
-		// for(int j=0; j!= streetsList.size()-4; j+=4){
-		int j = 0; 
-			
-				BSPNode node;
-				node.vertices[0] = streetsList[j].streetIntersectedPoints.pavementLeft[1];
-				node.vertices[1] = streetsList[j].streetIntersectedPoints.pavementLeft[5];
-				
-				additional_vec1 = streetsList[j].streetIntersectedPoints.pavementLeft[1];
-				additional_vec2 = streetsList[j].streetIntersectedPoints.pavementLeft[5];
-
-
-				
-				vec4 vec;
-				for (int i=0; i != streetsList.size(); ++i) {
-					
-					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[5] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
-					// printf(" resoult %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
-					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
-						node.vertices[2] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
-						
-						//node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
-						additional_vec3 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
-						additional_vec4 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
-						/*
-						for (int k=0; k!=streetsList.size(); ++k) {
-							vec4 resoult2 = streetsList[i].streetIntersectedPoints.pavementLeft[5] - streetsList[k].streetIntersectedPoints.pavementRight[1];
-							if (k!=i && resoult2.x() == 0 && resoult2.z() == 0) {
-								additional_vec1 = streetsList[k].streetIntersectedPoints.pavementRight[1];
-								additional_vec2 = streetsList[k].streetIntersectedPoints.pavementRight[5];
-								break;					
-							}
-						}
-						*/
-						break;
-					}
-				 }
+	//	// for(int j=0; j!= streetsList.size()-4; j+=4){
+	//	int j = 0; 
+	//		
+	//			BSPNode node;
+	//			node.vertices[0] = streetsList[j].streetIntersectedPoints.pavementLeft[1];
+	//			node.vertices[1] = streetsList[j].streetIntersectedPoints.pavementLeft[5];
+	//			
+	//			additional_vec1 = streetsList[j].streetIntersectedPoints.pavementLeft[1];
+	//			additional_vec2 = streetsList[j].streetIntersectedPoints.pavementLeft[5];
 
 
-				for (int i=0; i != streetsList.size(); ++i) {
-					
-					vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[1] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
-					printf(" resoult2 %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
-					if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
-						node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
-						
-						additional_vec5 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
-						additional_vec6 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
-						break;
-					}
-				}
-
-				//BuildingArea buildingArea0 = BuildingArea(additional_vec1, additional_vec2, additional_vec1, additional_vec2);
-				//BuildingArea buildingArea1 = BuildingArea(additional_vec3, additional_vec4, additional_vec3, additional_vec4); 
-
-				//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec6); 
-
-
-				BuildingArea buildingArea0 = BuildingArea(node.vertices[0], node.vertices[1], node.vertices[2], node.vertices[3]);
-				//BuildingArea buildingArea1 = BuildingArea(node.vertices[1], node.vertices[2], node.vertices[1], node.vertices[2]);
-				//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec2);
-
-
-			    buildingAreaList.push_back(buildingArea0);
-				//buildingAreaList.push_back(buildingArea1);
-				//buildingAreaList.push_back(buildingArea2); 
-				
-			//}
-
-				stop_iteration = true;
-				// calculateBuildingsAreas_(&node, 1.0f); 
-		//}
-	}
+	//			
+	//			vec4 vec;
+	//			for (int i=0; i != streetsList.size(); ++i) {
+	//				
+	//				vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[5] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
+	//				// printf(" resoult %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+	//				if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
+	//					node.vertices[2] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+	//					
+	//					//node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+	//					additional_vec3 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
+	//					additional_vec4 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+	//					/*
+	//					for (int k=0; k!=streetsList.size(); ++k) {
+	//						vec4 resoult2 = streetsList[i].streetIntersectedPoints.pavementLeft[5] - streetsList[k].streetIntersectedPoints.pavementRight[1];
+	//						if (k!=i && resoult2.x() == 0 && resoult2.z() == 0) {
+	//							additional_vec1 = streetsList[k].streetIntersectedPoints.pavementRight[1];
+	//							additional_vec2 = streetsList[k].streetIntersectedPoints.pavementRight[5];
+	//							break;					
+	//						}
+	//					}
+	//					*/
+	//					break;
+	//				}
+	//			 }
 
 
-    void calculateBuildingsAreas(float scale) {
-      stop_iteration = false;
-      calculateBuildingsAreas_(&root, true);
+	//			for (int i=0; i != streetsList.size(); ++i) {
+	//				
+	//				vec4 resoult = streetsList[j].streetIntersectedPoints.pavementLeft[1] - streetsList[i].streetIntersectedPoints.pavementLeft[1];
+	//				printf(" resoult2 %f, %f, %f, \n", resoult.x(), resoult.y(), resoult.z()); 
+	//				if ( i!=j && resoult.x() == 0 && resoult.y() == 0 && resoult.z() == 0 ) {
+	//					node.vertices[3] = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+	//					
+	//					additional_vec5 = streetsList[i].streetIntersectedPoints.pavementLeft[5];
+	//					additional_vec6 = streetsList[i].streetIntersectedPoints.pavementLeft[1];
+	//					break;
+	//				}
+	//			}
 
-      stop_iteration = true;
-      for (int i=0; i!=subAreaNodes.size(); ++i) {
-        calculateBuildingsAreas_(&subAreaNodes[i], false);
-      }
+	//			//BuildingArea buildingArea0 = BuildingArea(additional_vec1, additional_vec2, additional_vec1, additional_vec2);
+	//			//BuildingArea buildingArea1 = BuildingArea(additional_vec3, additional_vec4, additional_vec3, additional_vec4); 
+
+	//			//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec6); 
+
+
+	//			BuildingArea buildingArea0 = BuildingArea(node.vertices[0], node.vertices[1], node.vertices[2], node.vertices[3]);
+	//			//BuildingArea buildingArea1 = BuildingArea(node.vertices[1], node.vertices[2], node.vertices[1], node.vertices[2]);
+	//			//BuildingArea buildingArea2 = BuildingArea(additional_vec5, additional_vec6, additional_vec5, additional_vec2);
+
+
+	//		    buildingAreaList.push_back(buildingArea0);
+	//			//buildingAreaList.push_back(buildingArea1);
+	//			//buildingAreaList.push_back(buildingArea2); 
+	//			
+	//		//}
+
+	//			stop_iteration = true;
+	//			// calculateBuildingsAreas_(&node, 1.0f); 
+	//	//}
+	//}
+
+
+    void calculateBuildingsAreas() {
+      calculateBuildingsAreas_(&root);
     }
-
-    void getIntersectionsFor(Street *s)
-    {
-      for (auto i = streetsIntersections.begin(); i != streetsIntersections.end(); i++) {
-        StreetIntersection *st = *i;
-
-        if (st->containsStreet(s)) {
-
-        }
-      }
-    }
-
 
   private:
 
@@ -1140,116 +1212,38 @@ namespace octet {
       debugRenderRect_(s, cameraToWorld, aspectRatio, depth-1, node->right);
     }
 
-
     //We apply the heuristic: maximum value of the sum of the opposite sides, and then we yield one of those sides
-
     int getSideToMakePartition( BSPNode * b ) {
-
       float sideLengthSum1 = abs(b->vertices[0] - b->vertices[1]).length() + abs(b->vertices[3] - b->vertices[2]).length();
-
       float sideLengthSum2 = abs(b->vertices[0] - b->vertices[3]).length() + abs(b->vertices[1] - b->vertices[2]).length();
-
       return (sideLengthSum1 > sideLengthSum2)? 0: 1;
-
     }
 
-    void calculateBuildingsAreas_(BSPNode *b, bool scale) {
-
-      if (b->right ) {
-        calculateBuildingsAreas_(b->right, scale);
-      }
-
-      if (b->left) {
-        calculateBuildingsAreas_(b->left, scale);
+    void calculateBuildingsAreas_(BSPNode *b) {
+      if (!b->right && !b->left) { //If it's a leaf
+        dynarray <vec4> points;
+        b->getBuildAreaBase(points);
+        buildingAreaList.push_back(BuildingArea(points[0], points[1], points[2], points[3]));
       } else {
-
-		
-        vec4 v0 = b->vertices[0];
-        vec4 v1 = b->vertices[1];
-        vec4 v2 = b->vertices[2];
-        vec4 v3 = b->vertices[3];
-
-		float scale_x, scale_z, scale_final;
-		scale_final =scale_x = scale_z = 1.0f;
-
-		if (scale) {
-			scale_x = (STREET_WIDTH/2 + PAVEMENT_WIDTH) / vec4(v1-v0).length(); 
-			scale_z = (STREET_WIDTH/2 + PAVEMENT_WIDTH) / vec4(v2-v1).length();
-
-			if (scale_x > scale_z) {
-				scale_final = 1-sqrt(scale_x*scale_x);
-			} else {
-				scale_final = 1-sqrt(scale_z*scale_x);
-			}
-
-			scale_x = 1-sqrt(scale_x*scale_x);
-			scale_z = 1-sqrt(scale_z*scale_z); 
- 
-		}
-
-		/*
-		vec4 v0t = vec4(v0.x()*scale_x, v0.y(), v0.z()*scale_z, 1.0f);
-		vec4 v1t = vec4(v1.x()*scale_x, v1.y(), v1.z()*scale_z, 1.0f); 
-		vec4 v2t = vec4(v2.x()*scale_x, v2.y(), v2.z()*scale_z, 1.0f);
-		vec4 v3t = vec4(v3.x()*scale_x, v3.y(), v3.z()*scale_z, 1.0f); 
-		*/
-		
-        vec4 v0t = b->vertices[0]*scale_final;
-        vec4 v1t = b->vertices[1]*scale_final;
-        vec4 v2t = b->vertices[2]*scale_final;
-        vec4 v3t = b->vertices[3]*scale_final;
-		
-
-        // find the center point of quadrangle 
-        float nX = (v0.x() + v1.x() + v2.x() + v3.x())/4;
-        float nZ = (v0.z() + v1.z() + v2.z() + v3.z())/4;
-
-        // find the center point of scaled quadrangle
-        float nXt = (v0t.x() + v1t.x() + v2t.x() + v3t.x())/4;
-        float nZt = (v0t.z() + v1t.z() + v2t.z() + v3t.z())/4;
-
-        vec4 quad_center = vec4(nX, 0.0f, nZ, 1.0f);
-        vec4 quad_center_t = vec4(nXt, 0.0f, nZt, 1.0f);
-        vec4 dist_vector = vec4(quad_center.x()-quad_center_t.x(), 0, quad_center.z()-quad_center_t.z(), 1);
-
-        BuildingArea buildingArea = BuildingArea(v0t+dist_vector, v1t+dist_vector, v2t+dist_vector, v3t+dist_vector);
-
-        BSPNode buildingNodeRoot = BSPNode();
-        buildingNodeRoot.vertices[0] = buildingArea.points[0];
-        buildingNodeRoot.vertices[1] = buildingArea.points[1];
-        buildingNodeRoot.vertices[2] = buildingArea.points[2];
-        buildingNodeRoot.vertices[3] = buildingArea.points[3];
-
-        if (!stop_iteration) {
-          stepPartition_(5, &buildingNodeRoot, true);
-          subAreaNodes.push_back(buildingNodeRoot);
-        } else {
-          buildingAreaList.push_back(BuildingArea(buildingArea));
-
-
-		  /*
-          printf("-------------------- \n");
-          printf("Building Big Areas points \n");
-          printf(" v0 - %f, %f, %f, %f \n", v0.x(), v0.y(), v0.z(), v0.w());
-          printf(" v1 - %f, %f, %f, %f \n", v1.x(), v1.y(), v1.z(), v1.w());
-          printf(" v1 - %f, %f, %f, %f \n", v2.x(), v2.y(), v2.z(), v2.w());
-          printf(" v1 - %f, %f, %f, %f \n", v3.x(), v3.y(), v3.z(), v3.w());
-		  
-		  */
-		  
+        if (b->right) {
+          calculateBuildingsAreas_(b->right);
+        }
+        if (b->left) {
+          calculateBuildingsAreas_(b->left);
         }
       }
-
     }
-
 
 
     void stepPartition_(unsigned int depth, BSPNode *b, bool noStreet) {
       if (depth == 0) return;
 
+      printf("Partition depth: %d\n", depth);
+
       if (!b->right || !b->left) { // It was a leaf node, expand it
 
         int side_index = getSideToMakePartition(b);
+        printf("Side picked: %d\n", side_index);
 
         //Opposite side
         int opposite_side_index = (side_index+2)%4;
@@ -1270,8 +1264,13 @@ namespace octet {
           opposite_side_vertex_a.z() + (opposite_side_vertex_b.z() - opposite_side_vertex_a.z())*0.5f,
           1.0f);
 
-        b->left = new BSPNode();
-        b->right = new BSPNode();
+        b->left = new BSPNode(b);
+        b->right = new BSPNode(b);
+        
+        b->left->nodesOutside[0] = b->nodesOutside[side_index];
+        b->left->nodesOutside[1] = b->right;
+        b->left->nodesOutside[2] = b->nodesOutside[(side_index+2)%4];
+        b->left->nodesOutside[3] = b->nodesOutside[(side_index+3)%4];
 
         //Put resulting vertices in the same positions as its parent
         b->left->vertices[0] = side_vertex_a;
@@ -1279,13 +1278,18 @@ namespace octet {
         b->left->vertices[2] = midpoint_opposite;
         b->left->vertices[3] = opposite_side_vertex_b;
 
+        b->right->nodesOutside[0] = b->nodesOutside[(side_index+2)%4];
+        b->right->nodesOutside[1] = b->left;
+        b->right->nodesOutside[2] = b->nodesOutside[side_index];
+        b->right->nodesOutside[3] = b->nodesOutside[(side_index+1)%4];
+
         b->right->vertices[0] = opposite_side_vertex_a;
         b->right->vertices[1] = midpoint_opposite;
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
 
-        generateStreets(b->left, b, noStreet);
-        generateStreets(b->right, b, noStreet);
+        generateStreets(b->left, noStreet);
+        generateStreets(b->right, noStreet);
 
       }
 
@@ -1307,33 +1311,54 @@ namespace octet {
 
     }
 
-    void generateStreets( BSPNode * node, BSPNode *parentNode, bool noStreet) {
+    void generateStreets( BSPNode * node, bool noStreet) {
 
       dynarray<Street> localList;
+      dynarray<unsigned int> parentIndexList;
 
       for (int i = 0; i != 4; ++i) {
  
         if (!streetAlreadyExists(node->vertices[i],node->vertices[(i==3) ? 0 : i+1])) {
-          BSPNode *right = NULL;
-          int indexToDelete = solveConflictbetweenStreets(node->vertices[i], node->vertices[(i==3) ? 0 : i+1]);
+          int indexToDelete = solveConflictbetweenStreets(node->vertices[i], node->vertices[(i+1)%4]);
 
           if (indexToDelete != -1) {
-            right = streetsList[indexToDelete].rightNode;
+            //Remove street from parent node and from CityMesh street list
+            Street *streetToDelete = &streetsList[indexToDelete];
+            dynarray <Street *> &parentList = *(node->parent->streetsList);
+            unsigned int parentListSize = parentList.size();
+            for (unsigned int j = 0; j != parentListSize; j++) {
+              if (parentList[j] == streetToDelete) {
+                parentList.erase(j);
+                break;
+              }
+            }
+
             streetsList.erase(indexToDelete);
           }
 
-          Street s1(node->vertices[i],node->vertices[(i==3) ? 0 : i+1]);
+          Street s1(node->vertices[i],node->vertices[(i+1)%4]);
           s1.leftNode = node;
-          s1.rightNode = right;
+          s1.rightNode = node->nodesOutside[i];
           localList.push_back(s1);
 
+          if (indexToDelete != 1) {
+            parentIndexList.push_back(localList.size()-1);
+          }
+          //printf("Generated street from (%g, %g, %g) to (%g, %g, %g). Left node: %p, Right node: %p\n", s1.points[0].x(), s1.points[0].y(), s1.points[0].z(), s1.points[1].x(), s1.points[1].y(), s1.points[1].z(), s1.leftNode, s1.rightNode);
         }
-
       }
 
-      if (!noStreet){
-        for(int m=0; m!=localList.size(); m++){
+      if (!noStreet) {
+        for (int m = 0; m != localList.size(); m++) {
           streetsList.push_back(localList[m]);
+          node->streetsList->push_back(&streetsList[streetsList.size()-1]);
+          
+          for (int n = 0; n != parentIndexList.size(); n++) {
+            if (m == parentIndexList[n]) {
+              node->parent->streetsList->push_back(&streetsList[streetsList.size()-1]);
+              break;
+            }
+          }
         }
       }
     }
