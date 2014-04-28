@@ -282,19 +282,18 @@ namespace octet {
     void getBuildAreaBase(dynarray <Street *> *streetsList, dynarray <vec4> &points) {
       points.reset();
 
-      printf("Building area base for %p\n", this);
       for (auto i = streetsList->begin(); i != streetsList->end(); i++) {
         Street &st = **i;
         const dynarray<vec4> &pavement = *st.getPavementSideFromNode(this);
 
-        printf(">> Street from (%g, %g, %g) to (%g, %g, %g)\n", pavement[1].x(), pavement[1].y(), pavement[1].z(), pavement[4].x(), pavement[4].y(), pavement[4].z());
-
         addPointAsASet(points, pavement[1]);
         addPointAsASet(points, pavement[5]);
       }
-
-      //Remove 
+      
+      //Because of street list point order, we have to make sure the points are counter-clockwise
       orderPoints(points);
+      //Remove points that are part of the rectangle (both lines to other vertices will be parallel)
+      removeParallelPoints(points);
     }
   private:
 
@@ -304,8 +303,25 @@ namespace octet {
         if (all(points[i] == p)) return;
         if ((points[i]-p).length() < DELTA) return;
       }
-      printf(">> >> Adding point (%g, %g, %g)\n", p.x(), p.y(), p.z());
       points.push_back(p);
+    }
+
+    void removeParallelPoints(dynarray <vec4> &points) {
+      dynarray <unsigned int> indicesToRemove;
+      unsigned int s = points.size();
+      for (int i = 0; i != s; i++) {
+        vec4 v1 = points[i];
+        vec4 v2 = points[(i+1)%s];
+        vec4 v0 = points[(s+i-1)%s];
+
+        if ((v0-v1).cross(v2-v1).length() < 0.05f) {
+          indicesToRemove.push_back(i);
+        }
+      }
+
+      for (int i = indicesToRemove.size()-1; i != -1; i--) {
+        points.erase(indicesToRemove[i]);
+      }
     }
 
     void orderPoints(dynarray <vec4> &points) {
@@ -317,29 +333,27 @@ namespace octet {
       }
       center *= 1.0f/points.size();
       
+      dynarray <float> angles;
+
+      for (unsigned int i = 0; i != points.size(); i++) {
+        angles.push_back(atan2f(points[i].z() - center.z(), points[i].x() - center.x()));
+      }
+
       //Bubble sort points counter-clockwise
       for (unsigned int j = 0; j != points.size()-1; j++) {
         for (unsigned int i = 0; i != points.size()-j-1; i++) {
-          if (pointcmp(points[i], points[i+1], center)) {
+          if (angles[i] < angles[i+1]) {
             vec4 temp = points[i];
             points[i] = points[i+1];
             points[i+1] = temp;
+            
+            float tempf = angles[i];
+            angles[i] = angles[i+1];
+            angles[i+1] = tempf;
           }
         }
       }
     }
-
-    int pointcmp(vec4 &a, vec4 &b, vec4 &center) {
-      float det = (a.x() - center.x()) * (b.z() - center.z()) - (b.x() - center.x()) * (a.z() - center.z());
-      if (det < 0) {
-        return -10;
-      } else if (det > 0) {
-        return 10;
-      } else {
-        return 0;
-      }
-    }
-
   };
 
   class City {
@@ -403,14 +417,14 @@ namespace octet {
       root.nodesOutside[1] = NULL;
       root.nodesOutside[2] = NULL;
       root.nodesOutside[3] = NULL;
-
+      /*
       printf("Root, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
           root.vertices[0].x(), root.vertices[0].y(), root.vertices[0].z(), 
           root.vertices[1].x(), root.vertices[1].y(), root.vertices[1].z(), 
           root.vertices[2].x(), root.vertices[2].y(), root.vertices[2].z(), 
           root.vertices[3].x(), root.vertices[3].y(), root.vertices[3].z(), 
           root.nodesOutside[0], root.nodesOutside[1], root.nodesOutside[2], root.nodesOutside[3]);
-
+          */
       modelToWorld.loadIdentity();
 
       for(int i=0; i!=4; ++i){
@@ -425,9 +439,6 @@ namespace octet {
     }
 
     void stepPartition(unsigned int depth/* camera frustrum */) {
-      
-      printf("Root node in %p\n", &root);
-
       setDebugColors(depth);
       stepPartition_(depth, &root, false);
 
@@ -1275,12 +1286,12 @@ namespace octet {
     void stepPartition_(unsigned int depth, BSPNode *b, bool noStreet) {
       if (depth == 0) return;
 
-      printf("Partition depth: %d\n", depth);
+      //rintf("Partition depth: %d\n", depth);
 
       if (!b->right || !b->left) { // It was a leaf node, expand it
 
         int side_index = getSideToMakePartition(b);
-        printf("Side picked: %d\n", side_index);
+        //printf("Side picked: %d\n", side_index);
 
         //Opposite side
         int opposite_side_index = (side_index+2)%4;
@@ -1325,20 +1336,20 @@ namespace octet {
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
 
-        printf("Left side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
-          b->left->vertices[0].x(), b->left->vertices[0].y(), b->left->vertices[0].z(), 
-          b->left->vertices[1].x(), b->left->vertices[1].y(), b->left->vertices[1].z(), 
-          b->left->vertices[2].x(), b->left->vertices[2].y(), b->left->vertices[2].z(), 
-          b->left->vertices[3].x(), b->left->vertices[3].y(), b->left->vertices[3].z(), 
-          b->left->nodesOutside[0], b->left->nodesOutside[1], b->left->nodesOutside[2], b->left->nodesOutside[3]);
+        //printf("Left side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
+        //  b->left->vertices[0].x(), b->left->vertices[0].y(), b->left->vertices[0].z(), 
+        //  b->left->vertices[1].x(), b->left->vertices[1].y(), b->left->vertices[1].z(), 
+        //  b->left->vertices[2].x(), b->left->vertices[2].y(), b->left->vertices[2].z(), 
+        //  b->left->vertices[3].x(), b->left->vertices[3].y(), b->left->vertices[3].z(), 
+        //  b->left->nodesOutside[0], b->left->nodesOutside[1], b->left->nodesOutside[2], b->left->nodesOutside[3]);
 
         
-        printf("Right side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
-          b->right->vertices[0].x(), b->right->vertices[0].y(), b->right->vertices[0].z(), 
-          b->right->vertices[1].x(), b->right->vertices[1].y(), b->right->vertices[1].z(), 
-          b->right->vertices[2].x(), b->right->vertices[2].y(), b->right->vertices[2].z(), 
-          b->right->vertices[3].x(), b->right->vertices[3].y(), b->right->vertices[3].z(), 
-          b->right->nodesOutside[0], b->right->nodesOutside[1], b->right->nodesOutside[2], b->right->nodesOutside[3]);
+        //printf("Right side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
+        //  b->right->vertices[0].x(), b->right->vertices[0].y(), b->right->vertices[0].z(), 
+        //  b->right->vertices[1].x(), b->right->vertices[1].y(), b->right->vertices[1].z(), 
+        //  b->right->vertices[2].x(), b->right->vertices[2].y(), b->right->vertices[2].z(), 
+        //  b->right->vertices[3].x(), b->right->vertices[3].y(), b->right->vertices[3].z(), 
+        //  b->right->nodesOutside[0], b->right->nodesOutside[1], b->right->nodesOutside[2], b->right->nodesOutside[3]);
 
         generateStreets(b->left, noStreet);
         generateStreets(b->right, noStreet);
