@@ -50,6 +50,8 @@ namespace octet {
     dynarray<Street> *streetList;
     dynarray<BuildingArea> *buildingAreaList;
 
+    std::vector <LampModel> *lampModels;
+
     CompassCard compassCard;
 
     int depth;
@@ -119,15 +121,19 @@ namespace octet {
       city->calculateBuildingsAreas(0.75);
 	  //city->calculateBuildingsAreas_fromStreet(); 
      
-
+      city->loadModels();
+      city->generateLamps();
+      city->loadModels();
       //
       // city_mesh declaration
       // city_mesh initialization
       //
       city_mesh = new CityMesh();
       streetList = &city->streetsList;
-	  
-	  buildingAreaList = &city->buildingAreaList;
+	    
+      buildingAreaList = &city->buildingAreaList;
+
+      lampModels = &city->lamps;
 
       //city->calculateBuildingsAreas(0.75);
       city->calculateBuildingsAreas_fromStreet(); 
@@ -415,7 +421,7 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, drawFlags, draw_texture_mode);
+      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, lampModels, drawFlags, draw_texture_mode);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 

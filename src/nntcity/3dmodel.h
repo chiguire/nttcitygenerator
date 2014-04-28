@@ -1,37 +1,62 @@
 namespace octet {
 
-  class model{
-    mat4t modelToWorld;
-
-    GLuint texture;
-
-    std::vector<mesh*> meshes;  
+  class ModelBuilder{
 
     collada_builder builder;
+
+  public:
+
+    void loadModel(char* modelPath){
+      builder.load_xml(modelPath);
+    }
+
+    collada_builder* getColladaBuilder(){
+      return &builder;
+    }
+  };
+
+
+  class Model{
+    mat4t modelToWorld;
+
+    std::vector<mesh*> meshes;  
 
     // container for resources
     resources dict;
 
   public:
-    model(char* modelPath, char* texturePath){      
-     
-
-      builder.load_xml(modelPath);
-
-      std::vector<std::string> geometries = builder.get_geometries();
+    Model(ModelBuilder* builder){      
+    
+      std::vector<std::string> geometries = builder->getColladaBuilder()->get_geometries();
 
       for(int i=0;i!=geometries.size();++i){
         mesh* mesh1 = new mesh();
         meshes.push_back(mesh1);
-        builder.get_mesh(*(meshes[i]), geometries[i].c_str(), dict);
+        builder->getColladaBuilder()->get_mesh(*(meshes[i]), geometries[i].c_str(), dict);
       }
-
-      texture = resources::get_texture_handle(GL_RGBA, texturePath);
     }
 
-    ~model(){
-      for(int i = 0; i < meshes.size(); ++i)
+    Model(const Model& rhs){
+
+      this->modelToWorld = rhs.modelToWorld;
+
+      std::vector<mesh*> m; 
+
+      for(int i=0; i!=rhs.meshes.size();++i){
+        mesh* mesh1 = new mesh();
+        *mesh1 = *(rhs.meshes[i]);
+        m.push_back(mesh1);
+      }
+      this->meshes = m;
+      this->dict = rhs.dict;
+    }
+
+
+    ~Model(){
+      for(int i = 0; i != meshes.size(); ++i){
         delete meshes[i];
+      }
+
     }
 
     void render(){
@@ -40,6 +65,15 @@ namespace octet {
       }
 
     }
+  };
+
+  class LampModel:public Model{
+  public:
+    LampModel(ModelBuilder* builder):Model(builder){
+      //Apply the scale and rotation in every model
+    }
+
+    LampModel(const LampModel & rhs):Model(rhs){}
   };
 
 }

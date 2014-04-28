@@ -20,6 +20,8 @@ namespace octet {
     material *waterMaterial;
     material *buldingMaterial;
 
+    material *lampMaterial;
+
     dynarray<float> heightmap;
     dynarray<vec4> normalmapXY;
     dynarray<vec4> normalmapXZ;
@@ -49,6 +51,7 @@ namespace octet {
       TEXTUREASSET_WATER_DIFFUSE,
       TEXTUREASSET_WATER_DISP,
       TEXTUREASSET_WATER_NORMAL,
+      TEXTUREASSET_LAMP_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -70,6 +73,7 @@ namespace octet {
           "assets/citytex/water/12_DIFFUSE.jpg",
           "assets/citytex/water/12_DISP.jpg",
           "assets/citytex/water/12_NORMAL.jpg",
+          "assets/citytex/models/lamp/lamp_bn.gif",
           0
         };
 
@@ -432,7 +436,7 @@ namespace octet {
       (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
       waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
 
-
+      lampMaterial = new material((*getImageArray())[TEXTUREASSET_LAMP_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -478,7 +482,7 @@ namespace octet {
     }
 
     void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
-        dynarray<BuildingArea> *buildingAreaList, int drawFlags, int draw_texture_mode) {
+        dynarray<BuildingArea> *buildingAreaList, std::vector <LampModel> *lampModels, int drawFlags, int draw_texture_mode) {
 
       if (drawFlags & 0x1) {
         grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -523,6 +527,13 @@ namespace octet {
         roadLeftNormalsMesh.render();
         roadRightNormalsMesh.render();
         pavementNormalsMesh.render();
+      }
+
+      //RENDER 3D MODELS
+
+      for(int i=0;i!=lampModels->size();++i){
+        lampMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        (*lampModels)[i].render();
       }
 
       glActiveTexture(GL_TEXTURE7);

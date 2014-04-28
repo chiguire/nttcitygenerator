@@ -1,3 +1,5 @@
+#include <vector>
+
 namespace octet {
   
   class BSPNode;
@@ -272,6 +274,10 @@ namespace octet {
     dynarray<BuildingArea> buildingAreaList_streets; 
 
     dynarray <StreetIntersection*> streetsIntersections;
+
+
+    ModelBuilder lampModel;
+    std::vector <LampModel> lamps;
 
     class random randomizer;
 
@@ -1107,6 +1113,16 @@ namespace octet {
 
         }
       }
+    }
+
+    void loadModels(){
+      lampModel.loadModel("assets/citytex/models/lamp/lamp.dae");
+    }
+
+    void generateLamps(){
+      LampModel lamp1(&lampModel);
+      lamps.push_back(lamp1);
+      lamps.clear();
     }
 
 
