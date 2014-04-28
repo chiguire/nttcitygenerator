@@ -123,7 +123,7 @@ namespace octet {
      
       city->loadModels();
       city->generateLamps();
-      city->loadModels();
+
       //
       // city_mesh declaration
       // city_mesh initialization

@@ -1122,7 +1122,6 @@ namespace octet {
     void generateLamps(){
       LampModel lamp1(&lampModel);
       lamps.push_back(lamp1);
-      lamps.clear();
     }
 
 
