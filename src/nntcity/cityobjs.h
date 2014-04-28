@@ -172,6 +172,7 @@ namespace octet {
         }
     }
 
+
   };
 
   class BuildingArea {
@@ -383,7 +384,7 @@ namespace octet {
 
     vec4 * debugColors;
 
-    //bool stop_iteration;
+    bool stop_iteration;
 
 
     City ()
@@ -1202,7 +1203,16 @@ namespace octet {
 
 
     void calculateBuildingsAreas() {
+	  stop_iteration= false;
       calculateBuildingsAreas_(&root);
+
+	  
+	  stop_iteration = true;
+      for (int i=0; i!=subAreaNodes.size(); ++i) {
+        calculateBuildingsAreas_(&subAreaNodes[i]);
+      }
+	  
+
     }
 
     void loadModels(){
@@ -1255,22 +1265,40 @@ namespace octet {
     }
 
     void calculateBuildingsAreas_(BSPNode *b) {
-      dynarray <Street *> nodeStreetsList;
 
-      getStreetsWithNode(b, nodeStreetsList);
 
-      if (!b->right && !b->left) { //If it's a leaf
-        dynarray <vec4> points;
-        b->getBuildAreaBase(&nodeStreetsList, points);
-        buildingAreaList.push_back(BuildingArea(points[0], points[1], points[2], points[3]));
-      } else {
-        if (b->right) {
-          calculateBuildingsAreas_(b->right);
-        }
-        if (b->left) {
-          calculateBuildingsAreas_(b->left);
-        }
-      }
+		  if (!b->right && !b->left ) { //If it's a leaf
+
+			  if(stop_iteration) {
+			  
+				dynarray <Street *> nodeStreetsList;
+
+				getStreetsWithNode(b, nodeStreetsList);
+				dynarray <vec4> points;
+				b->getBuildAreaBase(&nodeStreetsList, points);
+			
+				buildingAreaList.push_back(BuildingArea(points[0], points[1], points[2], points[3]));
+			  } else {
+				  BSPNode buildingNodeRoot = BSPNode();
+				  buildingNodeRoot.vertices[0] = b->vertices[0];
+				  buildingNodeRoot.vertices[1] = b->vertices[1];
+				  buildingNodeRoot.vertices[2] = b->vertices[2];
+				  buildingNodeRoot.vertices[3] = b->vertices[3];
+				  stepPartition_(5, &buildingNodeRoot, true);
+			      subAreaNodes.push_back(buildingNodeRoot);
+
+			  }
+
+		  } else {
+			if (b->right) {
+			  calculateBuildingsAreas_(b->right);
+			}
+			if (b->left) {
+			  calculateBuildingsAreas_(b->left);
+			}
+		  }
+
+
     }
 
     void getStreetsWithNode(BSPNode *b, dynarray <Street *> &resultList) {
