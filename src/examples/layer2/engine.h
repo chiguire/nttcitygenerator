@@ -96,7 +96,7 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 2;
+      depth = 8;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();

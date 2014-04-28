@@ -251,7 +251,7 @@ namespace octet {
   public:
     vec4 vertices[4];
     BSPNode *nodesOutside[4];
-    dynarray <Street *> *streetsList;
+    //dynarray <Street *> *streetsList;
 
     BSPNode *parent;
     BSPNode *left;
@@ -260,22 +260,22 @@ namespace octet {
     BSPNode(BSPNode *parent_ = NULL)
       : vertices()
       , nodesOutside()
-      , streetsList(NULL)
+      //, streetsList(NULL)
       , parent(parent_)
       , left(NULL)
       , right(NULL)
     {
-      streetsList = new dynarray<Street *>();
+      //streetsList = new dynarray<Street *>();
     }
 
     ~BSPNode()
     {
-      if (streetsList) {
-        delete streetsList;
-      }
+      //if (streetsList) {
+      //  delete streetsList;
+      //}
     }
 
-    void getBuildAreaBase(dynarray <vec4> &points) {
+    void getBuildAreaBase(dynarray <Street *> *streetsList, dynarray <vec4> &points) {
       points.reset();
 
       printf("Building area base for %p\n", this);
@@ -320,14 +320,13 @@ namespace octet {
             vec4 temp = points[i];
             points[i] = points[i+1];
             points[i+1] = temp;
-            printf("Swapping...\n");
           }
         }
       }
     }
 
     int pointcmp(vec4 &a, vec4 &b, vec4 &center) {
-      float det = (a.x() - center.x()) * (b.y() - center.y()) - (b.x() - center.x()) * (a.y() - center.y());
+      float det = (a.x() - center.x()) * (b.z() - center.z()) - (b.x() - center.x()) * (a.z() - center.z());
       if (det < 0) {
         return -10;
       } else if (det > 0) {
@@ -397,6 +396,13 @@ namespace octet {
       root.nodesOutside[2] = NULL;
       root.nodesOutside[3] = NULL;
 
+      printf("Root, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
+          root.vertices[0].x(), root.vertices[0].y(), root.vertices[0].z(), 
+          root.vertices[1].x(), root.vertices[1].y(), root.vertices[1].z(), 
+          root.vertices[2].x(), root.vertices[2].y(), root.vertices[2].z(), 
+          root.vertices[3].x(), root.vertices[3].y(), root.vertices[3].z(), 
+          root.nodesOutside[0], root.nodesOutside[1], root.nodesOutside[2], root.nodesOutside[3]);
+
       modelToWorld.loadIdentity();
 
       for(int i=0; i!=4; ++i){
@@ -404,7 +410,7 @@ namespace octet {
         s1.leftNode = &root;
         s1.rightNode = root.nodesOutside[i];
         streetsList.push_back(s1);
-        root.streetsList->push_back(&streetsList[streetsList.size()-1]);
+        //root.streetsList->push_back(&streetsList[streetsList.size()-1]);
       }
 
       srand (static_cast <unsigned> (time(0)));
@@ -1220,9 +1226,13 @@ namespace octet {
     }
 
     void calculateBuildingsAreas_(BSPNode *b) {
+      dynarray <Street *> nodeStreetsList;
+
+      getStreetsWithNode(b, nodeStreetsList);
+
       if (!b->right && !b->left) { //If it's a leaf
         dynarray <vec4> points;
-        b->getBuildAreaBase(points);
+        b->getBuildAreaBase(&nodeStreetsList, points);
         buildingAreaList.push_back(BuildingArea(points[0], points[1], points[2], points[3]));
       } else {
         if (b->right) {
@@ -1234,6 +1244,15 @@ namespace octet {
       }
     }
 
+    void getStreetsWithNode(BSPNode *b, dynarray <Street *> &resultList) {
+      resultList.reset();
+
+      for (auto i = streetsList.begin(); i != streetsList.end(); i++) {
+        if (i->leftNode == b || i ->rightNode == b) {
+          resultList.push_back(&(*i));
+        }
+      }
+    }
 
     void stepPartition_(unsigned int depth, BSPNode *b, bool noStreet) {
       if (depth == 0) return;
@@ -1288,6 +1307,21 @@ namespace octet {
         b->right->vertices[2] = midpoint;
         b->right->vertices[3] = side_vertex_b;
 
+        printf("Left side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
+          b->left->vertices[0].x(), b->left->vertices[0].y(), b->left->vertices[0].z(), 
+          b->left->vertices[1].x(), b->left->vertices[1].y(), b->left->vertices[1].z(), 
+          b->left->vertices[2].x(), b->left->vertices[2].y(), b->left->vertices[2].z(), 
+          b->left->vertices[3].x(), b->left->vertices[3].y(), b->left->vertices[3].z(), 
+          b->left->nodesOutside[0], b->left->nodesOutside[1], b->left->nodesOutside[2], b->left->nodesOutside[3]);
+
+        
+        printf("Right side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
+          b->right->vertices[0].x(), b->right->vertices[0].y(), b->right->vertices[0].z(), 
+          b->right->vertices[1].x(), b->right->vertices[1].y(), b->right->vertices[1].z(), 
+          b->right->vertices[2].x(), b->right->vertices[2].y(), b->right->vertices[2].z(), 
+          b->right->vertices[3].x(), b->right->vertices[3].y(), b->right->vertices[3].z(), 
+          b->right->nodesOutside[0], b->right->nodesOutside[1], b->right->nodesOutside[2], b->right->nodesOutside[3]);
+
         generateStreets(b->left, noStreet);
         generateStreets(b->right, noStreet);
 
@@ -1314,7 +1348,7 @@ namespace octet {
     void generateStreets( BSPNode * node, bool noStreet) {
 
       dynarray<Street> localList;
-      dynarray<unsigned int> parentIndexList;
+      //dynarray<unsigned int> parentIndexList;
 
       for (int i = 0; i != 4; ++i) {
  
@@ -1323,15 +1357,15 @@ namespace octet {
 
           if (indexToDelete != -1) {
             //Remove street from parent node and from CityMesh street list
-            Street *streetToDelete = &streetsList[indexToDelete];
-            dynarray <Street *> &parentList = *(node->parent->streetsList);
-            unsigned int parentListSize = parentList.size();
-            for (unsigned int j = 0; j != parentListSize; j++) {
-              if (parentList[j] == streetToDelete) {
-                parentList.erase(j);
-                break;
-              }
-            }
+            //Street *streetToDelete = &streetsList[indexToDelete];
+            //dynarray <Street *> &parentList = *(node->parent->streetsList);
+            //unsigned int parentListSize = parentList.size();
+            //for (unsigned int j = 0; j != parentListSize; j++) {
+            //  if (parentList[j] == streetToDelete) {
+            //    parentList.erase(j);
+            //    break;
+            //  }
+            //}
 
             streetsList.erase(indexToDelete);
           }
@@ -1341,9 +1375,9 @@ namespace octet {
           s1.rightNode = node->nodesOutside[i];
           localList.push_back(s1);
 
-          if (indexToDelete != 1) {
-            parentIndexList.push_back(localList.size()-1);
-          }
+          //if (indexToDelete != 1) {
+            //parentIndexList.push_back(localList.size()-1);
+          //}
           //printf("Generated street from (%g, %g, %g) to (%g, %g, %g). Left node: %p, Right node: %p\n", s1.points[0].x(), s1.points[0].y(), s1.points[0].z(), s1.points[1].x(), s1.points[1].y(), s1.points[1].z(), s1.leftNode, s1.rightNode);
         }
       }
@@ -1351,14 +1385,14 @@ namespace octet {
       if (!noStreet) {
         for (int m = 0; m != localList.size(); m++) {
           streetsList.push_back(localList[m]);
-          node->streetsList->push_back(&streetsList[streetsList.size()-1]);
+          //node->streetsList->push_back(&streetsList[streetsList.size()-1]);
           
-          for (int n = 0; n != parentIndexList.size(); n++) {
-            if (m == parentIndexList[n]) {
-              node->parent->streetsList->push_back(&streetsList[streetsList.size()-1]);
-              break;
-            }
-          }
+          //for (int n = 0; n != parentIndexList.size(); n++) {
+          //  if (m == parentIndexList[n]) {
+          //    node->parent->streetsList->push_back(&streetsList[streetsList.size()-1]);
+          //    break;
+          //  }
+          //}
         }
       }
     }
