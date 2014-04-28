@@ -356,12 +356,82 @@ namespace octet {
       }
     }
 
-  void add_extrude_polygon(vec4 *vertices, int height){
-
-    vec4 nv0 = vec4(vertices[0].x(), vertices[0].y() , vertices[0].z(), vertices[0].w());
-    vec4 nv1 = vec4(vertices[1].x(), vertices[1].y() , vertices[1].z(), vertices[0].w());
+  void add_basement(vec4 *vertices, float height = 1.0f) {
+	vec4 nv0 = vec4(vertices[0].x(), vertices[0].y() , vertices[0].z(), vertices[0].w());
+	vec4 nv1 = vec4(vertices[1].x(), vertices[1].y() , vertices[1].z(), vertices[0].w());
     vec4 nv2 = vec4(vertices[2].x(), vertices[2].y() , vertices[2].z(), vertices[0].w());
     vec4 nv3 = vec4(vertices[3].x(), vertices[3].y() , vertices[3].z(), vertices[0].w());
+
+	vec4 mv0 = vec4(nv0.x(), nv0.y()+height , nv0.z(), nv0.w());
+    vec4 mv1 = vec4(nv1.x(), nv1.y()+height , nv1.z(), nv1.w());
+    vec4 mv2 = vec4(nv2.x(), nv2.y()+height , nv2.z(), nv2.w());
+    vec4 mv3 = vec4(nv3.x(), nv3.y()+height , nv3.z(), nv3.w());
+
+	vec4 n0n1 = nv1-nv0;
+	vec4 n1n2 = nv2-nv1;
+	vec4 n2n3 = nv3-nv2;
+	vec4 n3n0 = nv0-nv3; 
+
+	vec4 n0m0 = mv0-nv0;
+	vec4 n1m1 = mv1-nv1;
+	vec4 n2m2 = mv2-nv2;
+	vec4 n3m3 = mv3-nv3;
+
+	vec4 norm_n0n1 = n0n1.cross(n0m0).normalize();
+	vec4 norm_n1n2 = n1n2.cross(n1m1).normalize(); 
+	vec4 norm_n2n3 = n2n3.cross(n2m2).normalize(); 
+	vec4 norm_n3n0 = n3n0.cross(n3m3).normalize(); 
+
+	add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
+	add_face(mv0, mv1, mv2, mv3, vec4(0,  1, 0, 0));
+	add_face(nv0, nv1, mv1, mv0, vec4(norm_n0n1.x(), 0.0f, norm_n0n1.z(), 0));
+	add_face(nv1, nv2, mv2, mv1, vec4(norm_n1n2.x(), 0.0f, norm_n1n2.z(), 0)); // r 
+	add_face(nv2, nv3, mv3, mv2, vec4(norm_n2n3.x(), 0.0f, norm_n2n3.z(), 0)); // b
+	add_face(nv3, nv0, mv0, mv3, vec4(norm_n3n0.x(), 0.0f, norm_n3n0.z(), 0)); // l
+
+  }
+
+  void add_roof(vec4 *vertices, int height, float roof_height = 0.05f) {
+	
+	vec4 nv0 = vec4(vertices[0].x(), height , vertices[0].z(), vertices[0].w());
+	vec4 nv1 = vec4(vertices[1].x(), height , vertices[1].z(), vertices[0].w());
+    vec4 nv2 = vec4(vertices[2].x(), height , vertices[2].z(), vertices[0].w());
+    vec4 nv3 = vec4(vertices[3].x(), height , vertices[3].z(), vertices[0].w());
+
+	vec4 mv0 = vec4(nv0.x(), height+roof_height , nv0.z(), nv0.w());
+    vec4 mv1 = vec4(nv1.x(), height+roof_height , nv1.z(), nv1.w());
+    vec4 mv2 = vec4(nv2.x(), height+roof_height , nv2.z(), nv2.w());
+    vec4 mv3 = vec4(nv3.x(), height+roof_height , nv3.z(), nv3.w());
+
+	vec4 n0n1 = nv1-nv0; 
+	vec4 n1n2 = nv2-nv1;
+	vec4 n2n3 = nv3-nv2;
+	vec4 n3n0 = nv0-nv3; 
+
+	vec4 n0m0 = mv0-nv0;
+	vec4 n1m1 = mv1-nv1;
+	vec4 n2m2 = mv2-nv2;
+	vec4 n3m3 = mv3-nv3;
+
+	vec4 norm_n0n1 = n0n1.cross(n0m0).normalize();
+	vec4 norm_n1n2 = n1n2.cross(n1m1).normalize(); 
+	vec4 norm_n2n3 = n2n3.cross(n2m2).normalize(); 
+	vec4 norm_n3n0 = n3n0.cross(n3m3).normalize();  
+
+	add_face(nv0, nv1, nv2, nv3, vec4(0, -1, 0, 0));
+	add_face(mv0, mv1, mv2, mv3, vec4(0,  1, 0, 0));
+	add_face(nv0, nv1, mv1, mv0, vec4(norm_n0n1.x(), 0.0f, norm_n0n1.z(), 0));
+	add_face(nv1, nv2, mv2, mv1, vec4(norm_n1n2.x(), 0.0f, norm_n1n2.z(), 0)); // r 
+	add_face(nv2, nv3, mv3, mv2, vec4(norm_n2n3.x(), 0.0f, norm_n2n3.z(), 0)); // b
+	add_face(nv3, nv0, mv0, mv3, vec4(norm_n3n0.x(), 0.0f, norm_n3n0.z(), 0)); // l
+  }
+
+  void add_extrude_polygon(vec4 *vertices, float height, float basement_height = 1.0f){
+
+    vec4 nv0 = vec4(vertices[0].x(), basement_height , vertices[0].z(), vertices[0].w());
+    vec4 nv1 = vec4(vertices[1].x(), basement_height , vertices[1].z(), vertices[0].w());
+    vec4 nv2 = vec4(vertices[2].x(), basement_height , vertices[2].z(), vertices[0].w());
+    vec4 nv3 = vec4(vertices[3].x(), basement_height , vertices[3].z(), vertices[0].w());
 
     vec4 mv0 = vec4(nv0.x(), nv0.y()+height , nv0.z(), nv0.w());
     vec4 mv1 = vec4(nv1.x(), nv1.y()+height , nv1.z(), nv1.w());

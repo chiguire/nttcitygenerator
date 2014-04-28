@@ -20,6 +20,8 @@ namespace octet {
     material *waterMaterial;
     material *buldingMaterial;
 
+    material *lampMaterial;
+
     dynarray<float> heightmap;
     dynarray<vec4> normalmapXY;
     dynarray<vec4> normalmapXZ;
@@ -49,6 +51,7 @@ namespace octet {
       TEXTUREASSET_WATER_DIFFUSE,
       TEXTUREASSET_WATER_DISP,
       TEXTUREASSET_WATER_NORMAL,
+      TEXTUREASSET_LAMP_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -70,6 +73,7 @@ namespace octet {
           "assets/citytex/water/12_DIFFUSE.jpg",
           "assets/citytex/water/12_DISP.jpg",
           "assets/citytex/water/12_NORMAL.jpg",
+          "assets/citytex/models/lamp/lamp_bn.gif",
           0
         };
 
@@ -94,6 +98,9 @@ namespace octet {
     static const float OFFSET_Y;
     static const float ROAD_RAISE;
     static const float PAVEMENT_RAISE;
+	static const float BUILDING_ROOF_HEIGHT;
+	static const float BUILDING_BASEMENT_HEIGHT;
+
 
     CityMesh() {
 
@@ -394,16 +401,31 @@ namespace octet {
         
         float random_height = std::rand()%4 + 2;
 
-        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height); 
+		// central mesh of the building
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height, BUILDING_BASEMENT_HEIGHT); 
 		(*buildingAreaList)[i].height = random_height; 
 		(*buildingAreaList)[i].calculate_area();
-
-		// printf(" area %f \n", (*buildingAreaList)[i].area); 
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
         m->set_mode(GL_TRIANGLES);
         (*buildingAreaList)[i].areaMesh = (*m);
+
+		// basement mesh of the building
+		mb.init(0,0); 
+		mb.add_basement((*buildingAreaList)[i].points, BUILDING_BASEMENT_HEIGHT);
+		m->init();
+		mb.get_mesh(*m);
+		m->set_mode(GL_TRIANGLES);
+		(*buildingAreaList)[i].basementMesh = (*m);
+
+		// roof mesh of the building
+		mb.init(0,0); 
+		mb.add_roof((*buildingAreaList)[i].points, BUILDING_BASEMENT_HEIGHT + random_height);
+		m->init();
+		mb.get_mesh(*m);
+		m->set_mode(GL_TRIANGLES);
+		(*buildingAreaList)[i].roofMesh = (*m);
       }
 
       pavementMaterial = new material((*getImageArray())[TEXTUREASSET_PAVEMENT]);
@@ -414,7 +436,7 @@ namespace octet {
       (*getImageArray())[TEXTUREASSET_WATER_DIFFUSE]->multiplyColor(vec4(1.0f, 1.0f, 1.0f, 0.5f));
       waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
 
-
+      lampMaterial = new material((*getImageArray())[TEXTUREASSET_LAMP_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -460,7 +482,7 @@ namespace octet {
     }
 
     void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
-        dynarray<BuildingArea> *buildingAreaList, int drawFlags, int draw_texture_mode) {
+        dynarray<BuildingArea> *buildingAreaList, std::vector <LampModel> *lampModels, int drawFlags, int draw_texture_mode) {
 
       if (drawFlags & 0x1) {
         grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -481,8 +503,12 @@ namespace octet {
       if (drawFlags & 0x8) {
        
       for (int i = 0; i != buildingAreaList->size(); ++i) {
-		  buldingMaterial->renderBuilding(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode);
-        (*buildingAreaList)[i].areaMesh.render();
+		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 0);
+			(*buildingAreaList)[i].areaMesh.render();
+		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 1);
+			(*buildingAreaList)[i].roofMesh.render();
+		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 2);
+			(*buildingAreaList)[i].basementMesh.render();
         }
       }
 
@@ -501,6 +527,13 @@ namespace octet {
         roadLeftNormalsMesh.render();
         roadRightNormalsMesh.render();
         pavementNormalsMesh.render();
+      }
+
+      //RENDER 3D MODELS
+
+      for(int i=0;i!=lampModels->size();++i){
+        lampMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        (*lampModels)[i].render();
       }
 
       glActiveTexture(GL_TEXTURE7);
@@ -660,4 +693,7 @@ namespace octet {
   const float CityMesh::OFFSET_Y = 0.25f;
   const float CityMesh::ROAD_RAISE = City::ROAD_HEIGHT;
   const float CityMesh::PAVEMENT_RAISE = City::PAVEMENT_HEIGHT;
+  const float CityMesh::BUILDING_ROOF_HEIGHT = 0.05f;
+  const float CityMesh::BUILDING_BASEMENT_HEIGHT = 1.0f;
+
 }
