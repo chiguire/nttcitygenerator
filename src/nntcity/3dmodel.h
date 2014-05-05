@@ -106,4 +106,19 @@ namespace octet {
     LampModel(const LampModel & rhs):Model(rhs){}
   };
 
+  class TrafficLight:public Model{
+  public:
+    TrafficLight(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      //this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      //this->modelToWorld.rotateZ(rotation);
+      this->modelToWorld.scale(0.0025f,0.0025f,0.0025f);
+
+    }
+
+    TrafficLight(const LampModel & rhs):Model(rhs){}
+  };
+
 }

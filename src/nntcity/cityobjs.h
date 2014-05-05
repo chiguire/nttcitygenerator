@@ -381,7 +381,9 @@ namespace octet {
 
 
     ModelBuilder lampModel;
+    ModelBuilder trafficLightModel;
     std::vector <ref<LampModel>> lamps;
+    std::vector <ref<TrafficLight>> trafficLights;
 
     class random randomizer;
 
@@ -1144,6 +1146,7 @@ namespace octet {
 
     void loadModels(){
       lampModel.loadModel("assets/citytex/models/lamp/lamp.dae");
+      trafficLightModel.loadModel("assets/citytex/models/trafficLight/traffic_single.dae");
     }
 
     void generateLamps(){
@@ -1279,6 +1282,9 @@ namespace octet {
           
         }
       }
+
+      TrafficLight* tl = new TrafficLight(&trafficLightModel,vec4(0.0f,0.0f,0.0f,0.0f),0.0f);
+      trafficLights.push_back(tl);
     }
 
 
