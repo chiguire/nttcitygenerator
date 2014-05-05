@@ -1145,20 +1145,15 @@ namespace octet {
         pavementMeshes[0] = &(streetsList[i].streetIntersectedPoints.pavementLeft);
         pavementMeshes[1] = &(streetsList[i].streetIntersectedPoints.pavementRight);
 
-        dynarray<vec4>* pavementMeshLeft = &(streetsList[i].streetIntersectedPoints.pavementLeft);
-
-        /*printf("Pavement mesh left\n");
-        for(int j=0;j!=pavementMeshLeft->size();++j){
-
-        printf("%d. (%.2f, %.2f, %.2f)\n",j+1,
-        ((*pavementMeshLeft)[j]).x(), ((*pavementMeshLeft)[j]).y(), ((*pavementMeshLeft)[j]).z());
-
-        }*/
 
         vec4 streetVector = streetsList[i].points[1] - streetsList[i].points[0];
-        vec4 lampVector(10.0f,0.0f,0.0f,0.0f); //model aligned to the x-axis
+        vec4 lampVector(10.0f,0.0f,0.0f,0.0f); //model aligned to the positive x-axis
 
-        float angleBetweenStreets = dot(streetVector, lampVector) / (streetVector.length()*lampVector.length());
+        float dotProduct = dot(streetVector, lampVector);
+
+        printf("Dot product:%.2f\n",dotProduct);
+
+        float angleBetweenStreets = dotProduct / (streetVector.length()*lampVector.length());
 
         if (angleBetweenStreets <= -0.99f) {
           angleBetweenStreets = -1.0f;
@@ -1182,7 +1177,20 @@ namespace octet {
           rotationAngle = angleBetweenStreets - 90;
         }
 
-        //VER CUANDO HAY QUE ROTAR +5 o -5
+        //We determine in which of the four quadrants is our street vector, to see if we apply a positive or negative rotation
+
+        if(streetVector.x() > 0.0f){
+          if(streetVector.z() < 0.0f){
+            //First quadrant
+            rotationAngle*=-1;
+          }
+
+        }else{
+          if(streetVector.z() > 0.0f){
+            //Third quadrant
+            rotationAngle*=-1;
+          }
+        }
 
         for(int j=0;j!=2;++j){
 
@@ -1194,13 +1202,34 @@ namespace octet {
 
           printf("Midpoint2 (%.2f, %.2f, %.2f)\n",midPoint2.x(), midPoint2.y(), midPoint2.z());
 
-          LampModel lamp1(&lampModel,midPoint1,0.0);
-          LampModel lamp2(&lampModel,midPoint2,0.0);
+          float rotation = rotationAngle;
+
+          if(dotProduct < 0.0f){
+            if(j==0){
+              if(rotation > 0.0f){
+                rotation+=180.0f;
+              }else{
+                rotation-=180.0f;
+              }
+            }
+          }else{
+            if(j==1){
+              if(rotation > 0.0f){
+                rotation+=180.0f;
+              }else{
+                rotation-=180.0f;
+              }
+            }
+          }
+
+          
+
+          LampModel lamp1(&lampModel,midPoint1,rotation);
+          LampModel lamp2(&lampModel,midPoint2,rotation);
 
           lamps.push_back(lamp1);
           lamps.push_back(lamp2);
         }
-        int c = 6;
       }
     }
 

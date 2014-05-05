@@ -59,7 +59,7 @@ namespace octet {
       for(int i = 0; i != meshes.size(); ++i){
         delete meshes[i];
       }
-
+      //printf("DESTRUCTOR\n");
     }
 
     void render(){
@@ -80,7 +80,7 @@ namespace octet {
 
       this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
       this->modelToWorld.rotateX(-90.0f);
-      this->modelToWorld.rotateY(rotation);
+      this->modelToWorld.rotateZ(rotation);
       this->modelToWorld.scale(0.010f,0.010f,0.010f);
       
     }
