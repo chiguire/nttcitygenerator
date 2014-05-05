@@ -357,6 +357,8 @@ namespace octet {
     }
   };
 
+  class CityMesh;
+
   class City {
   public:
     static const float STREET_WIDTH;
@@ -386,6 +388,8 @@ namespace octet {
     vec4 * debugColors;
 
     //bool stop_iteration;
+
+    CityMesh* cityMesh;
 
 
     City ()
@@ -523,6 +527,10 @@ namespace octet {
       center[1] = (root.vertices[0].y() + root.vertices[1].y() + root.vertices[2].y() + root.vertices[3].y())/4.0f;
       center[2] = (root.vertices[0].z() + root.vertices[1].z() + root.vertices[2].z() + root.vertices[3].z())/4.0f;
       center[3] = (root.vertices[0].w() + root.vertices[1].w() + root.vertices[2].w() + root.vertices[3].w())/4.0f;
+    }
+
+    void setCityMesh(CityMesh* c){
+      this->cityMesh = c;
     }
 
     void calculateIntersections(){
@@ -1153,17 +1161,17 @@ namespace octet {
 
         float angleBetweenStreets = dot(streetVector, lampVector) / (streetVector.length()*lampVector.length());
 
-        if (angleBetweenStreets <= -0.99f) {
+        if (angleBetweenStreets <= -0.9999999f) {
           angleBetweenStreets = -1.0f;
         }
 
-        if (angleBetweenStreets > 0.99f) {
+        if (angleBetweenStreets > 0.999999999f) {
           angleBetweenStreets = 1.0f;
         }
 
         angleBetweenStreets = acos(angleBetweenStreets) *(180.0f/3.14159265359f);
 
-        if(angleBetweenStreets > 180.0f){
+        if(angleBetweenStreets >= 180.0f){
           angleBetweenStreets = 360 - angleBetweenStreets;
         }
 
@@ -1195,7 +1203,9 @@ namespace octet {
 
         //To determine the orientation of the lamp depending if it is placed on the right or on the left pavement
         float crossProductResult = (streetVector.x() *lampVector.y()) - (streetVector.y() * lampVector.x()); 
-
+        
+        printf("CrossProduct:%.2f\n",crossProductResult);
+        
 
         for(int j=0;j!=2;++j){
 
@@ -1206,8 +1216,6 @@ namespace octet {
           vec4 pavementVector = pavementMidPoint1 - pavementMidPoint2;
 
           float distanceBetweenPoints =  pavementVector.length();
-
-          printf("Distance:%.2f\n",distanceBetweenPoints);
 
           vec4 normalizedPavementVector = pavementVector.normalize();
 
@@ -1223,7 +1231,7 @@ namespace octet {
                 rotation-=180.0f;
               }
             }
-          }else{
+          }else if(crossProductResult < 0.0f){
             if(j==1){
               if(rotation > 0.0f){
                 rotation+=180.0f;
@@ -1233,8 +1241,30 @@ namespace octet {
             }
           }
 
+          if(crossProductResult == 0.0f){
+            if(angleBetweenStreets == 0.0f){
+              if(j==0){
+                rotation = -90.0f;
+              }else{
+                rotation = -270.0f;
+              }
+            }else{
+              if(j==0){
+                rotation = 90.0f;
+              }else{
+                rotation = 270.0f;
+              }
+            }
+          }
+
           vec4 translationPoint = pavementMidPoint2+(normalizedPavementVector)/2;
 
+          vec4 dimensions;
+          vec4 center;
+
+          /*translationPoint = vec4(translationPoint.x(),cityMesh->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f), 
+          getDimensions(dimensions), getCenter(center), cityMesh->MULTIPLIER, cityMesh->OFFSET_X, cityMesh->OFFSET_Y),translationPoint.z(),translationPoint.w());*/
+  
           float walkedDistance = (translationPoint-pavementMidPoint2).length();
 
           while(walkedDistance < distanceBetweenPoints){

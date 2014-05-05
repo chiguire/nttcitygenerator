@@ -21,6 +21,7 @@ namespace octet {
     material *buldingMaterial;
 
     material *lampMaterial;
+    material *trafficLightMaterial;
 
     dynarray<float> heightmap;
     dynarray<vec4> normalmapXY;
@@ -52,6 +53,7 @@ namespace octet {
       TEXTUREASSET_WATER_DISP,
       TEXTUREASSET_WATER_NORMAL,
       TEXTUREASSET_LAMP_TEXTURE,
+      TEXTUREASSET_TRAFFICLIGHT_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -74,6 +76,7 @@ namespace octet {
           "assets/citytex/water/12_DISP.jpg",
           "assets/citytex/water/12_NORMAL.jpg",
           "assets/citytex/models/lamp/lamp_bn.gif",
+          "assets/citytex/models/trafficLight/traffic.gif",
           0
         };
 
@@ -437,6 +440,7 @@ namespace octet {
       waterMaterial = new material((*getImageArray())[TEXTUREASSET_WATER_DIFFUSE], (*getImageArray())[TEXTUREASSET_WATER_NORMAL]);
 
       lampMaterial = new material((*getImageArray())[TEXTUREASSET_LAMP_TEXTURE]);
+      trafficLightMaterial = new material((*getImageArray())[TEXTUREASSET_TRAFFICLIGHT_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;

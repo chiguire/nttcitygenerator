@@ -125,16 +125,18 @@ namespace octet {
       //city->calculateIntersectionsSpace();
       city->calculateMeshesIntersections();
       //city->printMeshesPoints();
-      city->calculateBuildingsAreas();
-     
-      city->loadModels();
-      city->generateLamps();
+      city->calculateBuildingsAreas(); 
 
       //
       // city_mesh declaration
       // city_mesh initialization
       //
       city_mesh = new CityMesh();
+      city->setCityMesh(city_mesh);
+
+      city->loadModels();
+      city->generateLamps();
+
       streetList = &city->streetsList;
       
       lampModels = &city->lamps;
