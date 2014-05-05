@@ -98,15 +98,22 @@ namespace octet {
       num_lights = 1;
 
       // Binary Space Partition
-      depth = 8;
+      depth = 0;
 
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
+      /*vec4 vertices[] = {
+      vec4(-10.0f, 0.0f, -16.0f, 1.0f),
+      vec4(-13.0f, 0.0f, 18.0f, 1.0f),
+      vec4(9.0f, 0.0f, 16.0f, 1.0f),
+      vec4(8.0f, 0.0f, -10.0f, 1.0f)
+      }; */
+
       vec4 vertices[] = {
-        vec4(-10.0f, 0.0f, -16.0f, 1.0f),
-        vec4(-13.0f, 0.0f, 18.0f, 1.0f),
-        vec4(9.0f, 0.0f, 16.0f, 1.0f),
-        vec4(8.0f, 0.0f, -10.0f, 1.0f)
+        vec4(-5.0f, 0.0f, -8.0f, 1.0f),
+        vec4(-6.5f, 0.0f, 9.0f, 1.0f),
+        vec4(4.5f, 0.0f, 8.0f, 1.0f),
+        vec4(4.0f, 0.0f, -5.0f, 1.0f)
       }; 
 
       city->init(vertices);

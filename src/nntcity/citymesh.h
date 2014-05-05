@@ -532,7 +532,7 @@ namespace octet {
       //RENDER 3D MODELS
 
       for(int i=0;i!=lampModels->size();++i){
-        lampMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        lampMaterial->render(shader, (*lampModels)[i].getModelToWorld()*modelToProjection, (*lampModels)[i].getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         (*lampModels)[i].render();
       }
 

@@ -17,6 +17,7 @@ namespace octet {
 
 
   class Model{
+  protected:
     mat4t modelToWorld;
 
     std::vector<mesh*> meshes;  
@@ -34,6 +35,8 @@ namespace octet {
         meshes.push_back(mesh1);
         builder->getColladaBuilder()->get_mesh(*(meshes[i]), geometries[i].c_str(), dict);
       }
+
+      this->modelToWorld = mat4t(1.0f);
     }
 
     Model(const Model& rhs){
@@ -63,14 +66,23 @@ namespace octet {
       for(int i=0;i!=meshes.size();++i){
         meshes[i]->render();
       }
+    }
 
+    mat4t getModelToWorld(){
+      return this->modelToWorld;
     }
   };
 
   class LampModel:public Model{
   public:
-    LampModel(ModelBuilder* builder):Model(builder){
+    LampModel(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
       //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      this->modelToWorld.rotateY(rotation);
+      this->modelToWorld.scale(0.010f,0.010f,0.010f);
+      
     }
 
     LampModel(const LampModel & rhs):Model(rhs){}

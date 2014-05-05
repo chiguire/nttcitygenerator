@@ -1138,8 +1138,70 @@ namespace octet {
     }
 
     void generateLamps(){
-      LampModel lamp1(&lampModel);
-      lamps.push_back(lamp1);
+
+      dynarray<vec4>* pavementMeshes[2];
+
+      for(int i=0; i!=streetsList.size();++i){
+        pavementMeshes[0] = &(streetsList[i].streetIntersectedPoints.pavementLeft);
+        pavementMeshes[1] = &(streetsList[i].streetIntersectedPoints.pavementRight);
+
+        dynarray<vec4>* pavementMeshLeft = &(streetsList[i].streetIntersectedPoints.pavementLeft);
+
+        /*printf("Pavement mesh left\n");
+        for(int j=0;j!=pavementMeshLeft->size();++j){
+
+        printf("%d. (%.2f, %.2f, %.2f)\n",j+1,
+        ((*pavementMeshLeft)[j]).x(), ((*pavementMeshLeft)[j]).y(), ((*pavementMeshLeft)[j]).z());
+
+        }*/
+
+        vec4 streetVector = streetsList[i].points[1] - streetsList[i].points[0];
+        vec4 lampVector(10.0f,0.0f,0.0f,0.0f); //model aligned to the x-axis
+
+        float angleBetweenStreets = dot(streetVector, lampVector) / (streetVector.length()*lampVector.length());
+
+        if (angleBetweenStreets <= -0.99f) {
+          angleBetweenStreets = -1.0f;
+        }
+
+        if (angleBetweenStreets > 0.99f) {
+          angleBetweenStreets = 1.0f;
+        }
+
+        angleBetweenStreets = acos(angleBetweenStreets) *(180.0f/3.14159265359f);
+
+        if(angleBetweenStreets > 180.0f){
+          angleBetweenStreets = 360 - angleBetweenStreets;
+        }
+
+        float rotationAngle = 0.0f;
+
+        if (angleBetweenStreets < 90.0f){
+          rotationAngle = 90 - angleBetweenStreets;
+        }else{
+          rotationAngle = angleBetweenStreets - 90;
+        }
+
+        //VER CUANDO HAY QUE ROTAR +5 o -5
+
+        for(int j=0;j!=2;++j){
+
+          vec4 midPoint1 = vec4( ((*pavementMeshes[j])[0].x() + (*pavementMeshes[j])[1].x()) / 2, 0.5f, ((*pavementMeshes[j])[0].z() + (*pavementMeshes[j])[1].z()) / 2, 1.0f);
+
+          vec4 midPoint2 = vec4( ((*pavementMeshes[j])[4].x() + (*pavementMeshes[j])[5].x()) / 2, 0.5f, ((*pavementMeshes[j])[4].z() + (*pavementMeshes[j])[5].z()) / 2, 1.0f);
+
+          printf("Midpoint1 (%.2f, %.2f, %.2f)\n",midPoint1.x(), midPoint1.y(), midPoint1.z());
+
+          printf("Midpoint2 (%.2f, %.2f, %.2f)\n",midPoint2.x(), midPoint2.y(), midPoint2.z());
+
+          LampModel lamp1(&lampModel,midPoint1,0.0);
+          LampModel lamp2(&lampModel,midPoint2,0.0);
+
+          lamps.push_back(lamp1);
+          lamps.push_back(lamp2);
+        }
+        int c = 6;
+      }
     }
 
 
