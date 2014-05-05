@@ -25,6 +25,9 @@ namespace octet {
     // container for resources
     resources dict;
 
+    // how many lives do we have?
+    int ref_count;
+
   public:
     Model(ModelBuilder* builder){      
     
@@ -37,6 +40,8 @@ namespace octet {
       }
 
       this->modelToWorld = mat4t(1.0f);
+
+      ref_count = 0;
     }
 
     Model(const Model& rhs){
@@ -52,6 +57,7 @@ namespace octet {
       }
       this->meshes = m;
       this->dict = rhs.dict;
+      this->ref_count = rhs.ref_count;
     }
 
 
@@ -70,6 +76,18 @@ namespace octet {
 
     mat4t getModelToWorld(){
       return this->modelToWorld;
+    }
+
+
+    // give this resource an extra life
+    void add_ref() {
+      ref_count++;
+    }
+    // remove a life from this resource and delete it if it is dead.
+    void release() {
+      if (--ref_count == 0) {
+        delete this;
+      }
     }
   };
 

@@ -364,6 +364,7 @@ namespace octet {
     static const float PAVEMENT_WIDTH;
     static const float ROAD_HEIGHT;
     static const float PAVEMENT_HEIGHT;
+    static const float LAMPS_SEPARATION;
 
     BSPNode root;
 
@@ -378,7 +379,7 @@ namespace octet {
 
 
     ModelBuilder lampModel;
-    std::vector <LampModel> lamps;
+    std::vector <ref<LampModel>> lamps;
 
     class random randomizer;
 
@@ -1149,11 +1150,8 @@ namespace octet {
         vec4 streetVector = streetsList[i].points[1] - streetsList[i].points[0];
         vec4 lampVector(10.0f,0.0f,0.0f,0.0f); //model aligned to the positive x-axis
 
-        float dotProduct = dot(streetVector, lampVector);
 
-        printf("Dot product:%.2f\n",dotProduct);
-
-        float angleBetweenStreets = dotProduct / (streetVector.length()*lampVector.length());
+        float angleBetweenStreets = dot(streetVector, lampVector) / (streetVector.length()*lampVector.length());
 
         if (angleBetweenStreets <= -0.99f) {
           angleBetweenStreets = -1.0f;
@@ -1192,19 +1190,32 @@ namespace octet {
           }
         }
 
+        lampVector[1] =  -lampVector[2]; 
+        streetVector[1] = -streetVector[2];
+
+        //To determine the orientation of the lamp depending if it is placed on the right or on the left pavement
+        float crossProductResult = (streetVector.x() *lampVector.y()) - (streetVector.y() * lampVector.x()); 
+
+
         for(int j=0;j!=2;++j){
 
-          vec4 midPoint1 = vec4( ((*pavementMeshes[j])[0].x() + (*pavementMeshes[j])[1].x()) / 2, 0.5f, ((*pavementMeshes[j])[0].z() + (*pavementMeshes[j])[1].z()) / 2, 1.0f);
+          vec4 pavementMidPoint1 = vec4( ((*pavementMeshes[j])[0].x() + (*pavementMeshes[j])[1].x()) / 2, 0.5f, ((*pavementMeshes[j])[0].z() + (*pavementMeshes[j])[1].z()) / 2, 1.0f);
 
-          vec4 midPoint2 = vec4( ((*pavementMeshes[j])[4].x() + (*pavementMeshes[j])[5].x()) / 2, 0.5f, ((*pavementMeshes[j])[4].z() + (*pavementMeshes[j])[5].z()) / 2, 1.0f);
+          vec4 pavementMidPoint2 = vec4( ((*pavementMeshes[j])[4].x() + (*pavementMeshes[j])[5].x()) / 2, 0.5f, ((*pavementMeshes[j])[4].z() + (*pavementMeshes[j])[5].z()) / 2, 1.0f);
 
-          printf("Midpoint1 (%.2f, %.2f, %.2f)\n",midPoint1.x(), midPoint1.y(), midPoint1.z());
+          vec4 pavementVector = pavementMidPoint1 - pavementMidPoint2;
 
-          printf("Midpoint2 (%.2f, %.2f, %.2f)\n",midPoint2.x(), midPoint2.y(), midPoint2.z());
+          float distanceBetweenPoints =  pavementVector.length();
+
+          printf("Distance:%.2f\n",distanceBetweenPoints);
+
+          vec4 normalizedPavementVector = pavementVector.normalize();
+
+          float normalizedPavementVectorLength = normalizedPavementVector.length();
 
           float rotation = rotationAngle;
 
-          if(dotProduct < 0.0f){
+          if(crossProductResult > 0.0f){
             if(j==0){
               if(rotation > 0.0f){
                 rotation+=180.0f;
@@ -1222,13 +1233,20 @@ namespace octet {
             }
           }
 
+          vec4 translationPoint = pavementMidPoint2+(normalizedPavementVector)/2;
+
+          float walkedDistance = (translationPoint-pavementMidPoint2).length();
+
+          while(walkedDistance < distanceBetweenPoints){
+
+            LampModel* lamp = new LampModel(&lampModel,translationPoint,rotation);
+            lamps.push_back(lamp);
+
+            translationPoint += City::LAMPS_SEPARATION*normalizedPavementVector;
+            walkedDistance = (translationPoint-pavementMidPoint2).length();
+            
+          }
           
-
-          LampModel lamp1(&lampModel,midPoint1,rotation);
-          LampModel lamp2(&lampModel,midPoint2,rotation);
-
-          lamps.push_back(lamp1);
-          lamps.push_back(lamp2);
         }
       }
     }
@@ -1579,5 +1597,6 @@ outloop:;
   const float City::ROAD_WIDTH = City::STREET_WIDTH - 2*City::PAVEMENT_WIDTH;
   const float City::ROAD_HEIGHT = 0.04f;
   const float City::PAVEMENT_HEIGHT = 0.042f;
+  const float City::LAMPS_SEPARATION = 2.0f;
 
 }

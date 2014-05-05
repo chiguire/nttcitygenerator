@@ -482,7 +482,7 @@ namespace octet {
     }
 
     void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
-        dynarray<BuildingArea> *buildingAreaList, std::vector <LampModel> *lampModels, int drawFlags, int draw_texture_mode) {
+        dynarray<BuildingArea> *buildingAreaList, std::vector <ref<LampModel>> *lampModels, int drawFlags, int draw_texture_mode) {
 
       if (drawFlags & 0x1) {
         grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -532,8 +532,8 @@ namespace octet {
       //RENDER 3D MODELS
 
       for(int i=0;i!=lampModels->size();++i){
-        lampMaterial->render(shader, (*lampModels)[i].getModelToWorld()*modelToProjection, (*lampModels)[i].getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
-        (*lampModels)[i].render();
+        lampMaterial->render(shader, (*lampModels)[i]->getModelToWorld()*modelToProjection, (*lampModels)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        (*lampModels)[i]->render();
       }
 
       glActiveTexture(GL_TEXTURE7);
