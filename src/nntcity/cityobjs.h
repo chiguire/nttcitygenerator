@@ -1146,10 +1146,10 @@ namespace octet {
 
     void loadModels(){
       lampModel.loadModel("assets/citytex/models/lamp/lamp.dae");
-      trafficLightModel.loadModel("assets/citytex/models/trafficLight/traffic_single.dae");
+      trafficLightModel.loadModel("assets/citytex/models/trafficLight/traffic_double.dae");
     }
 
-    void generateLamps(){
+    void generate3DModels(){
 
       dynarray<vec4>* pavementMeshes[2];
 
@@ -1207,8 +1207,6 @@ namespace octet {
         //To determine the orientation of the lamp depending if it is placed on the right or on the left pavement
         float crossProductResult = (streetVector.x() *lampVector.y()) - (streetVector.y() * lampVector.x()); 
         
-        printf("CrossProduct:%.2f\n",crossProductResult);
-        
 
         for(int j=0;j!=2;++j){
 
@@ -1262,11 +1260,11 @@ namespace octet {
 
           vec4 translationPoint = pavementMidPoint2+(normalizedPavementVector)/2;
 
-          vec4 dimensions;
+          /*vec4 dimensions;
           vec4 center;
 
-          /*translationPoint = vec4(translationPoint.x(),cityMesh->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f), 
-          getDimensions(dimensions), getCenter(center), cityMesh->MULTIPLIER, cityMesh->OFFSET_X, cityMesh->OFFSET_Y),translationPoint.z(),translationPoint.w());*/
+          translationPoint = vec4(translationPoint.x(),cityMesh->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f), 
+          getDimensions(dimensions), getCenter(center),0.5f, 0.25f, 0.25f),translationPoint.z(),translationPoint.w());*/
   
           float walkedDistance = (translationPoint-pavementMidPoint2).length();
 
@@ -1279,12 +1277,38 @@ namespace octet {
             walkedDistance = (translationPoint-pavementMidPoint2).length();
             
           }
+
+
+          //TRAFFIC LIGHTS
+
+          vec4 trafficLightRotation = rotationAngle;
+
+          vec4 pointTF1 = pavementMidPoint1 - (normalizedPavementVector)/6;
+          vec4 pointTF2 = pavementMidPoint2 + (normalizedPavementVector)/6;
+
+          TrafficLight* tl = 0; 
+          TrafficLight* t2 = 0; 
+
+          //We place traffic lights ramdonly
+          int r = rand() / static_cast <float> (RAND_MAX/4);
+
+          if(r == 0){
+            tl = new TrafficLight(&trafficLightModel,pointTF1,rotationAngle);
+            trafficLights.push_back(tl);
+          }else if(r == 1){
+            t2 = new TrafficLight(&trafficLightModel,pointTF2,rotationAngle);
+            trafficLights.push_back(t2);
+          }else if (r==2){
+            tl = new TrafficLight(&trafficLightModel,pointTF1,rotationAngle);
+            t2 = new TrafficLight(&trafficLightModel,pointTF2,rotationAngle);
+            trafficLights.push_back(tl);
+            trafficLights.push_back(t2);
+          }
           
         }
       }
 
-      TrafficLight* tl = new TrafficLight(&trafficLightModel,vec4(0.0f,0.0f,0.0f,0.0f),0.0f);
-      trafficLights.push_back(tl);
+      
     }
 
 

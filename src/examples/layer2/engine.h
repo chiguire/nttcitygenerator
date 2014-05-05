@@ -136,7 +136,7 @@ namespace octet {
       city->setCityMesh(city_mesh);
 
       city->loadModels();
-      city->generateLamps();
+      city->generate3DModels();
 
       streetList = &city->streetsList;
       

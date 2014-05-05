@@ -111,10 +111,10 @@ namespace octet {
     TrafficLight(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
       //Apply the scale and rotation in every model
 
-      //this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
       this->modelToWorld.rotateX(-90.0f);
-      //this->modelToWorld.rotateZ(rotation);
-      this->modelToWorld.scale(0.0025f,0.0025f,0.0025f);
+      this->modelToWorld.rotateZ(rotation);
+      this->modelToWorld.scale(0.001f,0.001f,0.001f);
 
     }
 
