@@ -1389,7 +1389,7 @@ namespace octet {
           getDimensions(dimensions);
           getCenter(center);
 
-          translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f)),translationPoint.z(),translationPoint.w())+CityConstants::PAVEMENT_RAISE*0.9f;
+          translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,translationPoint.z(),translationPoint.w());
 
           float walkedDistance = (translationPoint-pavementMidPoint2).length();
 
@@ -1399,6 +1399,9 @@ namespace octet {
             lamps.push_back(lamp);
 
             translationPoint += CityConstants::LAMPS_SEPARATION*normalizedPavementVector;
+
+            translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,translationPoint.z(),translationPoint.w());
+
             walkedDistance = (translationPoint-pavementMidPoint2).length();
 
           }
@@ -1411,10 +1414,13 @@ namespace octet {
           vec4 pointTF1 = pavementMidPoint1 - (normalizedPavementVector)/6;
           vec4 pointTF2 = pavementMidPoint2 + (normalizedPavementVector)/6;
 
+          pointTF1 = vec4(pointTF1.x(),heightMap->sample_heightmap(vec4(pointTF1.x(), 0, pointTF1.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,pointTF1.z(),pointTF1.w());
+          pointTF2 = vec4(pointTF2.x(),heightMap->sample_heightmap(vec4(pointTF2.x(), 0, pointTF2.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,pointTF2.z(),pointTF2.w());
+
           TrafficLight* tl = 0; 
           TrafficLight* t2 = 0; 
 
-          //We place traffic lights ramdonly
+          //We place traffic lights randomly
           int r = (float)rand() / static_cast <float> (RAND_MAX/4);
 
           if(r == 0){
