@@ -11,6 +11,7 @@
 #include "../../platform/platform.h"
 
 // city headers
+#include "../../nntcity/cityconstants.h"
 #include "../../nntcity/3dmodel.h"
 #include "../../nntcity/polygonintersect.h"
 #include "../../nntcity/cityobjs.h"

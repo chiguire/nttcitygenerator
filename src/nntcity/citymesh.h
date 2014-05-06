@@ -23,12 +23,8 @@ namespace octet {
     material *lampMaterial;
     material *trafficLightMaterial;
 
-    dynarray<float> heightmap;
-    dynarray<vec4> normalmapXY;
-    dynarray<vec4> normalmapXZ;
-    int heightmap_width;
-    int heightmap_height;
-
+    HeightMap *heightMap;
+    
     static dynarray<image *> *imageArray_;
 
     mesh skyboxMesh;
@@ -36,15 +32,17 @@ namespace octet {
     dynarray<uint8_t> buffer;
     dynarray<uint8_t> images;
 
+    public:
+
     enum TextureAsset {
       TEXTUREASSET_PAVEMENT,
       TEXTUREASSET_ROADLEFT,
       TEXTUREASSET_ROADRIGHT,
       TEXTUREASSET_HEIGHTMAP,
       TEXTUREASSET_BUILDING,
-	  TEXTUREASSET_BUILDING_RES_1,
-	  TEXTUREASSET_BUILDING_RES_2,
-	  TEXTUREASSET_BUILDING_RES_3,
+      TEXTUREASSET_BUILDING_RES_1,
+      TEXTUREASSET_BUILDING_RES_2,
+      TEXTUREASSET_BUILDING_RES_3,
       TEXTUREASSET_GRASS_DIFFUSE,
       TEXTUREASSET_GRASS_DISP,
       TEXTUREASSET_GRASS_NORMAL,
@@ -65,9 +63,9 @@ namespace octet {
           "assets/citytex/road_right.gif",
           "assets/citytex/heightmap6.gif",
           "assets/citytex/grass/detail.gif",
-		  "assets/citytex/buildings/building_residential_low.gif",
-		  "assets/citytex/buildings/building_office_glass.gif",
-		  "assets/citytex/buildings/building_office_highglass.gif",
+          "assets/citytex/buildings/building_residential_low.gif",
+          "assets/citytex/buildings/building_office_glass.gif",
+          "assets/citytex/buildings/building_office_highglass.gif",
           "assets/citytex/grass/06_DIFFUSE.jpg",
           "assets/citytex/grass/06_DISP.jpg",
           "assets/citytex/grass/06_NORMAL.jpg",
@@ -90,132 +88,13 @@ namespace octet {
       return imageArray_;
     }
 
-
-  public:
-
-    static const float HEIGHT_FACTOR;
-    static const float WATER_LEVEL;
-    static const float BRIDGE_LEVEL;
-    static const float MULTIPLIER;
-    static const float OFFSET_X;
-    static const float OFFSET_Y;
-    static const float ROAD_RAISE;
-    static const float PAVEMENT_RAISE;
-	static const float BUILDING_ROOF_HEIGHT;
-	static const float BUILDING_BASEMENT_HEIGHT;
-
-
     CityMesh() {
 
     }
 
-    void generateHeightmap() {
-      heightmap.reset();
-      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
-      heightmap_width = heightmapImage->get_width()+2;
-      heightmap_height = heightmapImage->get_height()+2;
-      heightmap.resize(heightmap_width*heightmap_height);
-
-      for (int j = 0; j != heightmap_height; j++) {
-        float v_ = ((float)j-1) / (heightmap_height-2);
-        for (int i = 0; i != heightmap_width; i++) {
-          vec4 color;
-
-          float u_ = ((float)i-1) / (heightmap_width-2);
-
-          heightmapImage->sample2Dbilinear(u_, v_, color);
-
-          heightmap[j*heightmap_width+i] = ((color.x()+color.y()+color.z())/3.0f)*HEIGHT_FACTOR;
-
-        }
-      }
+    void setHeightmap(HeightMap *hm) {
+      heightMap = hm;
     }
-
-    void generateNormalMap() {
-      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
-      unsigned int nx = heightmapImage->get_width();
-      unsigned int ny = heightmapImage->get_height();
-      unsigned int hmx = nx + 2;
-      unsigned int hmy = ny + 2;
-
-      normalmapXY.reset();
-      normalmapXY.resize(nx*ny);      
-      normalmapXZ.reset();
-      normalmapXZ.resize(nx*ny);      
-
-      mat4t rotMat;
-      rotMat.loadIdentity();
-      rotMat.rotate(-90, 1.0f, 0.0f, 0.0f);
-
-      for (unsigned j = 0; j != ny; j++) {
-        for (unsigned i = 0; i != nx; i++) {
-          vec4 normal(0.0f, 0.0f, 0.0f, 1.0f);
-
-          float h01 = heightmap[hmx*(j+1)+(i+1-1)];
-          float h21 = heightmap[hmx*(j+1)+(i+1+1)];
-          float h10 = heightmap[hmx*(j+1-1)+(i+1)];
-          float h12 = heightmap[hmx*(j+1+1)+(i+1)];
-          vec3 va(2.0f, 0.0f, h21 - h01);
-          vec3 vb(0.0f, 2.0f, h12 - h10);
-          vec3 c = va.cross(vb);
-          normal = vec4(c[0], c[1], c[2], 1.0f);
-          normal = normal.normalize();
-          normalmapXY[nx*j+i] = normal;
-          normalmapXZ[nx*j+i] = normal*rotMat;
-        }
-      }
-    }
-
-    /*
-    //Not yet functional, didn't manage to get it working in time
-    //Calculate the bezier point
-    vec4 drawBezierGeneralized(vec4 &firstPoint, vec4 &secondPoint, vec4 &thirdPoint, vec4 &fourthPoint) {
-    vec4 pointOfResult = vec4(0,0,0,0);
-    float points = 4;
-
-    for(int i=0;i<4;i++)
-    {
-    if(i == 0) {
-    pointOfResult.x = firstPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.x;
-    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * firstPoint.y;
-    }
-    if(i == 1) {
-    pointOfResult.x = secondPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.x;
-    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * secondPoint.y;
-    }
-    if(i == 2) {
-    pointOfResult.x = thirdPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.x;
-    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * thirdPoint.y;
-    }
-    if(i == 3) {
-    pointOfResult.x = fourthPoint.x + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.x;
-    pointOfResult.y = firstPoint.y + binomial_coff(points,i) * pow(points,i) * pow((1-points),(points-i)) * fourthPoint.y;
-    }
-    }
-    //cout<<P.x<<endl<<P.y;
-    //cout<<endl<<endl;
-    return pointOfResult;
-    }
-
-
-    int factorial(int n)
-    {
-    if (n<=1)
-    return(1);
-    else
-    n=n*factorial(n-1);
-    return n;
-    }
-
-    float binomial_coff(float n,float k)
-    {
-    float ans;
-    ans = factorial(n) / (factorial(k)*factorial(n-k));
-    return ans;
-    }
-    */
-
-
 
     // Samples the heights of the heightmap to create a projected road on the surface
     // result - the array of float with the heights
@@ -247,33 +126,13 @@ namespace octet {
         heightmapImage->sample2Dbilinear(u_, v_, color);
         //printf("Point %.2f (%.2f, %.2f, %.2f, %.2f), Sampling hm at (%.2f, %.2f) = %.2f\n", t, vt.x(), vt.y(), vt.z(), vt.w(), u_, v_, color.x()/255.0f*2.0f);
 
-        float h = (color.x() * HEIGHT_FACTOR)+HEIGHT_FACTOR*3;
-        if (h < BRIDGE_LEVEL) {
-          h = BRIDGE_LEVEL;
+        float h = (color.x() * CityConstants::HEIGHT_FACTOR)+CityConstants::HEIGHT_FACTOR*3;
+        if (h < CityConstants::BRIDGE_LEVEL) {
+          h = CityConstants::BRIDGE_LEVEL;
         }
         result.push_back(h);
       }
     }
-
-    float sample_heightmap(vec4 &vertex, vec4 &cityDimensions, vec4 &cityCenter, float multiplier, float offsetX, float offsetY) {
-      image *heightmapImage = ((*getImageArray())[TEXTUREASSET_HEIGHTMAP]);
-      vec4 color;
-
-      float u_ = (vertex.x()-cityCenter.x()+cityDimensions.x()*0.5f) / (cityDimensions.x());
-      float v_ = (vertex.z()-cityCenter.z()+cityDimensions.z()*0.5f) / (cityDimensions.z());
-
-      u_ = (u_*multiplier)+offsetX;
-      v_ = ((1-v_)*multiplier)+offsetY;
-
-      heightmapImage->sample2Dbilinear(u_, v_, color);
-
-      float h = (color.x() * HEIGHT_FACTOR);
-      if (h < BRIDGE_LEVEL) {
-        h = BRIDGE_LEVEL;
-      }
-      return h;
-    }
-
 
     void init(dynarray<Street> *streetsList, dynarray<BuildingArea> *buildingAreaList, vec4 &cityDimensions, vec4 &cityCenter) {
     // temp
@@ -287,34 +146,30 @@ namespace octet {
       //Create heightmap
       vec4 terrainDimensions = cityDimensions*2.0f;
 
-      printf("Generating heightmap and normalmap.\n");
-      generateHeightmap();
-      generateNormalMap();
-
       printf("Creating road meshes.\n");
 
       printf("Creating surface from heightmap.\n");
       mb.init(0, 0);
       mb.translate(cityCenter.x(), cityCenter.y(), cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
-      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightmap_width-2, heightmap_height-2, normalmapXY.data(), heightmap_width, heightmap_height, heightmap.data(), 0.0f, 0.0f, 10, 13);
+      mb.add_plane_heightmap(terrainDimensions.x(), terrainDimensions.z(), heightMap->getWidth()-2, heightMap->getHeight()-2, heightMap->getNormalMapXY(), heightMap->getWidth(), heightMap->getHeight(), heightMap->getHeightmap(), 0.0f, 0.0f, 10, 13);
       mb.get_mesh(surfaceMesh);
       //surfaceMesh.set_mode(GL_LINE_STRIP);
   
       printf("Creating water plane.\n");
       mb.init(0, 0);
-      mb.translate(cityCenter.x(), cityCenter.y()+WATER_LEVEL, cityCenter.z());
+      mb.translate(cityCenter.x(), cityCenter.y()+CityConstants::WATER_LEVEL, cityCenter.z());
       mb.rotate(-90, 1, 0, 0);
       mb.add_plane(terrainDimensions.x(), terrainDimensions.z(), 10, 10);
       mb.get_mesh(waterMesh);
 
-      float separationX = terrainDimensions.x()/(heightmap_width-2);
-      float separationZ = terrainDimensions.z()/(heightmap_height-2);
-      int gridWidth = heightmap_width-2;
-      int gridHeight = heightmap_height-2;
+      float separationX = terrainDimensions.x()/(heightMap->getWidth()-2);
+      float separationZ = terrainDimensions.z()/(heightMap->getHeight()-2);
+      int gridWidth = heightMap->getWidth()-2;
+      int gridHeight = heightMap->getHeight()-2;
 
       // Creating road meshes
-	  printf("Creating road meshes.\n");
+      printf("Creating road meshes.\n");
       mbRoadLeft.init(0, 0);
       mbRoadRight.init(0, 0);
       mbPavement.init(0, 0);
@@ -327,22 +182,22 @@ namespace octet {
         vec4 v1 = street.points[0];
         vec4 v2 = street.points[1];
 
-        street.intersectGridStreet(cityCenter.x(), cityCenter.z(), separationX, separationZ, City::ROAD_HEIGHT, City::PAVEMENT_HEIGHT, gridWidth, gridHeight);
+        street.intersectGridStreet(cityCenter.x(), cityCenter.z(), separationX, separationZ, CityConstants::ROAD_HEIGHT, CityConstants::PAVEMENT_HEIGHT, gridWidth, gridHeight);
 
         for (auto j = street.terrainIntersectedPoints.roadLeft.begin(); j != street.terrainIntersectedPoints.roadLeft.end(); j++) {
-          (*j)[1] += sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + ROAD_RAISE;
+          (*j)[1] += heightMap->sample_heightmap(*j) + CityConstants::ROAD_RAISE;
         }
 
         for (auto j = street.terrainIntersectedPoints.roadRight.begin(); j != street.terrainIntersectedPoints.roadRight.end(); j++) {
-          (*j)[1] += sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + ROAD_RAISE;
+          (*j)[1] += heightMap->sample_heightmap(*j) + CityConstants::ROAD_RAISE;
         }
 
         for (auto j = street.terrainIntersectedPoints.pavementLeft.begin(); j != street.terrainIntersectedPoints.pavementLeft.end(); j++) {
-          (*j)[1] += sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + PAVEMENT_RAISE;
+          (*j)[1] += heightMap->sample_heightmap(*j) + CityConstants::PAVEMENT_RAISE;
         }
 
         for (auto j = street.terrainIntersectedPoints.pavementRight.begin(); j != street.terrainIntersectedPoints.pavementRight.end(); j++) {
-          (*j)[1] += sample_heightmap(*j, cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y) + PAVEMENT_RAISE;
+          (*j)[1] += heightMap->sample_heightmap(*j) + CityConstants::PAVEMENT_RAISE;
         }
         
         if (street.terrainIntersectedPoints.roadLeft.size() > 0) {
@@ -350,8 +205,8 @@ namespace octet {
                                    street.terrainIntersectedIndices.roadLeft,
                                    street.terrainIntersectedNormals.roadLeft,
                                    street.terrainIntersectedUVCoords.roadLeft,
-                                   cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                   heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
+                                   cityDimensions, cityCenter, CityConstants::MULTIPLIER, CityConstants::OFFSET_X, CityConstants::OFFSET_Y,
+                                   heightMap->getWidth()-2, heightMap->getHeight()-2, heightMap->getNormalMapXZ(), heightMap->getWidth(), heightMap->getHeight(), heightMap->getHeightmap());
         }
         
         if (street.terrainIntersectedPoints.roadRight.size() > 0) {
@@ -359,8 +214,8 @@ namespace octet {
                                   street.terrainIntersectedIndices.roadRight,
                                   street.terrainIntersectedNormals.roadRight,
                                   street.terrainIntersectedUVCoords.roadRight,
-                                  cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
+                                  cityDimensions, cityCenter, CityConstants::MULTIPLIER, CityConstants::OFFSET_X, CityConstants::OFFSET_Y,
+                                  heightMap->getWidth()-2, heightMap->getHeight()-2, heightMap->getNormalMapXZ(), heightMap->getWidth(), heightMap->getHeight(), heightMap->getHeightmap());
         }
 
         // Right Pavement
@@ -369,8 +224,8 @@ namespace octet {
                                   street.terrainIntersectedIndices.pavementRight,
                                   street.terrainIntersectedNormals.pavementRight,
                                   street.terrainIntersectedUVCoords.pavementRight,
-                                  cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
+                                  cityDimensions, cityCenter, CityConstants::MULTIPLIER, CityConstants::OFFSET_X, CityConstants::OFFSET_Y,
+                                  heightMap->getWidth()-2, heightMap->getHeight()-2, heightMap->getNormalMapXZ(), heightMap->getWidth(), heightMap->getHeight(), heightMap->getHeightmap());
         }
         
         // Left Pavement
@@ -379,8 +234,8 @@ namespace octet {
                                   street.terrainIntersectedIndices.pavementLeft,
                                   street.terrainIntersectedNormals.pavementLeft,
                                   street.terrainIntersectedUVCoords.pavementLeft,
-                                  cityDimensions, cityCenter, MULTIPLIER, OFFSET_X, OFFSET_Y,
-                                  heightmap_width-2, heightmap_height-2, normalmapXZ.data(), heightmap_width, heightmap_height, heightmap.data());
+                                  cityDimensions, cityCenter, CityConstants::MULTIPLIER, CityConstants::OFFSET_X, CityConstants::OFFSET_Y,
+                                  heightMap->getWidth()-2, heightMap->getHeight()-2, heightMap->getNormalMapXZ(), heightMap->getWidth(), heightMap->getHeight(), heightMap->getHeightmap());
         }
       }
 
@@ -398,37 +253,37 @@ namespace octet {
 
 
     // creating buildings meshes 
-	  printf("Creating buildings.\n");
+    printf("Creating buildings.\n");
       for (int i = 0; i < buildingAreaList->size(); i++) {
         mb.init(0, 0);
         
         float random_height = std::rand()%4 + 2;
 
-		// central mesh of the building
-        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height, BUILDING_BASEMENT_HEIGHT); 
-		(*buildingAreaList)[i].height = random_height; 
-		(*buildingAreaList)[i].calculate_area();
+    // central mesh of the building
+        mb.add_extrude_polygon((*buildingAreaList)[i].points, random_height, CityConstants::BUILDING_BASEMENT_HEIGHT); 
+    (*buildingAreaList)[i].height = random_height; 
+    (*buildingAreaList)[i].calculate_area();
         
         mesh * m = new mesh();
         mb.get_mesh(*m);
         m->set_mode(GL_TRIANGLES);
         (*buildingAreaList)[i].areaMesh = (*m);
 
-		// basement mesh of the building
-		mb.init(0,0); 
-		mb.add_basement((*buildingAreaList)[i].points, BUILDING_BASEMENT_HEIGHT);
-		m->init();
-		mb.get_mesh(*m);
-		m->set_mode(GL_TRIANGLES);
-		(*buildingAreaList)[i].basementMesh = (*m);
+    // basement mesh of the building
+    mb.init(0,0); 
+    mb.add_basement((*buildingAreaList)[i].points, CityConstants::BUILDING_BASEMENT_HEIGHT);
+    m->init();
+    mb.get_mesh(*m);
+    m->set_mode(GL_TRIANGLES);
+    (*buildingAreaList)[i].basementMesh = (*m);
 
-		// roof mesh of the building
-		mb.init(0,0); 
-		mb.add_roof((*buildingAreaList)[i].points, BUILDING_BASEMENT_HEIGHT + random_height);
-		m->init();
-		mb.get_mesh(*m);
-		m->set_mode(GL_TRIANGLES);
-		(*buildingAreaList)[i].roofMesh = (*m);
+    // roof mesh of the building
+    mb.init(0,0); 
+    mb.add_roof((*buildingAreaList)[i].points, CityConstants::BUILDING_BASEMENT_HEIGHT + random_height);
+    m->init();
+    mb.get_mesh(*m);
+    m->set_mode(GL_TRIANGLES);
+    (*buildingAreaList)[i].roofMesh = (*m);
       }
 
       pavementMaterial = new material((*getImageArray())[TEXTUREASSET_PAVEMENT]);
@@ -507,12 +362,12 @@ namespace octet {
       if (drawFlags & 0x8) {
        
       for (int i = 0; i != buildingAreaList->size(); ++i) {
-		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 0);
-			(*buildingAreaList)[i].areaMesh.render();
-		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 1);
-			(*buildingAreaList)[i].roofMesh.render();
-		  buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 2);
-			(*buildingAreaList)[i].basementMesh.render();
+      buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 0);
+      (*buildingAreaList)[i].areaMesh.render();
+      buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 1);
+      (*buildingAreaList)[i].roofMesh.render();
+      buldingMaterial->render_building(buldingShader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights, (*buildingAreaList)[i].height, (*buildingAreaList)[i].area, draw_texture_mode, 2);
+      (*buildingAreaList)[i].basementMesh.render();
         }
       }
 
@@ -694,15 +549,5 @@ namespace octet {
     }
   };
 
-  const float CityMesh::HEIGHT_FACTOR = 1.0f/255.0f;
-  const float CityMesh::WATER_LEVEL = 0.3f;
-  const float CityMesh::BRIDGE_LEVEL = 0.35f;
-  const float CityMesh::MULTIPLIER = 0.5f;
-  const float CityMesh::OFFSET_X = 0.25f;
-  const float CityMesh::OFFSET_Y = 0.25f;
-  const float CityMesh::ROAD_RAISE = City::ROAD_HEIGHT;
-  const float CityMesh::PAVEMENT_RAISE = City::PAVEMENT_HEIGHT;
-  const float CityMesh::BUILDING_ROOF_HEIGHT = 0.05f;
-  const float CityMesh::BUILDING_BASEMENT_HEIGHT = 1.0f;
 
 }

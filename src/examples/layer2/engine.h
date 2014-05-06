@@ -44,6 +44,7 @@ namespace octet {
     camera_controls cameraControls;
     mat4t cameraToWorld;
 
+    HeightMap heightMap;
     City *city;
     CityMesh *city_mesh;
 
@@ -67,6 +68,7 @@ namespace octet {
     engine(int argc, char **argv) 
     : app(argc, argv)
     , textOverlay()
+    , heightMap()
     , cameraControls()
     , cameraToWorld()
     , light_rotation(45.0f, 30.0f, 0.0f) 
@@ -101,6 +103,11 @@ namespace octet {
       // Binary Space Partition
       depth = 8;
 
+      heightMap.setImage((*CityMesh::getImageArray())[CityMesh::TextureAsset::TEXTUREASSET_HEIGHTMAP]);
+      printf("Generating heightmap and normalmap.\n");
+      heightMap.generateHeightmap();
+      heightMap.generateNormalMap();
+
       //city = City::createFromRectangle(7.0f, 5.0f);
       city = new City();
       vec4 vertices[] = {
@@ -128,12 +135,23 @@ namespace octet {
       //city->printMeshesPoints();
       city->calculateBuildingsAreas(); 
 
+      vec4 dimensions;
+      vec4 center;
+
+      city->getDimensions(dimensions);
+      city->getCenter(center);
+
+      heightMap.setCenter(center);
+      heightMap.setDimensions(dimensions);
+      
+      city->setHeightmap(&heightMap);
+      
       //
       // city_mesh declaration
       // city_mesh initialization
       //
       city_mesh = new CityMesh();
-      city->setCityMesh(city_mesh);
+      city_mesh->setHeightmap(&heightMap);
 
       city->loadModels();
       city->generate3DModels();
@@ -146,15 +164,9 @@ namespace octet {
       //city->calculateBuildingsAreas(0.75);
       buildingAreaList = &city->buildingAreaList;
 
-      vec4 dimensions;
-      vec4 center;
-
-      city->getDimensions(dimensions);
-      city->getCenter(center);
-
       city_mesh->init(streetList, buildingAreaList, dimensions, center);
 
-      cameraControls.init(city, city_mesh);
+      cameraControls.init(city, city_mesh, &heightMap);
 
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

@@ -115,6 +115,7 @@ class camera_controls {
   vec4 cityCenter;
   vec4 cityDimensions;
   CityMesh *cityMesh;
+  HeightMap *heightMap;
 
   vec4 mouseCoordinates; //x,y for start position, z,w for difference between current and start
   vec3 startingCameraRotation;
@@ -202,15 +203,17 @@ public:
   , cityCenter()
   , cityDimensions()
   , cityMesh(NULL)
+  , heightMap(NULL)
   , mouseCoordinates()
   , isDragging(false)
   { }
   
-  void init(City *c, CityMesh *cm) {
+  void init(City *c, CityMesh *cm, HeightMap *hm) {
     city = c;
     city->getDimensions(cityDimensions);
     city->getCenter(cityCenter);
     cityMesh = cm;
+    heightMap = hm;
 
     if (city && city->streetsList.size() > 0) {
       streetSelected = 0;
@@ -348,7 +351,7 @@ public:
       camera_position[0] = interpolatedPoint.x();
       camera_position[1] = interpolatedPoint.z();
       camera_position[2] = 0.0f;
-      camera_position[3] = 0.25f+max(cityMesh->sample_heightmap(vec4(interpolatedPoint.x(), 0, interpolatedPoint.z(), 0.0f), cityDimensions, cityCenter, CityMesh::MULTIPLIER, CityMesh::OFFSET_X, CityMesh::OFFSET_Y), CityMesh::BRIDGE_LEVEL);
+      camera_position[3] = 0.25f+max(heightMap->sample_heightmap(vec4(interpolatedPoint.x(), 0, interpolatedPoint.z(), 0.0f)), CityConstants::BRIDGE_LEVEL);
       streetLerp.t += 1.0f/(60.0f*1);
       if (streetLerp.t >= 1.0f) {
         walkthroughMode = WALKTHROUGHMODE_ADVANCED;

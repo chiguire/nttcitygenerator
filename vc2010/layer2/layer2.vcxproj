@@ -74,6 +74,7 @@
     <ClInclude Include="..\..\src\math\vec4.h" />
     <ClInclude Include="..\..\src\nntcity\3dmodel.h" />
     <ClInclude Include="..\..\src\nntcity\citycamera.h" />
+    <ClInclude Include="..\..\src\nntcity\cityconstants.h" />
     <ClInclude Include="..\..\src\nntcity\citymesh.h" />
     <ClInclude Include="..\..\src\nntcity\cityobjs.h" />
     <ClInclude Include="..\..\src\nntcity\polygonintersect.h" />

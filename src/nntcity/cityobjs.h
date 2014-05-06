@@ -1,7 +1,7 @@
 #include <vector>
 
 namespace octet {
-  
+
   class BSPNode;
 
   template <class T>
@@ -179,10 +179,10 @@ namespace octet {
   public:
     vec4 points[4];
     mesh areaMesh;
-	mesh roofMesh; 
-	mesh basementMesh;
+    mesh roofMesh; 
+    mesh basementMesh;
     float height; 
-	float area; 
+    float area; 
 
     BuildingArea() {
       memset(points, 0, sizeof(vec4)*4);
@@ -210,13 +210,13 @@ namespace octet {
         all(this->points[3] == b2->points[3]);
     }
 
-	void calculate_area() {
-		float side_a, side_b; 
-		side_a = vec4(points[1]-points[0]).length(); 
-		side_b = vec4(points[2]-points[1]).length(); 
+    void calculate_area() {
+      float side_a, side_b; 
+      side_a = vec4(points[1]-points[0]).length(); 
+      side_b = vec4(points[2]-points[1]).length(); 
 
-		area = side_a * side_b;
-	}
+      area = side_a * side_b;
+    }
   };
 
 
@@ -290,7 +290,7 @@ namespace octet {
         addPointAsASet(points, pavement[1]);
         addPointAsASet(points, pavement[5]);
       }
-      
+
       //Because of street list point order, we have to make sure the points are counter-clockwise
       orderPoints(points);
       //Remove points that are part of the rectangle (both lines to other vertices will be parallel)
@@ -333,7 +333,7 @@ namespace octet {
         center += points[i];
       }
       center *= 1.0f/points.size();
-      
+
       dynarray <float> angles;
 
       for (unsigned int i = 0; i != points.size(); i++) {
@@ -347,7 +347,7 @@ namespace octet {
             vec4 temp = points[i];
             points[i] = points[i+1];
             points[i+1] = temp;
-            
+
             float tempf = angles[i];
             angles[i] = angles[i+1];
             angles[i+1] = tempf;
@@ -357,17 +357,145 @@ namespace octet {
     }
   };
 
-  class CityMesh;
+  class HeightMap {
+
+    dynarray<float> heightmap;
+    dynarray<vec4> normalmapXY;
+    dynarray<vec4> normalmapXZ;
+
+    int heightmap_width;
+    int heightmap_height;
+
+    vec4 center;
+    vec4 dimensions;
+
+    float multiplier;
+    float offset_x;
+    float offset_y;
+
+    image *img;
+
+  public:
+    HeightMap(image *heightmapImage = NULL)
+      : multiplier(CityConstants::MULTIPLIER)
+      , offset_x(CityConstants::OFFSET_X)
+      , offset_y(CityConstants::OFFSET_Y)
+      , img(heightmapImage)
+    { }
+
+    void setImage(image *heightmapImage) {
+      img = heightmapImage;
+    }
+
+    void setCenter(vec4 c) {
+      center = c;
+    }
+
+    void setDimensions(vec4 d) {
+      dimensions = d;
+    }
+
+    float *getHeightmap() {
+      return heightmap.data();
+    }
+
+    vec4 *getNormalMapXZ() {
+      return normalmapXZ.data();
+    }
+
+    vec4 *getNormalMapXY() {
+      return normalmapXY.data();
+    }
+
+    int getWidth() {
+      return heightmap_width;
+    }
+
+    int getHeight() {
+      return heightmap_height;
+    }
+
+    float sample_heightmap(vec4 &vertex) {
+      image *heightmapImage = img;
+      vec4 color;
+
+      float u_ = (vertex.x()-center.x()+dimensions.x()*0.5f) / (dimensions.x());
+      float v_ = (vertex.z()-center.z()+dimensions.z()*0.5f) / (dimensions.z());
+
+      u_ = (u_*multiplier)+offset_x;
+      v_ = ((1-v_)*multiplier)+offset_y;
+
+      heightmapImage->sample2Dbilinear(u_, v_, color);
+
+      float h = (color.x() * CityConstants::HEIGHT_FACTOR);
+      if (h < CityConstants::BRIDGE_LEVEL) {
+        h = CityConstants::BRIDGE_LEVEL;
+      }
+      return h;
+    }
+
+    void generateHeightmap() {
+      heightmap.reset();
+      image *heightmapImage = img;
+      heightmap_width = heightmapImage->get_width()+2;
+      heightmap_height = heightmapImage->get_height()+2;
+      heightmap.resize(heightmap_width*heightmap_height);
+
+      for (int j = 0; j != heightmap_height; j++) {
+        float v_ = ((float)j-1) / (heightmap_height-2);
+        for (int i = 0; i != heightmap_width; i++) {
+          vec4 color;
+
+          float u_ = ((float)i-1) / (heightmap_width-2);
+
+          heightmapImage->sample2Dbilinear(u_, v_, color);
+
+          heightmap[j*heightmap_width+i] = ((color.x()+color.y()+color.z())/3.0f)*CityConstants::HEIGHT_FACTOR;
+
+        }
+      }
+    }
+
+    void generateNormalMap() {
+      image *heightmapImage = img;
+      unsigned int nx = heightmapImage->get_width();
+      unsigned int ny = heightmapImage->get_height();
+      unsigned int hmx = nx + 2;
+      unsigned int hmy = ny + 2;
+
+      normalmapXY.reset();
+      normalmapXY.resize(nx*ny);      
+      normalmapXZ.reset();
+      normalmapXZ.resize(nx*ny);      
+
+      mat4t rotMat;
+      rotMat.loadIdentity();
+      rotMat.rotate(-90, 1.0f, 0.0f, 0.0f);
+
+      for (unsigned j = 0; j != ny; j++) {
+        for (unsigned i = 0; i != nx; i++) {
+          vec4 normal(0.0f, 0.0f, 0.0f, 1.0f);
+
+          float h01 = heightmap[hmx*(j+1)+(i+1-1)];
+          float h21 = heightmap[hmx*(j+1)+(i+1+1)];
+          float h10 = heightmap[hmx*(j+1-1)+(i+1)];
+          float h12 = heightmap[hmx*(j+1+1)+(i+1)];
+          vec3 va(2.0f, 0.0f, h21 - h01);
+          vec3 vb(0.0f, 2.0f, h12 - h10);
+          vec3 c = va.cross(vb);
+          normal = vec4(c[0], c[1], c[2], 1.0f);
+          normal = normal.normalize();
+          normalmapXY[nx*j+i] = normal;
+          normalmapXZ[nx*j+i] = normal*rotMat;
+        }
+      }
+    }
+  };
 
   class City {
-  public:
-    static const float STREET_WIDTH;
-    static const float ROAD_WIDTH;
-    static const float PAVEMENT_WIDTH;
-    static const float ROAD_HEIGHT;
-    static const float PAVEMENT_HEIGHT;
-    static const float LAMPS_SEPARATION;
+    HeightMap* heightMap;
 
+  public:
     BSPNode root;
 
     mat4t modelToWorld;
@@ -388,11 +516,6 @@ namespace octet {
     class random randomizer;
 
     vec4 * debugColors;
-
-    //bool stop_iteration;
-
-    CityMesh* cityMesh;
-
 
     City ()
       : randomizer(time(NULL))
@@ -417,22 +540,22 @@ namespace octet {
       root.vertices[1] = *(vertices_+1);
       root.vertices[2] = *(vertices_+2);
       root.vertices[3] = *(vertices_+3);
-      
+
       root.left = NULL;
       root.right = NULL;
-      
+
       root.nodesOutside[0] = NULL;
       root.nodesOutside[1] = NULL;
       root.nodesOutside[2] = NULL;
       root.nodesOutside[3] = NULL;
       /*
       printf("Root, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
-          root.vertices[0].x(), root.vertices[0].y(), root.vertices[0].z(), 
-          root.vertices[1].x(), root.vertices[1].y(), root.vertices[1].z(), 
-          root.vertices[2].x(), root.vertices[2].y(), root.vertices[2].z(), 
-          root.vertices[3].x(), root.vertices[3].y(), root.vertices[3].z(), 
-          root.nodesOutside[0], root.nodesOutside[1], root.nodesOutside[2], root.nodesOutside[3]);
-          */
+      root.vertices[0].x(), root.vertices[0].y(), root.vertices[0].z(), 
+      root.vertices[1].x(), root.vertices[1].y(), root.vertices[1].z(), 
+      root.vertices[2].x(), root.vertices[2].y(), root.vertices[2].z(), 
+      root.vertices[3].x(), root.vertices[3].y(), root.vertices[3].z(), 
+      root.nodesOutside[0], root.nodesOutside[1], root.nodesOutside[2], root.nodesOutside[3]);
+      */
       modelToWorld.loadIdentity();
 
       for(int i=0; i!=4; ++i){
@@ -450,6 +573,10 @@ namespace octet {
       setDebugColors(depth);
       stepPartition_(depth, &root, false);
 
+    }
+
+    void setHeightmap(HeightMap *hm) {
+      heightMap = hm;
     }
 
     void setDebugColors(unsigned int depth) {
@@ -529,10 +656,6 @@ namespace octet {
       center[1] = (root.vertices[0].y() + root.vertices[1].y() + root.vertices[2].y() + root.vertices[3].y())/4.0f;
       center[2] = (root.vertices[0].z() + root.vertices[1].z() + root.vertices[2].z() + root.vertices[3].z())/4.0f;
       center[3] = (root.vertices[0].w() + root.vertices[1].w() + root.vertices[2].w() + root.vertices[3].w())/4.0f;
-    }
-
-    void setCityMesh(CityMesh* c){
-      this->cityMesh = c;
     }
 
     void calculateIntersections(){
@@ -632,11 +755,11 @@ namespace octet {
 
               if (intAngleBetweenStreets != 180) {
 
-                float exteriorPavementDistance = (STREET_WIDTH / 2) / sin(angleBetweenStreets/2);
+                float exteriorPavementDistance = (CityConstants::STREET_WIDTH / 2) / sin(angleBetweenStreets/2);
 
-                float interiorPavementDistance = ((STREET_WIDTH / 2) - PAVEMENT_WIDTH) / sin(angleBetweenStreets/2);
+                float interiorPavementDistance = ((CityConstants::STREET_WIDTH / 2) - CityConstants::PAVEMENT_WIDTH) / sin(angleBetweenStreets/2);
 
-                float exteriorRoadDistance = (ROAD_WIDTH / 2) / sin(angleBetweenStreets/2);
+                float exteriorRoadDistance = (CityConstants::ROAD_WIDTH / 2) / sin(angleBetweenStreets/2);
 
                 //------------------------------We calculate the coordinates of the new point of the streets---------------------------------
                 float angleStreetsCS[2];  
@@ -832,8 +955,8 @@ namespace octet {
 
     //generates 4 or 8 additional points for the Road Meshes that just have 4 points
     void generatePointsEmptyRoadMeshes(){
-      float exteriorPavementDistance = (STREET_WIDTH / 2);
-      float interiorPavementDistance = ((STREET_WIDTH / 2) - PAVEMENT_WIDTH);
+      float exteriorPavementDistance = (CityConstants::STREET_WIDTH / 2);
+      float interiorPavementDistance = ((CityConstants::STREET_WIDTH / 2) - CityConstants::PAVEMENT_WIDTH);
 
       for(int i=0; i!= streetsList.size(); ++i){
 
@@ -887,24 +1010,24 @@ namespace octet {
             anglePerpendicularVector = 2 * (3.14159265359f) + anglePerpendicularVector;
           }
 
-          vec4 exteriorPointRoad1 (st->points[0].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
-            st->points[0].z()  + (ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
+          vec4 exteriorPointRoad1 (st->points[0].x() + (CityConstants::ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+            st->points[0].z()  + (CityConstants::ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
-          vec4 exteriorPointRoad2 (st->points[1].x() + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
-            st->points[1].z() + (ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
+          vec4 exteriorPointRoad2 (st->points[1].x() + (CityConstants::ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+            st->points[1].z() + (CityConstants::ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
           vec2 exteriorUVRoad1(0.0f, 0.0f);
           vec2 exteriorUVRoad2(0.0f, 0.0f);
 
-          roadMeshToApplyChanges->push_back(vec4(st->points[0].x(),ROAD_HEIGHT,st->points[0].z(),st->points[0].w()));
-          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad1.x(),ROAD_HEIGHT,exteriorPointRoad1.z(),exteriorPointRoad1.w()));
-          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad1.x(),-ROAD_HEIGHT,exteriorPointRoad1.z(),exteriorPointRoad1.w()));
-          roadMeshToApplyChanges->push_back(vec4(st->points[0].x(),-ROAD_HEIGHT,st->points[0].z(),st->points[0].w()));  
+          roadMeshToApplyChanges->push_back(vec4(st->points[0].x(),CityConstants::ROAD_HEIGHT,st->points[0].z(),st->points[0].w()));
+          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad1.x(),CityConstants::ROAD_HEIGHT,exteriorPointRoad1.z(),exteriorPointRoad1.w()));
+          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad1.x(),-CityConstants::ROAD_HEIGHT,exteriorPointRoad1.z(),exteriorPointRoad1.w()));
+          roadMeshToApplyChanges->push_back(vec4(st->points[0].x(),-CityConstants::ROAD_HEIGHT,st->points[0].z(),st->points[0].w()));  
 
-          roadMeshToApplyChanges->push_back(vec4(st->points[1].x(),ROAD_HEIGHT,st->points[1].z(),st->points[1].w()));
-          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad2.x(),ROAD_HEIGHT,exteriorPointRoad2.z(),exteriorPointRoad2.w()));
-          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad2.x(),-ROAD_HEIGHT,exteriorPointRoad2.z(),exteriorPointRoad2.w()));
-          roadMeshToApplyChanges->push_back(vec4(st->points[1].x(),-ROAD_HEIGHT,st->points[1].z(),st->points[1].w())); 
+          roadMeshToApplyChanges->push_back(vec4(st->points[1].x(),CityConstants::ROAD_HEIGHT,st->points[1].z(),st->points[1].w()));
+          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad2.x(),CityConstants::ROAD_HEIGHT,exteriorPointRoad2.z(),exteriorPointRoad2.w()));
+          roadMeshToApplyChanges->push_back(vec4(exteriorPointRoad2.x(),-CityConstants::ROAD_HEIGHT,exteriorPointRoad2.z(),exteriorPointRoad2.w()));
+          roadMeshToApplyChanges->push_back(vec4(st->points[1].x(),-CityConstants::ROAD_HEIGHT,st->points[1].z(),st->points[1].w())); 
 
           roadUVCoordToApplyChanges->push_back(exteriorUVRoad1);
           roadUVCoordToApplyChanges->push_back(exteriorUVRoad1);
@@ -932,14 +1055,14 @@ namespace octet {
           vec2 exteriorUVPavement2(0.0f, 0.0f);
           vec2 interiorUVPavement2(0.0f, 0.0f);
 
-          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement1.x(),PAVEMENT_HEIGHT,interiorPointPavement1.z(),interiorPointPavement1.w()));
-          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement1.x(),PAVEMENT_HEIGHT,exteriorPointPavement1.z(),exteriorPointPavement1.w()));
-          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement1.x(),-PAVEMENT_HEIGHT,exteriorPointPavement1.z(),exteriorPointPavement1.w()));
-          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement1.x(),-PAVEMENT_HEIGHT,interiorPointPavement1.z(),interiorPointPavement1.w())); 
-          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement2.x(),PAVEMENT_HEIGHT,interiorPointPavement2.z(),interiorPointPavement2.w()));
-          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement2.x(),PAVEMENT_HEIGHT,exteriorPointPavement2.z(),exteriorPointPavement2.w()));
-          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement2.x(),-PAVEMENT_HEIGHT,exteriorPointPavement2.z(),exteriorPointPavement2.w()));
-          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement2.x(),-PAVEMENT_HEIGHT,interiorPointPavement2.z(),interiorPointPavement2.w())); 
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement1.x(),CityConstants::PAVEMENT_HEIGHT,interiorPointPavement1.z(),interiorPointPavement1.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement1.x(),CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement1.z(),exteriorPointPavement1.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement1.x(),-CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement1.z(),exteriorPointPavement1.w()));
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement1.x(),-CityConstants::PAVEMENT_HEIGHT,interiorPointPavement1.z(),interiorPointPavement1.w())); 
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement2.x(),CityConstants::PAVEMENT_HEIGHT,interiorPointPavement2.z(),interiorPointPavement2.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement2.x(),CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement2.z(),exteriorPointPavement2.w()));
+          pavementMeshToApplyChanges->push_back(vec4(exteriorPointPavement2.x(),-CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement2.z(),exteriorPointPavement2.w()));
+          pavementMeshToApplyChanges->push_back(vec4(interiorPointPavement2.x(),-CityConstants::PAVEMENT_HEIGHT,interiorPointPavement2.z(),interiorPointPavement2.w())); 
 
           pavementUVCoordToApplyChanges->push_back(exteriorUVPavement1);
           pavementUVCoordToApplyChanges->push_back(exteriorUVPavement1);
@@ -1020,14 +1143,14 @@ namespace octet {
             } 
 
 
-            vec4 exteriorPointPavement (streetPoint[0] + (STREET_WIDTH / 2) * cos(anglePerpendicularVector),0,
-              streetPoint[2] + (STREET_WIDTH / 2) * sin(anglePerpendicularVector),1);
+            vec4 exteriorPointPavement (streetPoint[0] + (CityConstants::STREET_WIDTH / 2) * cos(anglePerpendicularVector),0,
+              streetPoint[2] + (CityConstants::STREET_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
-            vec4 interiorPointPavement (streetPoint[0] + ((STREET_WIDTH / 2) - PAVEMENT_WIDTH) * cos(anglePerpendicularVector),0,
-              streetPoint[2] + ((STREET_WIDTH / 2) - PAVEMENT_WIDTH) * sin(anglePerpendicularVector),1);
+            vec4 interiorPointPavement (streetPoint[0] + ((CityConstants::STREET_WIDTH / 2) - CityConstants::PAVEMENT_WIDTH) * cos(anglePerpendicularVector),0,
+              streetPoint[2] + ((CityConstants::STREET_WIDTH / 2) - CityConstants::PAVEMENT_WIDTH) * sin(anglePerpendicularVector),1);
 
-            vec4 exteriorPointRoad (streetPoint[0] + (ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
-              streetPoint[2] + (ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
+            vec4 exteriorPointRoad (streetPoint[0] + (CityConstants::ROAD_WIDTH / 2) * cos(anglePerpendicularVector),0,
+              streetPoint[2] + (CityConstants::ROAD_WIDTH / 2) * sin(anglePerpendicularVector),1);
 
             vec2 exteriorUVPavement1(0.0f, 0.0f);
             vec2 interiorUVPavement1(0.0f, 0.0f);
@@ -1040,10 +1163,10 @@ namespace octet {
 
             if(st->streetIntersectedPoints.pavementRight.size() == 4){
 
-              st->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w()));
-              st->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
-              st->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),-PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
-              st->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),-PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w())); 
+              st->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),CityConstants::PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w()));
+              st->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->streetIntersectedPoints.pavementRight.push_back(vec4(exteriorPointPavement.x(),-CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->streetIntersectedPoints.pavementRight.push_back(vec4(interiorPointPavement.x(),-CityConstants::PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w())); 
 
               st->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVPavement1);
               st->streetIntersectedUVCoords.pavementRight.push_back(exteriorUVPavement1);
@@ -1052,10 +1175,10 @@ namespace octet {
 
             }else if(st->streetIntersectedPoints.pavementLeft.size() == 4){
 
-              st->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w()));
-              st->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
-              st->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),-PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
-              st->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),-PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w())); 
+              st->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),CityConstants::PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w()));
+              st->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->streetIntersectedPoints.pavementLeft.push_back(vec4(exteriorPointPavement.x(),-CityConstants::PAVEMENT_HEIGHT,exteriorPointPavement.z(),exteriorPointPavement.w()));
+              st->streetIntersectedPoints.pavementLeft.push_back(vec4(interiorPointPavement.x(),-CityConstants::PAVEMENT_HEIGHT,interiorPointPavement.z(),interiorPointPavement.w())); 
 
               st->streetIntersectedUVCoords.pavementLeft.push_back(exteriorUVPavement1);
               st->streetIntersectedUVCoords.pavementLeft.push_back(exteriorUVPavement1);
@@ -1065,10 +1188,10 @@ namespace octet {
 
             if(st->streetIntersectedPoints.roadRight.size() == 4){
 
-              st->streetIntersectedPoints.roadRight.push_back(vec4(streetPoint.x(),ROAD_HEIGHT,streetPoint.z(),streetPoint.w()));
-              st->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
-              st->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),-ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
-              st->streetIntersectedPoints.roadRight.push_back(vec4(streetPoint.x(),-ROAD_HEIGHT,streetPoint.z(),streetPoint.w())); 
+              st->streetIntersectedPoints.roadRight.push_back(vec4(streetPoint.x(),CityConstants::ROAD_HEIGHT,streetPoint.z(),streetPoint.w()));
+              st->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),CityConstants::ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
+              st->streetIntersectedPoints.roadRight.push_back(vec4(exteriorPointRoad.x(),-CityConstants::ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
+              st->streetIntersectedPoints.roadRight.push_back(vec4(streetPoint.x(),-CityConstants::ROAD_HEIGHT,streetPoint.z(),streetPoint.w())); 
 
               st->streetIntersectedUVCoords.roadRight.push_back(exteriorUVRoad1);
               st->streetIntersectedUVCoords.roadRight.push_back(exteriorUVRoad1);
@@ -1077,10 +1200,10 @@ namespace octet {
 
             }else if(st->streetIntersectedPoints.roadLeft.size() == 4){
 
-              st->streetIntersectedPoints.roadLeft.push_back(vec4(streetPoint.x(),ROAD_HEIGHT,streetPoint.z(),streetPoint.w()));
-              st->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
-              st->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),-ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
-              st->streetIntersectedPoints.roadLeft.push_back(vec4(streetPoint.x(),-ROAD_HEIGHT,streetPoint.z(),streetPoint.w())); 
+              st->streetIntersectedPoints.roadLeft.push_back(vec4(streetPoint.x(),CityConstants::ROAD_HEIGHT,streetPoint.z(),streetPoint.w()));
+              st->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),CityConstants::ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
+              st->streetIntersectedPoints.roadLeft.push_back(vec4(exteriorPointRoad.x(),-CityConstants::ROAD_HEIGHT,exteriorPointRoad.z(),exteriorPointRoad.w()));
+              st->streetIntersectedPoints.roadLeft.push_back(vec4(streetPoint.x(),-CityConstants::ROAD_HEIGHT,streetPoint.z(),streetPoint.w())); 
 
               st->streetIntersectedUVCoords.roadLeft.push_back(exteriorUVRoad1);
               st->streetIntersectedUVCoords.roadLeft.push_back(exteriorUVRoad1);
@@ -1140,7 +1263,7 @@ namespace octet {
       for (int i=0; i!=subAreaNodes.size(); ++i) {
         calculateFinalBuildingsAreas_(&subAreaNodes[i]);
       }
-	  
+
 
     }
 
@@ -1206,7 +1329,7 @@ namespace octet {
 
         //To determine the orientation of the lamp depending if it is placed on the right or on the left pavement
         float crossProductResult = (streetVector.x() *lampVector.y()) - (streetVector.y() * lampVector.x()); 
-        
+
 
         for(int j=0;j!=2;++j){
 
@@ -1260,12 +1383,14 @@ namespace octet {
 
           vec4 translationPoint = pavementMidPoint2+(normalizedPavementVector)/2;
 
-          /*vec4 dimensions;
+          vec4 dimensions;
           vec4 center;
 
-          translationPoint = vec4(translationPoint.x(),cityMesh->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f), 
-          getDimensions(dimensions), getCenter(center),0.5f, 0.25f, 0.25f),translationPoint.z(),translationPoint.w());*/
-  
+          getDimensions(dimensions);
+          getCenter(center);
+
+          translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f)),translationPoint.z(),translationPoint.w())+CityConstants::PAVEMENT_RAISE*0.9f;
+
           float walkedDistance = (translationPoint-pavementMidPoint2).length();
 
           while(walkedDistance < distanceBetweenPoints){
@@ -1273,9 +1398,9 @@ namespace octet {
             LampModel* lamp = new LampModel(&lampModel,translationPoint,rotation);
             lamps.push_back(lamp);
 
-            translationPoint += City::LAMPS_SEPARATION*normalizedPavementVector;
+            translationPoint += CityConstants::LAMPS_SEPARATION*normalizedPavementVector;
             walkedDistance = (translationPoint-pavementMidPoint2).length();
-            
+
           }
 
 
@@ -1290,7 +1415,7 @@ namespace octet {
           TrafficLight* t2 = 0; 
 
           //We place traffic lights ramdonly
-          int r = rand() / static_cast <float> (RAND_MAX/4);
+          int r = (float)rand() / static_cast <float> (RAND_MAX/4);
 
           if(r == 0){
             tl = new TrafficLight(&trafficLightModel,pointTF1,rotationAngle);
@@ -1304,11 +1429,11 @@ namespace octet {
             trafficLights.push_back(tl);
             trafficLights.push_back(t2);
           }
-          
+
         }
       }
 
-      
+
     }
 
 
@@ -1354,47 +1479,47 @@ namespace octet {
     void calculateBuildingsAreas_(BSPNode *b) {
 
 
-		  if (!b->right && !b->left ) { //If it's a leaf
+      if (!b->right && !b->left ) { //If it's a leaf
         dynarray <Street *> nodeStreetsList;
 
-				getStreetsWithNode(b, nodeStreetsList);
-				dynarray <vec4> points;
-				b->getBuildAreaBase(&nodeStreetsList, points);
-			
-				//buildingAreaList.push_back(BuildingArea(points[0], points[1], points[2], points[3]));
+        getStreetsWithNode(b, nodeStreetsList);
+        dynarray <vec4> points;
+        b->getBuildAreaBase(&nodeStreetsList, points);
+
+        //buildingAreaList.push_back(BuildingArea(points[0], points[1], points[2], points[3]));
         BSPNode buildingNodeRoot = BSPNode();
         buildingNodeRoot.vertices[0] = points[0];
         buildingNodeRoot.vertices[1] = points[1];
         buildingNodeRoot.vertices[2] = points[2];
         buildingNodeRoot.vertices[3] = points[3];
         subAreaNodes.push_back(buildingNodeRoot);
-		  } else {
-			if (b->right) {
-			  calculateBuildingsAreas_(b->right);
-			}
-			if (b->left) {
-			  calculateBuildingsAreas_(b->left);
-			}
-		  }
+      } else {
+        if (b->right) {
+          calculateBuildingsAreas_(b->right);
+        }
+        if (b->left) {
+          calculateBuildingsAreas_(b->left);
+        }
+      }
     }
-    
+
     void calculateFinalBuildingsAreas_(BSPNode *b) {
       if (!b->right && !b->left ) { //If it's a leaf
         BSPNode buildingNodeRoot = BSPNode();
-			  buildingNodeRoot.vertices[0] = b->vertices[0];
-			  buildingNodeRoot.vertices[1] = b->vertices[1];
-			  buildingNodeRoot.vertices[2] = b->vertices[2];
-			  buildingNodeRoot.vertices[3] = b->vertices[3];
-			  stepPartition_(5, &buildingNodeRoot, true);
+        buildingNodeRoot.vertices[0] = b->vertices[0];
+        buildingNodeRoot.vertices[1] = b->vertices[1];
+        buildingNodeRoot.vertices[2] = b->vertices[2];
+        buildingNodeRoot.vertices[3] = b->vertices[3];
+        stepPartition_(5, &buildingNodeRoot, true);
 
-			  createBuildingAreas(&buildingNodeRoot);
+        createBuildingAreas(&buildingNodeRoot);
       } else {
         if (b->right) {
-			    calculateFinalBuildingsAreas_(b->right);
-			  }
-			  if (b->left) {
-			    calculateFinalBuildingsAreas_(b->left);
-			  }
+          calculateFinalBuildingsAreas_(b->right);
+        }
+        if (b->left) {
+          calculateFinalBuildingsAreas_(b->left);
+        }
       }
     }
 
@@ -1452,7 +1577,7 @@ namespace octet {
 
         b->left = new BSPNode(b);
         b->right = new BSPNode(b);
-        
+
         b->left->nodesOutside[0] = b->nodesOutside[side_index];
         b->left->nodesOutside[1] = b->right;
         b->left->nodesOutside[2] = b->nodesOutside[(side_index+2)%4];
@@ -1481,7 +1606,7 @@ namespace octet {
         //  b->left->vertices[3].x(), b->left->vertices[3].y(), b->left->vertices[3].z(), 
         //  b->left->nodesOutside[0], b->left->nodesOutside[1], b->left->nodesOutside[2], b->left->nodesOutside[3]);
 
-        
+
         //printf("Right side, v:{ (%g, %g, %g), (%g, %g, %g), (%g, %g, %g), (%g, %g, %g) }, nout: { %p, %p, %p, %p }\n",
         //  b->right->vertices[0].x(), b->right->vertices[0].y(), b->right->vertices[0].z(), 
         //  b->right->vertices[1].x(), b->right->vertices[1].y(), b->right->vertices[1].z(), 
@@ -1518,7 +1643,7 @@ namespace octet {
       //dynarray<unsigned int> parentIndexList;
 
       for (int i = 0; i != 4; ++i) {
- 
+
         if (!streetAlreadyExists(node->vertices[i],node->vertices[(i==3) ? 0 : i+1])) {
           int indexToDelete = solveConflictbetweenStreets(node->vertices[i], node->vertices[(i+1)%4]);
 
@@ -1543,7 +1668,7 @@ namespace octet {
           localList.push_back(s1);
 
           //if (indexToDelete != 1) {
-            //parentIndexList.push_back(localList.size()-1);
+          //parentIndexList.push_back(localList.size()-1);
           //}
           //printf("Generated street from (%g, %g, %g) to (%g, %g, %g). Left node: %p, Right node: %p\n", s1.points[0].x(), s1.points[0].y(), s1.points[0].z(), s1.points[1].x(), s1.points[1].y(), s1.points[1].z(), s1.leftNode, s1.rightNode);
         }
@@ -1553,7 +1678,7 @@ namespace octet {
         for (int m = 0; m != localList.size(); m++) {
           streetsList.push_back(localList[m]);
           //node->streetsList->push_back(&streetsList[streetsList.size()-1]);
-          
+
           //for (int n = 0; n != parentIndexList.size(); n++) {
           //  if (m == parentIndexList[n]) {
           //    node->parent->streetsList->push_back(&streetsList[streetsList.size()-1]);
@@ -1648,15 +1773,4 @@ namespace octet {
 outloop:;
     }
   }; 
-
-  //Another nice measure
-  //pavement 16 / 56
-
-  const float City::STREET_WIDTH = 0.98f;
-  const float City::PAVEMENT_WIDTH = 0.25f;
-  const float City::ROAD_WIDTH = City::STREET_WIDTH - 2*City::PAVEMENT_WIDTH;
-  const float City::ROAD_HEIGHT = 0.04f;
-  const float City::PAVEMENT_HEIGHT = 0.042f;
-  const float City::LAMPS_SEPARATION = 2.0f;
-
 }
