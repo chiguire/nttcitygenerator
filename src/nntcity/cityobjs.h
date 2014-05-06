@@ -1451,8 +1451,6 @@ namespace octet {
 
             if(r2==5){
 
-              printf("Hydrant Point\n");
-
               r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
 
               vec4 hydP = pavementMidPoint2+r2*(normalizedPavementVector);
@@ -1465,8 +1463,6 @@ namespace octet {
             }
 
             if(r2 == 3 || r2 == 6){
-
-              printf("Postbox\n");
 
               r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
 
