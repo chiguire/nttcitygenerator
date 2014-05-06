@@ -510,8 +510,12 @@ namespace octet {
 
     ModelBuilder lampModel;
     ModelBuilder trafficLightModel;
+    ModelBuilder hydrantModel;
+    ModelBuilder postboxModel;
     std::vector <ref<LampModel>> lamps;
     std::vector <ref<TrafficLight>> trafficLights;
+    std::vector <ref<Hydrant>> hydrants;
+    std::vector <ref<PostBox>> postboxes;
 
     class random randomizer;
 
@@ -1270,6 +1274,8 @@ namespace octet {
     void loadModels(){
       lampModel.loadModel("assets/citytex/models/lamp/lamp.dae");
       trafficLightModel.loadModel("assets/citytex/models/trafficLight/traffic_double.dae");
+      hydrantModel.loadModel("assets/citytex/models/hydrant/hydrant.dae");
+      postboxModel.loadModel("assets/citytex/models/postbox/postbox.dae");
     }
 
     void generate3DModels(){
@@ -1421,7 +1427,7 @@ namespace octet {
           TrafficLight* t2 = 0; 
 
           //We place traffic lights randomly
-          int r = (float)rand() / static_cast <float> (RAND_MAX/4);
+          int r = (float)rand() / static_cast <float> (RAND_MAX/5);
 
           if(r == 0){
             tl = new TrafficLight(&trafficLightModel,pointTF1,rotationAngle);
@@ -1435,6 +1441,45 @@ namespace octet {
             trafficLights.push_back(tl);
             trafficLights.push_back(t2);
           }
+
+
+          //HYDRANTS
+          int r2 = (float)rand() / static_cast <float> (RAND_MAX/10);
+
+
+          if(distanceBetweenPoints > 1.0f){
+
+            if(r2==5){
+
+              printf("Hydrant Point\n");
+
+              r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
+
+              vec4 hydP = pavementMidPoint2+r2*(normalizedPavementVector);
+
+              hydP = vec4(hydP.x(),heightMap->sample_heightmap(vec4(hydP.x(), 0, hydP.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*1.8f,hydP.z(),hydP.w());
+
+              Hydrant* h = new Hydrant(&hydrantModel,hydP,rotation);
+              hydrants.push_back(h);
+
+            }
+
+            if(r2 == 3 || r2 == 6){
+
+              printf("Postbox\n");
+
+              r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
+
+              vec4 postBoxPoint = pavementMidPoint2+r2*(normalizedPavementVector);
+
+              postBoxPoint = vec4(postBoxPoint.x(),heightMap->sample_heightmap(vec4(postBoxPoint.x(), 0, postBoxPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*3.5f,postBoxPoint.z(),postBoxPoint.w());
+
+              PostBox* p = new PostBox(&postboxModel,postBoxPoint,rotation);
+              postboxes.push_back(p);
+
+            }
+          }
+
 
         }
       }

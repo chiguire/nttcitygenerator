@@ -299,7 +299,7 @@ namespace octet {
       } else if (!strcmp(param_type, "name")) {
         type = 3;
       } else {
-        printf("warning: unsupported type\n");
+        //printf("warning: unsupported type\n");
         return;
       }
 

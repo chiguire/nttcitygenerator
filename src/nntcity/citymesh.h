@@ -22,6 +22,8 @@ namespace octet {
 
     material *lampMaterial;
     material *trafficLightMaterial;
+    material *hydrantMaterial;
+    material *postBoxMaterial;
 
     HeightMap *heightMap;
     
@@ -52,6 +54,8 @@ namespace octet {
       TEXTUREASSET_WATER_NORMAL,
       TEXTUREASSET_LAMP_TEXTURE,
       TEXTUREASSET_TRAFFICLIGHT_TEXTURE,
+      TEXTUREASSET_HYDRANT_TEXTURE,
+      TEXTUREASSET_POSTBOX_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -75,6 +79,8 @@ namespace octet {
           "assets/citytex/water/12_NORMAL.jpg",
           "assets/citytex/models/lamp/lamp_bn.gif",
           "assets/citytex/models/trafficLight/traffic.gif",
+          "assets/citytex/models/hydrant/hydrant.gif",
+          "assets/citytex/models/postbox/postbox.gif",
           0
         };
 
@@ -296,6 +302,8 @@ namespace octet {
 
       lampMaterial = new material((*getImageArray())[TEXTUREASSET_LAMP_TEXTURE]);
       trafficLightMaterial = new material((*getImageArray())[TEXTUREASSET_TRAFFICLIGHT_TEXTURE]);
+      hydrantMaterial = new material((*getImageArray())[TEXTUREASSET_HYDRANT_TEXTURE]);
+      postBoxMaterial = new material((*getImageArray())[TEXTUREASSET_POSTBOX_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -341,7 +349,7 @@ namespace octet {
     }
 
     void debugRender(bump_shader &shader, city_buildings_bump_shader &buldingShader, color_shader &cshader, skybox_shader &sb_shader,const mat4t &modelToProjection, const mat4t &modelToCamera, const mat4t &cameraToWorld, vec4 *light_uniforms, const int num_light_uniforms, const int num_lights,
-        dynarray<BuildingArea> *buildingAreaList, std::vector <ref<LampModel>> *lampModels, std::vector <ref<TrafficLight>> *trafficLightsModels,int drawFlags, int draw_texture_mode) {
+        dynarray<BuildingArea> *buildingAreaList, std::vector <ref<LampModel>> *lampModels, std::vector <ref<TrafficLight>> *trafficLightsModels, std::vector <ref<Hydrant>> *hydrantModels, std::vector <ref<PostBox>> *postBoxModels,int drawFlags, int draw_texture_mode) {
 
       if (drawFlags & 0x1) {
         grassMaterial->render(shader, modelToProjection, modelToCamera, light_uniforms, num_light_uniforms, num_lights);
@@ -398,6 +406,16 @@ namespace octet {
       for(int i=0;i!=trafficLightsModels->size();++i){
         trafficLightMaterial->render(shader, (*trafficLightsModels)[i]->getModelToWorld()*modelToProjection, (*trafficLightsModels)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         (*trafficLightsModels)[i]->render();
+      }
+
+      for(int i=0;i!=hydrantModels->size();++i){
+        hydrantMaterial->render(shader, (*hydrantModels)[i]->getModelToWorld()*modelToProjection, (*hydrantModels)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        (*hydrantModels)[i]->render();
+      }
+
+      for(int i=0;i!=postBoxModels->size();++i){
+        postBoxMaterial->render(shader, (*postBoxModels)[i]->getModelToWorld()*modelToProjection, (*postBoxModels)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        (*postBoxModels)[i]->render();
       }
 
       glActiveTexture(GL_TEXTURE7);

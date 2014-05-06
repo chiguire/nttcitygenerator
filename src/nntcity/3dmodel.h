@@ -121,4 +121,33 @@ namespace octet {
     TrafficLight(const LampModel & rhs):Model(rhs){}
   };
 
+  class Hydrant:public Model{
+  public:
+    Hydrant(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      this->modelToWorld.rotateZ(rotation);
+      this->modelToWorld.scale(0.016f,0.016f,0.016f);
+
+    }
+
+    Hydrant(const LampModel & rhs):Model(rhs){}
+  };
+
+  class PostBox:public Model{
+  public:
+    PostBox(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateY(rotation);
+      this->modelToWorld.scale(0.0015f,0.0015f,0.0015f);
+
+    }
+
+    PostBox(const LampModel & rhs):Model(rhs){}
+  };
+
 }
