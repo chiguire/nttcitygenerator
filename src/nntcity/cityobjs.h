@@ -512,10 +512,8 @@ namespace octet {
     ModelBuilder trafficLightModel;
     ModelBuilder hydrantModel;
     ModelBuilder postboxModel;
-    std::vector <ref<LampModel>> lamps;
-    std::vector <ref<TrafficLight>> trafficLights;
-    std::vector <ref<Hydrant>> hydrants;
-    std::vector <ref<PostBox>> postboxes;
+
+    std::vector <ref<Model>> models;
 
     class random randomizer;
 
@@ -1401,8 +1399,8 @@ namespace octet {
 
           while(walkedDistance < distanceBetweenPoints){
 
-            LampModel* lamp = new LampModel(&lampModel,translationPoint,rotation);
-            lamps.push_back(lamp);
+            Model* lamp = new LampModel(&lampModel,translationPoint,rotation);
+            models.push_back(lamp);
 
             translationPoint += CityConstants::LAMPS_SEPARATION*normalizedPavementVector;
 
@@ -1423,23 +1421,23 @@ namespace octet {
           pointTF1 = vec4(pointTF1.x(),heightMap->sample_heightmap(vec4(pointTF1.x(), 0, pointTF1.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,pointTF1.z(),pointTF1.w());
           pointTF2 = vec4(pointTF2.x(),heightMap->sample_heightmap(vec4(pointTF2.x(), 0, pointTF2.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,pointTF2.z(),pointTF2.w());
 
-          TrafficLight* tl = 0; 
-          TrafficLight* t2 = 0; 
+          Model* tl = 0; 
+          Model* t2 = 0; 
 
           //We place traffic lights randomly
           int r = (float)rand() / static_cast <float> (RAND_MAX/5);
 
           if(r == 0){
             tl = new TrafficLight(&trafficLightModel,pointTF1,rotationAngle);
-            trafficLights.push_back(tl);
+            models.push_back(tl);
           }else if(r == 1){
             t2 = new TrafficLight(&trafficLightModel,pointTF2,rotationAngle);
-            trafficLights.push_back(t2);
+            models.push_back(t2);
           }else if (r==2){
             tl = new TrafficLight(&trafficLightModel,pointTF1,rotationAngle);
             t2 = new TrafficLight(&trafficLightModel,pointTF2,rotationAngle);
-            trafficLights.push_back(tl);
-            trafficLights.push_back(t2);
+            models.push_back(tl);
+            models.push_back(t2);
           }
 
 
@@ -1457,8 +1455,8 @@ namespace octet {
 
               hydP = vec4(hydP.x(),heightMap->sample_heightmap(vec4(hydP.x(), 0, hydP.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*1.8f,hydP.z(),hydP.w());
 
-              Hydrant* h = new Hydrant(&hydrantModel,hydP,rotation);
-              hydrants.push_back(h);
+              Model* h = new Hydrant(&hydrantModel,hydP,rotation);
+              models.push_back(h);
 
             }
 
@@ -1470,8 +1468,8 @@ namespace octet {
 
               postBoxPoint = vec4(postBoxPoint.x(),heightMap->sample_heightmap(vec4(postBoxPoint.x(), 0, postBoxPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*3.5f,postBoxPoint.z(),postBoxPoint.w());
 
-              PostBox* p = new PostBox(&postboxModel,postBoxPoint,rotation);
-              postboxes.push_back(p);
+              Model* p = new PostBox(&postboxModel,postBoxPoint,rotation);
+              models.push_back(p);
 
             }
           }

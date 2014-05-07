@@ -28,6 +28,8 @@ namespace octet {
     // how many lives do we have?
     int ref_count;
 
+    std::string stringMaterial;
+
   public:
     Model(ModelBuilder* builder){      
     
@@ -42,6 +44,8 @@ namespace octet {
       this->modelToWorld = mat4t(1.0f);
 
       ref_count = 0;
+
+      this->stringMaterial="";
     }
 
     Model(const Model& rhs){
@@ -78,6 +82,10 @@ namespace octet {
       return this->modelToWorld;
     }
 
+    std::string getMaterial(){
+      return this->stringMaterial;
+    }
+
 
     // give this resource an extra life
     void add_ref() {
@@ -100,6 +108,7 @@ namespace octet {
       this->modelToWorld.rotateX(-90.0f);
       this->modelToWorld.rotateZ(rotation);
       this->modelToWorld.scale(0.010f,0.010f,0.010f);
+      this->stringMaterial = "Lamp";
       
     }
 
@@ -115,10 +124,11 @@ namespace octet {
       this->modelToWorld.rotateX(-90.0f);
       this->modelToWorld.rotateZ(rotation);
       this->modelToWorld.scale(0.001f,0.001f,0.001f);
+      this->stringMaterial = "Traffic Light";
 
     }
 
-    TrafficLight(const LampModel & rhs):Model(rhs){}
+    TrafficLight(const TrafficLight & rhs):Model(rhs){}
   };
 
   class Hydrant:public Model{
@@ -130,10 +140,11 @@ namespace octet {
       this->modelToWorld.rotateX(-90.0f);
       this->modelToWorld.rotateZ(rotation);
       this->modelToWorld.scale(0.016f,0.016f,0.016f);
+      this->stringMaterial = "Hydrant";
 
     }
 
-    Hydrant(const LampModel & rhs):Model(rhs){}
+    Hydrant(const Hydrant & rhs):Model(rhs){}
   };
 
   class PostBox:public Model{
@@ -144,10 +155,10 @@ namespace octet {
       this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
       this->modelToWorld.rotateY(rotation);
       this->modelToWorld.scale(0.0015f,0.0015f,0.0015f);
-
+      this->stringMaterial = "Postbox";
     }
 
-    PostBox(const LampModel & rhs):Model(rhs){}
+    PostBox(const PostBox & rhs):Model(rhs){}
   };
 
 }

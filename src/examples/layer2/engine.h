@@ -51,10 +51,7 @@ namespace octet {
     dynarray<Street> *streetList;
     dynarray<BuildingArea> *buildingAreaList;
 
-    std::vector <ref<LampModel>> *lampModels;
-    std::vector <ref<TrafficLight>> *trafficLightsModels;
-    std::vector <ref<Hydrant>> *hydrantModels;
-    std::vector <ref<PostBox>> *postboxModels;
+    std::vector <ref<Model>> *models;
 
     CompassCard compassCard;
 
@@ -160,10 +157,7 @@ namespace octet {
 
       streetList = &city->streetsList;
       
-      lampModels = &city->lamps;
-      trafficLightsModels = &city->trafficLights;
-      hydrantModels = &city->hydrants;
-      postboxModels = &city->postboxes;
+      models = &city->models;
       
       //city->calculateBuildingsAreas(0.75);
       buildingAreaList = &city->buildingAreaList;
@@ -444,7 +438,7 @@ namespace octet {
 
       light_uniforms_array[2] = vec4(sin(light_rotation[0]*3.1415926f/180.0f), sin(light_rotation[1]*3.1415926f/180.0f), cos(light_rotation[0]*3.1415926f/180.0f), 0.0f) * worldToCamera;
 
-      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, lampModels, trafficLightsModels, hydrantModels, postboxModels,drawFlags, draw_texture_mode);
+      city_mesh->debugRender(object_shader, city_buildings_bump_shader_, cshader, sb_shader, modelToProjection, modelToCamera, cameraToWorld,light_uniforms_array, num_light_uniforms, num_lights, buildingAreaList, models,drawFlags, draw_texture_mode);
       //city_mesh->debugRender_newShader(streetList, city_bump_shader_, object_shader, modelToProjection, modelToCamera, light_uniforms_array, num_light_uniforms, num_lights);
       //city->debugRender(&cshader, &cameraToWorld, float(vx)/float(vy), depth);
 
