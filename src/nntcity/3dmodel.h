@@ -161,4 +161,18 @@ namespace octet {
     PostBox(const PostBox & rhs):Model(rhs){}
   };
 
+  class Tree:public Model{
+  public:
+    Tree(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      this->modelToWorld.scale(0.08f,0.08f,0.08f);
+      this->stringMaterial = "Tree";
+    }
+
+    Tree(const Tree & rhs):Model(rhs){}
+  };
+
 }

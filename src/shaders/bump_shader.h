@@ -136,6 +136,7 @@ namespace octet {
           }
 
           vec4 diffuse = texture2D(samplers[0], uv_);
+          if(diffuse.a < 0.5) discard;
           vec4 ambient = texture2D(samplers[1], uv_);
           vec4 emission = texture2D(samplers[2], uv_);
           vec4 specular = texture2D(samplers[3], uv_);

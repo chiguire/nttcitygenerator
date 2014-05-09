@@ -512,6 +512,7 @@ namespace octet {
     ModelBuilder trafficLightModel;
     ModelBuilder hydrantModel;
     ModelBuilder postboxModel;
+    ModelBuilder treeModel;
 
     std::vector <ref<Model>> models;
 
@@ -1274,6 +1275,7 @@ namespace octet {
       trafficLightModel.loadModel("assets/citytex/models/trafficLight/traffic_double.dae");
       hydrantModel.loadModel("assets/citytex/models/hydrant/hydrant.dae");
       postboxModel.loadModel("assets/citytex/models/postbox/postbox.dae");
+      treeModel.loadModel("assets/citytex/models/tree/tree.dae");
     }
 
     void generate3DModels(){
@@ -1334,6 +1336,7 @@ namespace octet {
         //To determine the orientation of the lamp depending if it is placed on the right or on the left pavement
         float crossProductResult = (streetVector.x() *lampVector.y()) - (streetVector.y() * lampVector.x()); 
 
+        int streetHasTrees = (float)rand() / static_cast <float> (RAND_MAX/10);
 
         for(int j=0;j!=2;++j){
 
@@ -1387,12 +1390,6 @@ namespace octet {
 
           vec4 translationPoint = pavementMidPoint2+(normalizedPavementVector)/2;
 
-          vec4 dimensions;
-          vec4 center;
-
-          getDimensions(dimensions);
-          getCenter(center);
-
           translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,translationPoint.z(),translationPoint.w());
 
           float walkedDistance = (translationPoint-pavementMidPoint2).length();
@@ -1441,12 +1438,13 @@ namespace octet {
           }
 
 
-          //HYDRANTS
+          
           int r2 = (float)rand() / static_cast <float> (RAND_MAX/10);
 
 
           if(distanceBetweenPoints > 1.0f){
-
+          
+            //HYDRANTS
             if(r2==5){
 
               r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
@@ -1460,6 +1458,7 @@ namespace octet {
 
             }
 
+          //POSTBOXES
             if(r2 == 3 || r2 == 6){
 
               r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
@@ -1474,7 +1473,31 @@ namespace octet {
             }
           }
 
+          
 
+          if(streetHasTrees%2 == 0){
+
+            //TREES
+            translationPoint = pavementMidPoint2+(normalizedPavementVector)*1.5;
+
+            translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,translationPoint.z(),translationPoint.w());
+
+            walkedDistance = (translationPoint-pavementMidPoint2).length();
+
+            while(walkedDistance < distanceBetweenPoints){
+
+              Model* tree = new Tree(&treeModel,translationPoint,rotation);
+              models.push_back(tree);
+
+              translationPoint += CityConstants::LAMPS_SEPARATION*normalizedPavementVector;
+
+              translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*0.9f,translationPoint.z(),translationPoint.w());
+
+              walkedDistance = (translationPoint-pavementMidPoint2).length();
+
+            }
+
+          }
         }
       }
 

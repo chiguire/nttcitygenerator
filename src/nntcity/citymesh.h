@@ -24,6 +24,7 @@ namespace octet {
     material *trafficLightMaterial;
     material *hydrantMaterial;
     material *postBoxMaterial;
+    material *treeMaterial;
 
     HeightMap *heightMap;
     
@@ -56,6 +57,7 @@ namespace octet {
       TEXTUREASSET_TRAFFICLIGHT_TEXTURE,
       TEXTUREASSET_HYDRANT_TEXTURE,
       TEXTUREASSET_POSTBOX_TEXTURE,
+      TEXTUREASSET_TREE_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -81,6 +83,7 @@ namespace octet {
           "assets/citytex/models/trafficLight/traffic.gif",
           "assets/citytex/models/hydrant/hydrant.gif",
           "assets/citytex/models/postbox/postbox.gif",
+          "assets/citytex/models/tree/tree.gif",
           0
         };
 
@@ -304,6 +307,7 @@ namespace octet {
       trafficLightMaterial = new material((*getImageArray())[TEXTUREASSET_TRAFFICLIGHT_TEXTURE]);
       hydrantMaterial = new material((*getImageArray())[TEXTUREASSET_HYDRANT_TEXTURE]);
       postBoxMaterial = new material((*getImageArray())[TEXTUREASSET_POSTBOX_TEXTURE]);
+      treeMaterial = new material((*getImageArray())[TEXTUREASSET_TREE_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -413,6 +417,10 @@ namespace octet {
 
         if((*models)[i]->getMaterial() == "Postbox"){
           postBoxMaterial->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        }
+
+        if((*models)[i]->getMaterial() == "Tree"){
+          treeMaterial->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         }
 
         (*models)[i]->render();
