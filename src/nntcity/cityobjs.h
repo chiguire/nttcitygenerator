@@ -1278,7 +1278,7 @@ namespace octet {
       hydrantModel.loadModel("assets/citytex/models/hydrant/hydrant.dae");
       postboxModel.loadModel("assets/citytex/models/postbox/postbox.dae");
       treeModel.loadModel("assets/citytex/models/tree/tree.dae");
-      tree2Model.loadModel("assets/citytex/models/tree/tree3.dae");
+      tree2Model.loadModel("assets/citytex/models/tree/tree2.dae");
       benchModel.loadModel("assets/citytex/models/bench/bench.dae");
     }
 
