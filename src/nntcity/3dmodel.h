@@ -175,4 +175,35 @@ namespace octet {
     Tree(const Tree & rhs):Model(rhs){}
   };
 
+  class Tree2:public Model{
+  public:
+    Tree2(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      this->modelToWorld.rotateZ(rotation);
+      this->modelToWorld.scale(0.003f,0.003f,0.003f);
+      this->stringMaterial = "Tree2";
+    }
+
+    Tree2(const Tree2 & rhs):Model(rhs){}
+  };
+
+  class Bench:public Model{
+  public:
+    Bench(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      this->modelToWorld.rotateZ(90.0f);
+      this->modelToWorld.rotateZ(rotation);
+      this->modelToWorld.scale(0.001f,0.001f,0.001f);
+      this->stringMaterial = "Bench";
+    }
+
+    Bench(const Bench & rhs):Model(rhs){}
+  };
+
 }

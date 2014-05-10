@@ -513,6 +513,8 @@ namespace octet {
     ModelBuilder hydrantModel;
     ModelBuilder postboxModel;
     ModelBuilder treeModel;
+    ModelBuilder tree2Model;
+    ModelBuilder benchModel;
 
     std::vector <ref<Model>> models;
 
@@ -1276,6 +1278,8 @@ namespace octet {
       hydrantModel.loadModel("assets/citytex/models/hydrant/hydrant.dae");
       postboxModel.loadModel("assets/citytex/models/postbox/postbox.dae");
       treeModel.loadModel("assets/citytex/models/tree/tree.dae");
+      tree2Model.loadModel("assets/citytex/models/tree/tree3.dae");
+      benchModel.loadModel("assets/citytex/models/bench/bench.dae");
     }
 
     void generate3DModels(){
@@ -1336,7 +1340,7 @@ namespace octet {
         //To determine the orientation of the lamp depending if it is placed on the right or on the left pavement
         float crossProductResult = (streetVector.x() *lampVector.y()) - (streetVector.y() * lampVector.x()); 
 
-        int streetHasTrees = (float)rand() / static_cast <float> (RAND_MAX/10);
+        int typeOfTree = (float)rand() / static_cast <float> (RAND_MAX/10);
 
         for(int j=0;j!=2;++j){
 
@@ -1475,8 +1479,6 @@ namespace octet {
 
           
 
-          if(streetHasTrees%2 == 0){
-
             //TREES
             translationPoint = pavementMidPoint2+(normalizedPavementVector)*1.5;
 
@@ -1484,10 +1486,19 @@ namespace octet {
 
             walkedDistance = (translationPoint-pavementMidPoint2).length();
 
+            int i = 0;
+
             while(walkedDistance < distanceBetweenPoints){
 
-              Model* tree = new Tree(&treeModel,translationPoint,rotation);
-              models.push_back(tree);
+              if(i % 2 == 0){
+                Model* tree = new Tree(&treeModel,translationPoint,rotation);
+                models.push_back(tree);
+              }else{
+                Model* tree = new Tree2(&tree2Model,translationPoint,rotation);
+                models.push_back(tree);
+              }
+
+              i++;
 
               translationPoint += CityConstants::LAMPS_SEPARATION*normalizedPavementVector;
 
@@ -1497,7 +1508,29 @@ namespace octet {
 
             }
 
-          }
+          
+            //BENCHES
+            translationPoint = pavementMidPoint2+(normalizedPavementVector);
+
+            translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*1.5f,translationPoint.z(),translationPoint.w());
+
+            walkedDistance = (translationPoint-pavementMidPoint2).length();
+
+            while(walkedDistance < distanceBetweenPoints){
+
+              Model* bench = new Bench(&benchModel,translationPoint,rotation);
+              models.push_back(bench);
+
+              translationPoint += CityConstants::LAMPS_SEPARATION*normalizedPavementVector;
+
+              translationPoint = vec4(translationPoint.x(),heightMap->sample_heightmap(vec4(translationPoint.x(), 0, translationPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*1.5f,translationPoint.z(),translationPoint.w());
+
+              walkedDistance = (translationPoint-pavementMidPoint2).length();
+
+            }
+          
+
+
         }
       }
 

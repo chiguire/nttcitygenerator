@@ -25,6 +25,8 @@ namespace octet {
     material *hydrantMaterial;
     material *postBoxMaterial;
     material *treeMaterial;
+    material *tree2Material;
+    material *benchMaterial;
 
     HeightMap *heightMap;
     
@@ -58,6 +60,8 @@ namespace octet {
       TEXTUREASSET_HYDRANT_TEXTURE,
       TEXTUREASSET_POSTBOX_TEXTURE,
       TEXTUREASSET_TREE_TEXTURE,
+      TEXTUREASSET_TREE2_TEXTURE,
+      TEXTUREASSET_BENCH_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -84,6 +88,8 @@ namespace octet {
           "assets/citytex/models/hydrant/hydrant.gif",
           "assets/citytex/models/postbox/postbox.gif",
           "assets/citytex/models/tree/tree.gif",
+          "assets/citytex/models/tree/tree2.gif",
+          "assets/citytex/models/bench/bench.gif",
           0
         };
 
@@ -308,6 +314,8 @@ namespace octet {
       hydrantMaterial = new material((*getImageArray())[TEXTUREASSET_HYDRANT_TEXTURE]);
       postBoxMaterial = new material((*getImageArray())[TEXTUREASSET_POSTBOX_TEXTURE]);
       treeMaterial = new material((*getImageArray())[TEXTUREASSET_TREE_TEXTURE]);
+      tree2Material = new material((*getImageArray())[TEXTUREASSET_TREE2_TEXTURE]);
+      benchMaterial = new material((*getImageArray())[TEXTUREASSET_BENCH_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -421,6 +429,14 @@ namespace octet {
 
         if((*models)[i]->getMaterial() == "Tree"){
           treeMaterial->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        }
+
+        if((*models)[i]->getMaterial() == "Tree2"){
+          tree2Material->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        }
+
+        if((*models)[i]->getMaterial() == "Bench"){
+          benchMaterial->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         }
 
         (*models)[i]->render();
