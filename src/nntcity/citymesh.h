@@ -27,6 +27,7 @@ namespace octet {
     material *treeMaterial;
     material *tree2Material;
     material *benchMaterial;
+    material *binMaterial;
 
     HeightMap *heightMap;
     
@@ -62,6 +63,7 @@ namespace octet {
       TEXTUREASSET_TREE_TEXTURE,
       TEXTUREASSET_TREE2_TEXTURE,
       TEXTUREASSET_BENCH_TEXTURE,
+      TEXTUREASSET_BIN_TEXTURE,
     };
 
     static dynarray<image *> *getImageArray() {
@@ -90,6 +92,7 @@ namespace octet {
           "assets/citytex/models/tree/tree.gif",
           "assets/citytex/models/tree/tree2.gif",
           "assets/citytex/models/bench/bench.gif",
+          "assets/citytex/models/bin/bin.gif",
           0
         };
 
@@ -316,6 +319,7 @@ namespace octet {
       treeMaterial = new material((*getImageArray())[TEXTUREASSET_TREE_TEXTURE]);
       tree2Material = new material((*getImageArray())[TEXTUREASSET_TREE2_TEXTURE]);
       benchMaterial = new material((*getImageArray())[TEXTUREASSET_BENCH_TEXTURE]);
+      binMaterial = new material((*getImageArray())[TEXTUREASSET_BIN_TEXTURE]);
 
       skyboxMesh.make_cube(100.0f);
       sky_box_textureObj = 0;
@@ -437,6 +441,10 @@ namespace octet {
 
         if((*models)[i]->getMaterial() == "Bench"){
           benchMaterial->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
+        }
+
+        if((*models)[i]->getMaterial() == "Bin"){
+          binMaterial->render(shader, (*models)[i]->getModelToWorld()*modelToProjection, (*models)[i]->getModelToWorld()*modelToCamera, light_uniforms, num_light_uniforms, num_lights);
         }
 
         (*models)[i]->render();

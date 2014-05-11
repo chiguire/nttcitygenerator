@@ -206,4 +206,19 @@ namespace octet {
     Bench(const Bench & rhs):Model(rhs){}
   };
 
+  class Bin:public Model{
+  public:
+    Bin(ModelBuilder* builder,vec4 translation, float rotation):Model(builder){
+      //Apply the scale and rotation in every model
+
+      this->modelToWorld.translate(translation.x(),translation.y(),translation.z());
+      this->modelToWorld.rotateX(-90.0f);
+      this->modelToWorld.rotateZ(rotation);
+      this->modelToWorld.scale(0.0005f,0.0005f,0.0005f);
+      this->stringMaterial = "Bin";
+    }
+
+    Bin(const Bin & rhs):Model(rhs){}
+  };
+
 }

@@ -515,6 +515,7 @@ namespace octet {
     ModelBuilder treeModel;
     ModelBuilder tree2Model;
     ModelBuilder benchModel;
+    ModelBuilder binModel;
 
     std::vector <ref<Model>> models;
 
@@ -1280,6 +1281,7 @@ namespace octet {
       treeModel.loadModel("assets/citytex/models/tree/tree.dae");
       tree2Model.loadModel("assets/citytex/models/tree/tree2.dae");
       benchModel.loadModel("assets/citytex/models/bench/bench.dae");
+      binModel.loadModel("assets/citytex/models/bin/bin.dae");
     }
 
     void generate3DModels(){
@@ -1453,7 +1455,7 @@ namespace octet {
 
               r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
 
-              vec4 hydP = pavementMidPoint2+r2*(normalizedPavementVector);
+              vec4 hydP = pavementMidPoint2+r2*(normalizedPavementVector/3);
 
               hydP = vec4(hydP.x(),heightMap->sample_heightmap(vec4(hydP.x(), 0, hydP.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*1.8f,hydP.z(),hydP.w());
 
@@ -1467,7 +1469,7 @@ namespace octet {
 
               r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
 
-              vec4 postBoxPoint = pavementMidPoint2+r2*(normalizedPavementVector);
+              vec4 postBoxPoint = pavementMidPoint2+r2*(normalizedPavementVector/3);
 
               postBoxPoint = vec4(postBoxPoint.x(),heightMap->sample_heightmap(vec4(postBoxPoint.x(), 0, postBoxPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*3.5f,postBoxPoint.z(),postBoxPoint.w());
 
@@ -1475,9 +1477,21 @@ namespace octet {
               models.push_back(p);
 
             }
+
+            if(r2 == 2 || r2 == 4 || r2 == 7){
+
+              r2 = (float)rand() / static_cast <float> (RAND_MAX/static_cast<int>(distanceBetweenPoints));
+
+              vec4 binPoint = pavementMidPoint2+r2*(normalizedPavementVector/3);
+
+              binPoint = vec4(binPoint.x(),heightMap->sample_heightmap(vec4(binPoint.x(), 0, binPoint.z(), 0.0f))+CityConstants::PAVEMENT_RAISE*1.5f,binPoint.z(),binPoint.w());
+
+              Model* p = new Bin(&binModel,binPoint,rotation);
+              models.push_back(p);
+
+            }
           }
 
-          
 
             //TREES
             translationPoint = pavementMidPoint2+(normalizedPavementVector)*1.5;
